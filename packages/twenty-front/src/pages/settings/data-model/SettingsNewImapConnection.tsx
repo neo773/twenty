@@ -12,6 +12,7 @@ import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { Select } from '@/ui/input/components/Select';
 import { TextInput } from '@/ui/input/components/TextInput';
 import { SubMenuTopBarContainer } from '@/ui/layout/page/components/SubMenuTopBarContainer';
+import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
 import { H2Title } from 'twenty-ui/display';
 import { Section } from 'twenty-ui/layout';
@@ -37,6 +38,12 @@ enum MessageVisibility {
   SHARE_METADATA = 'SHARE_METADATA',
   PRIVATE = 'PRIVATE',
 }
+
+const StyledFormContainer = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(4)};
+`;
 
 const imapConnectionFormSchema = z.object({
   handle: z.string().email('Invalid email address'),
@@ -143,7 +150,7 @@ export const SettingsNewImapConnection = () => {
               title={t`IMAP Connection Details`}
               description={t`Configure your IMAP email account`}
             />
-            <form>
+            <StyledFormContainer>
               <Controller
                 name="handle"
                 control={control}
@@ -238,7 +245,7 @@ export const SettingsNewImapConnection = () => {
                   />
                 )}
               />
-            </form>
+            </StyledFormContainer>
           </Section>
         </SettingsPageContainer>
       </SubMenuTopBarContainer>
