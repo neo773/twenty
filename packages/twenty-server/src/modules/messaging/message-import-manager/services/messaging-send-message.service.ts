@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-import { z } from 'zod';
-import { assertUnreachable, isDefined } from 'twenty-shared/utils';
 import { ConnectedAccountProvider } from 'twenty-shared/types';
+import { assertUnreachable, isDefined } from 'twenty-shared/utils';
+import { z } from 'zod';
 
 import { ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 import { GmailClientProvider } from 'src/modules/messaging/message-import-manager/drivers/gmail/providers/gmail-client.provider';
-import { MicrosoftClientProvider } from 'src/modules/messaging/message-import-manager/drivers/microsoft/providers/microsoft-client.provider';
 import { OAuth2ClientProvider } from 'src/modules/messaging/message-import-manager/drivers/gmail/providers/oauth2-client.provider';
+import { MicrosoftClientProvider } from 'src/modules/messaging/message-import-manager/drivers/microsoft/providers/microsoft-client.provider';
 import { mimeEncode } from 'src/modules/messaging/message-import-manager/utils/mime-encode.util';
 
 interface SendMessageInput {
@@ -91,6 +91,10 @@ export class MessagingSendMessageService {
         z.string().parse(response.id);
 
         await microsoftClient.api(`/me/messages/${response.id}/send`).post({});
+        break;
+      }
+      case ConnectedAccountProvider.IMAP: {
+        // TODO: Handle this
         break;
       }
       default:

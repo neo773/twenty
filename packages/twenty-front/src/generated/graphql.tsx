@@ -305,6 +305,7 @@ export type ClientConfig = {
   isEmailVerificationRequired: Scalars['Boolean'];
   isGoogleCalendarEnabled: Scalars['Boolean'];
   isGoogleMessagingEnabled: Scalars['Boolean'];
+  isIMAPMessagingEnabled: Scalars['Boolean'];
   isMicrosoftCalendarEnabled: Scalars['Boolean'];
   isMicrosoftMessagingEnabled: Scalars['Boolean'];
   isMultiWorkspaceEnabled: Scalars['Boolean'];
@@ -744,6 +745,16 @@ export enum IdentityProviderType {
   SAML = 'SAML'
 }
 
+export type ImapConnectionInput = {
+  accountOwnerId: Scalars['String'];
+  handle: Scalars['String'];
+  id?: InputMaybe<Scalars['String']>;
+  imapEncryption: Scalars['String'];
+  imapPassword: Scalars['String'];
+  imapPort: Scalars['Float'];
+  imapServer: Scalars['String'];
+};
+
 export type ImpersonateOutput = {
   __typename?: 'ImpersonateOutput';
   loginToken: AuthToken;
@@ -948,10 +959,12 @@ export type Mutation = {
   uploadImage: Scalars['String'];
   uploadProfilePicture: Scalars['String'];
   uploadWorkspaceLogo: Scalars['String'];
+  upsertImapConnection: Scalars['Boolean'];
   upsertObjectPermissions: Array<ObjectPermission>;
   upsertSettingPermissions: Array<SettingPermission>;
   userLookupAdminPanel: UserLookup;
   validateApprovedAccessDomain: ApprovedAccessDomain;
+  validateImapConnection: Scalars['Boolean'];
 };
 
 
@@ -1281,6 +1294,11 @@ export type MutationUploadWorkspaceLogoArgs = {
 };
 
 
+export type MutationUpsertImapConnectionArgs = {
+  input: ImapConnectionInput;
+};
+
+
 export type MutationUpsertObjectPermissionsArgs = {
   upsertObjectPermissionsInput: UpsertObjectPermissionsInput;
 };
@@ -1298,6 +1316,11 @@ export type MutationUserLookupAdminPanelArgs = {
 
 export type MutationValidateApprovedAccessDomainArgs = {
   input: ValidateApprovedAccessDomainInput;
+};
+
+
+export type MutationValidateImapConnectionArgs = {
+  input: ValidateImapConnectionInput;
 };
 
 export type Object = {
@@ -2288,6 +2311,17 @@ export type UserWorkspace = {
 export type ValidateApprovedAccessDomainInput = {
   approvedAccessDomainId: Scalars['String'];
   validationToken: Scalars['String'];
+};
+
+export type ValidateImapConnectionInput = {
+  accountOwnerId: Scalars['String'];
+  handle: Scalars['String'];
+  imapEncryption: Scalars['String'];
+  imapPassword: Scalars['String'];
+  imapPort: Scalars['Float'];
+  imapServer: Scalars['String'];
+  provider: Scalars['String'];
+  workspaceId: Scalars['String'];
 };
 
 export type ValidatePasswordResetToken = {

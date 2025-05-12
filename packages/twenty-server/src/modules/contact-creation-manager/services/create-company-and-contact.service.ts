@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import chunk from 'lodash.chunk';
 import compact from 'lodash.compact';
-import { Any, Repository } from 'typeorm';
+import { Any, DeepPartial, Repository } from 'typeorm';
 
 import { DatabaseEventAction } from 'src/engine/api/graphql/graphql-query-runner/enums/database-event-action';
 import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';

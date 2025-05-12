@@ -59,4 +59,5 @@ export const mockedClientConfig: ClientConfig = {
   isGoogleCalendarEnabled: true,
   isAttachmentPreviewEnabled: true,
   isConfigVariablesInDbEnabled: false,
+  isIMAPMessagingEnabled: false,
 };

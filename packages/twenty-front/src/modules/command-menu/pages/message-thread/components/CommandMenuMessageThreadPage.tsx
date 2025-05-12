@@ -12,8 +12,8 @@ import { useIsMobile } from '@/ui/utilities/responsive/hooks/useIsMobile';
 import { useSetRecoilComponentStateV2 } from '@/ui/utilities/state/component-state/hooks/useSetRecoilComponentStateV2';
 import { assertUnreachable } from '@/workflow/utils/assertUnreachable';
 import { ConnectedAccountProvider } from 'twenty-shared/types';
-import { Button } from 'twenty-ui/input';
 import { IconArrowBackUp } from 'twenty-ui/display';
+import { Button } from 'twenty-ui/input';
 
 const StyledWrapper = styled.div`
   display: flex;
@@ -107,6 +107,9 @@ export const CommandMenuMessageThreadPage = () => {
       case ConnectedAccountProvider.GOOGLE:
         url = `https://mail.google.com/mail/?authuser=${connectedAccountHandle}#all/${messageThreadExternalId}`;
         window.open(url, '_blank');
+        break;
+      case ConnectedAccountProvider.IMAP:
+        // TODO: Handle this
         break;
       case null:
         throw new Error('Account provider not provided');

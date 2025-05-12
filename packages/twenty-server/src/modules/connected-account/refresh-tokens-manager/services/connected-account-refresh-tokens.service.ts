@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-import { assertUnreachable } from 'twenty-shared/utils';
 import { ConnectedAccountProvider } from 'twenty-shared/types';
+import { assertUnreachable } from 'twenty-shared/utils';
 
 import { TwentyORMManager } from 'src/engine/twenty-orm/twenty-orm.manager';
 import {
@@ -81,6 +81,12 @@ export class ConnectedAccountRefreshTokensService {
           return this.microsoftAPIRefreshAccessTokenService.refreshTokens(
             refreshToken,
           );
+        case ConnectedAccountProvider.IMAP:
+          // TODO: Handle this
+          return {
+            accessToken: refreshToken,
+            refreshToken: refreshToken,
+          };
         default:
           return assertUnreachable(
             connectedAccount.provider,

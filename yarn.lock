@@ -22199,6 +22199,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/imapflow@npm:^1.0.21":
+  version: 1.0.21
+  resolution: "@types/imapflow@npm:1.0.21"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/82b4d370ab9649b358246a85c2fac2daba19202c39defc05e580a5a96f9d4192c5302c438f147ad6ee0b7183e3460adeebfd713bbd6e1aa8e9a29bc675ccf449
+  languageName: node
+  linkType: hard
+
 "@types/is-hotkey@npm:^0.1.1":
   version: 0.1.10
   resolution: "@types/is-hotkey@npm:0.1.10"
@@ -26087,6 +26096,13 @@ __metadata:
   bin:
     atob: bin/atob.js
   checksum: 10c0/ada635b519dc0c576bb0b3ca63a73b50eefacf390abb3f062558342a8d68f2db91d0c8db54ce81b0d89de3b0f000de71f3ae7d761fd7d8cc624278fe443d6c7e
+  languageName: node
+  linkType: hard
+
+"atomic-sleep@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "atomic-sleep@npm:1.0.0"
+  checksum: 10c0/e329a6665512736a9bbb073e1761b4ec102f7926cce35037753146a9db9c8104f5044c1662e4a863576ce544fb8be27cd2be6bc8c1a40147d03f31eb1cfb6e8a
   languageName: node
   linkType: hard
 
@@ -32240,6 +32256,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"encoding-japanese@npm:2.2.0":
+  version: 2.2.0
+  resolution: "encoding-japanese@npm:2.2.0"
+  checksum: 10c0/9d1f10dde16f59da8a8a1a04499dffa3e9926b0dbd7dfab8054570527b7e6de30c47e828851f42d2727af31586ec8049a84eeae593ad8b22eea10921fd269798
+  languageName: node
+  linkType: hard
+
 "encoding@npm:^0.1.12, encoding@npm:^0.1.13":
   version: 0.1.13
   resolution: "encoding@npm:0.1.13"
@@ -34368,6 +34391,13 @@ __metadata:
   dependencies:
     fast-decode-uri-component: "npm:^1.0.1"
   checksum: 10c0/e8223273a9b199722f760f5a047a77ad049a14bd444b821502cb8218f5925e3a5fffb56b64389bca73ab2ac6f1aa7aebbe4e203e5f6e53ff5978de97c0fde4e3
+  languageName: node
+  linkType: hard
+
+"fast-redact@npm:^3.1.1":
+  version: 3.5.0
+  resolution: "fast-redact@npm:3.5.0"
+  checksum: 10c0/7e2ce4aad6e7535e0775bf12bd3e4f2e53d8051d8b630e0fa9e67f68cb0b0e6070d2f7a94b1d0522ef07e32f7c7cda5755e2b677a6538f1e9070ca053c42343a
   languageName: node
   linkType: hard
 
@@ -37808,6 +37838,23 @@ __metadata:
   version: 5.3.1
   resolution: "ignore@npm:5.3.1"
   checksum: 10c0/703f7f45ffb2a27fb2c5a8db0c32e7dee66b33a225d28e8db4e1be6474795f606686a6e3bcc50e1aa12f2042db4c9d4a7d60af3250511de74620fbed052ea4cd
+  languageName: node
+  linkType: hard
+
+"imapflow@npm:^1.0.186":
+  version: 1.0.186
+  resolution: "imapflow@npm:1.0.186"
+  dependencies:
+    encoding-japanese: "npm:2.2.0"
+    iconv-lite: "npm:0.6.3"
+    libbase64: "npm:1.3.0"
+    libmime: "npm:5.3.6"
+    libqp: "npm:2.1.1"
+    mailsplit: "npm:5.4.3"
+    nodemailer: "npm:6.10.0"
+    pino: "npm:9.6.0"
+    socks: "npm:2.8.4"
+  checksum: 10c0/2abfdeeaaa2c3811d4ca47e59dd8bdd8ab595908126eae259898e9fd77b9aeffafc16a1cbdd609e71be66bdbbd86045b7b26e9adf49005da3aeefdc3fdeeba48
   languageName: node
   linkType: hard
 
@@ -41394,10 +41441,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"libbase64@npm:1.3.0":
+  version: 1.3.0
+  resolution: "libbase64@npm:1.3.0"
+  checksum: 10c0/4ece76ce09fa389d0c578c83a121c16452916521b177f50c3e8637dd9919170c96c12e1c7de63b1c88da8e5aa7e7ab574c26d18f1f64666f46b358b4b5873c8b
+  languageName: node
+  linkType: hard
+
+"libmime@npm:5.3.6":
+  version: 5.3.6
+  resolution: "libmime@npm:5.3.6"
+  dependencies:
+    encoding-japanese: "npm:2.2.0"
+    iconv-lite: "npm:0.6.3"
+    libbase64: "npm:1.3.0"
+    libqp: "npm:2.1.1"
+  checksum: 10c0/54afa19f3500fe14b7562fd055518f1d82bf0f1076690a9b097d1a126322de7425d6d29aa9db9b51bc41b2ed16eacff65d7f30cd3622f7010f60993dfc79041e
+  languageName: node
+  linkType: hard
+
 "libphonenumber-js@npm:^1.10.14, libphonenumber-js@npm:^1.10.26, libphonenumber-js@npm:^1.11.5":
   version: 1.11.5
   resolution: "libphonenumber-js@npm:1.11.5"
   checksum: 10c0/c57b4d75d56fc32e611ea2dfdb196f18413caa1d72923250631ed0db915edb958b50f2ecee062241dbce98d9ed7afb6fe744776b6b325746cff0ab44ed69e756
+  languageName: node
+  linkType: hard
+
+"libqp@npm:2.1.1":
+  version: 2.1.1
+  resolution: "libqp@npm:2.1.1"
+  checksum: 10c0/6e78f0676cd2424b3ddbf3273ab8539871299310dba433b7e2ec10a41830acecb4d074ea8b78b706dea349996f011ce519d92f81ede712c4824a2dd402aa376c
   languageName: node
   linkType: hard
 
@@ -42184,6 +42257,17 @@ __metadata:
   dependencies:
     "@jridgewell/sourcemap-codec": "npm:^1.5.0"
   checksum: 10c0/16826e415d04b88378f200fe022b53e638e3838b9e496edda6c0e086d7753a44a6ed187adc72d19f3623810589bf139af1a315541cd6a26ae0771a0193eaf7b8
+  languageName: node
+  linkType: hard
+
+"mailsplit@npm:5.4.3":
+  version: 5.4.3
+  resolution: "mailsplit@npm:5.4.3"
+  dependencies:
+    libbase64: "npm:1.3.0"
+    libmime: "npm:5.3.6"
+    libqp: "npm:2.1.1"
+  checksum: 10c0/8b95df9f7fa6d810936f8f90163b215eb829a8a3073b9badd134f21cd73365b60c3fe9fda806ec73fd05dd580af3630922a17e2d9b029124f13df6f2a6511e01
   languageName: node
   linkType: hard
 
@@ -45684,6 +45768,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nodemailer@npm:6.10.0":
+  version: 6.10.0
+  resolution: "nodemailer@npm:6.10.0"
+  checksum: 10c0/39fd35d65b021b94c968eeac82a66dd843021b6ba53c659d01b1dd4cda73b6a2f96e20facfe500efa4b8d3f1cb23df10245c6c86b2bde5f806691ed17ce87826
+  languageName: node
+  linkType: hard
+
 "nodemailer@npm:^6.9.8":
   version: 6.9.14
   resolution: "nodemailer@npm:6.9.14"
@@ -46381,6 +46472,13 @@ __metadata:
   version: 5.0.3
   resolution: "oidc-token-hash@npm:5.0.3"
   checksum: 10c0/d0dc0551406f09577874155cc83cf69c39e4b826293d50bb6c37936698aeca17d4bcee356ab910c859e53e83f2728a2acbd041020165191353b29de51fbca615
+  languageName: node
+  linkType: hard
+
+"on-exit-leak-free@npm:^2.1.0":
+  version: 2.1.2
+  resolution: "on-exit-leak-free@npm:2.1.2"
+  checksum: 10c0/faea2e1c9d696ecee919026c32be8d6a633a7ac1240b3b87e944a380e8a11dc9c95c4a1f8fb0568de7ab8db3823e790f12bda45296b1d111e341aad3922a0570
   languageName: node
   linkType: hard
 
@@ -47752,6 +47850,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pino-abstract-transport@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "pino-abstract-transport@npm:2.0.0"
+  dependencies:
+    split2: "npm:^4.0.0"
+  checksum: 10c0/02c05b8f2ffce0d7c774c8e588f61e8b77de8ccb5f8125afd4a7325c9ea0e6af7fb78168999657712ae843e4462bb70ac550dfd6284f930ee57f17f486f25a9f
+  languageName: node
+  linkType: hard
+
+"pino-std-serializers@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "pino-std-serializers@npm:7.0.0"
+  checksum: 10c0/73e694d542e8de94445a03a98396cf383306de41fd75ecc07085d57ed7a57896198508a0dec6eefad8d701044af21eb27253ccc352586a03cf0d4a0bd25b4133
+  languageName: node
+  linkType: hard
+
+"pino@npm:9.6.0":
+  version: 9.6.0
+  resolution: "pino@npm:9.6.0"
+  dependencies:
+    atomic-sleep: "npm:^1.0.0"
+    fast-redact: "npm:^3.1.1"
+    on-exit-leak-free: "npm:^2.1.0"
+    pino-abstract-transport: "npm:^2.0.0"
+    pino-std-serializers: "npm:^7.0.0"
+    process-warning: "npm:^4.0.0"
+    quick-format-unescaped: "npm:^4.0.3"
+    real-require: "npm:^0.2.0"
+    safe-stable-stringify: "npm:^2.3.1"
+    sonic-boom: "npm:^4.0.1"
+    thread-stream: "npm:^3.0.0"
+  bin:
+    pino: bin.js
+  checksum: 10c0/bcd1e9d9b301bea13b95689ca9ad7105ae9451928fb6c0b67b3e58c5fe37cea1d40665f3d6641e3da00be0bbc17b89031e67abbc8ea6aac6164f399309fd78e7
+  languageName: node
+  linkType: hard
+
 "pinpoint@npm:^1.1.0":
   version: 1.1.0
   resolution: "pinpoint@npm:1.1.0"
@@ -48439,6 +48574,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"process-warning@npm:^4.0.0":
+  version: 4.0.1
+  resolution: "process-warning@npm:4.0.1"
+  checksum: 10c0/577a268b9fd5c3d9f6dbb4348220099391d830905642845d591e7ee8b1e45043d98b7b9826a3c1379bdd1686cdfe0f6cf349cb812affc5853b662e6a9896579e
+  languageName: node
+  linkType: hard
+
 "process@npm:^0.11.10, process@npm:~0.11.0":
   version: 0.11.10
   resolution: "process@npm:0.11.10"
@@ -49111,6 +49253,13 @@ __metadata:
   dependencies:
     inherits: "npm:~2.0.3"
   checksum: 10c0/cf987476cc72e7d3aaabe23ccefaab1cd757a2b5e0c8d80b67c9575a6b5e1198807ffd4f0948a3f118b149d1111d810ee773473530b77a5c606673cac2c9c996
+  languageName: node
+  linkType: hard
+
+"quick-format-unescaped@npm:^4.0.3":
+  version: 4.0.4
+  resolution: "quick-format-unescaped@npm:4.0.4"
+  checksum: 10c0/fe5acc6f775b172ca5b4373df26f7e4fd347975578199e7d74b2ae4077f0af05baa27d231de1e80e8f72d88275ccc6028568a7a8c9ee5e7368ace0e18eff93a4
   languageName: node
   linkType: hard
 
@@ -50134,6 +50283,13 @@ __metadata:
   version: 1.4.10
   resolution: "readline-sync@npm:1.4.10"
   checksum: 10c0/0a4d0fe4ad501f8f005a3c9cbf3cc0ae6ca2ced93e9a1c7c46f226bdfcb6ef5d3f437ae7e9d2e1098ee13524a3739c830e4c8dbc7f543a693eecd293e41093a3
+  languageName: node
+  linkType: hard
+
+"real-require@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "real-require@npm:0.2.0"
+  checksum: 10c0/23eea5623642f0477412ef8b91acd3969015a1501ed34992ada0e3af521d3c865bb2fe4cdbfec5fe4b505f6d1ef6a03e5c3652520837a8c3b53decff7e74b6a0
   languageName: node
   linkType: hard
 
@@ -51617,6 +51773,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"safe-stable-stringify@npm:^2.3.1":
+  version: 2.5.0
+  resolution: "safe-stable-stringify@npm:2.5.0"
+  checksum: 10c0/baea14971858cadd65df23894a40588ed791769db21bafb7fd7608397dbdce9c5aac60748abae9995e0fc37e15f2061980501e012cd48859740796bea2987f49
+  languageName: node
+  linkType: hard
+
 "safer-buffer@npm:>= 2.1.2 < 3, safer-buffer@npm:>= 2.1.2 < 3.0.0, safer-buffer@npm:^2.0.2, safer-buffer@npm:^2.1.0, safer-buffer@npm:~2.1.0":
   version: 2.1.2
   resolution: "safer-buffer@npm:2.1.2"
@@ -52493,6 +52656,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"socks@npm:2.8.4":
+  version: 2.8.4
+  resolution: "socks@npm:2.8.4"
+  dependencies:
+    ip-address: "npm:^9.0.5"
+    smart-buffer: "npm:^4.2.0"
+  checksum: 10c0/00c3271e233ccf1fb83a3dd2060b94cc37817e0f797a93c560b9a7a86c4a0ec2961fb31263bdd24a3c28945e24868b5f063cd98744171d9e942c513454b50ae5
+  languageName: node
+  linkType: hard
+
 "socks@npm:^2.6.2, socks@npm:^2.8.3":
   version: 2.8.3
   resolution: "socks@npm:2.8.3"
@@ -52500,6 +52673,15 @@ __metadata:
     ip-address: "npm:^9.0.5"
     smart-buffer: "npm:^4.2.0"
   checksum: 10c0/d54a52bf9325165770b674a67241143a3d8b4e4c8884560c4e0e078aace2a728dffc7f70150660f51b85797c4e1a3b82f9b7aa25e0a0ceae1a243365da5c51a7
+  languageName: node
+  linkType: hard
+
+"sonic-boom@npm:^4.0.1":
+  version: 4.2.0
+  resolution: "sonic-boom@npm:4.2.0"
+  dependencies:
+    atomic-sleep: "npm:^1.0.0"
+  checksum: 10c0/ae897e6c2cd6d3cb7cdcf608bc182393b19c61c9413a85ce33ffd25891485589f39bece0db1de24381d0a38fc03d08c9862ded0c60f184f1b852f51f97af9684
   languageName: node
   linkType: hard
 
@@ -52744,7 +52926,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"split2@npm:^4.1.0":
+"split2@npm:^4.0.0, split2@npm:^4.1.0":
   version: 4.2.0
   resolution: "split2@npm:4.2.0"
   checksum: 10c0/b292beb8ce9215f8c642bb68be6249c5a4c7f332fc8ecadae7be5cbdf1ea95addc95f0459ef2e7ad9d45fd1064698a097e4eb211c83e772b49bc0ee423e91534
@@ -54126,6 +54308,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"thread-stream@npm:^3.0.0":
+  version: 3.1.0
+  resolution: "thread-stream@npm:3.1.0"
+  dependencies:
+    real-require: "npm:^0.2.0"
+  checksum: 10c0/c36118379940b77a6ef3e6f4d5dd31e97b8210c3f7b9a54eb8fe6358ab173f6d0acfaf69b9c3db024b948c0c5fd2a7df93e2e49151af02076b35ada3205ec9a6
+  languageName: node
+  linkType: hard
+
 "throttle-debounce@npm:^3.0.1":
   version: 3.0.1
   resolution: "throttle-debounce@npm:3.0.1"
@@ -55364,6 +55555,7 @@ __metadata:
     "@types/file-saver": "npm:^2.0.7"
     "@types/graphql-fields": "npm:^1.3.6"
     "@types/graphql-upload": "npm:^8.0.12"
+    "@types/imapflow": "npm:^1.0.21"
     "@types/js-cookie": "npm:^3.0.3"
     "@types/js-levenshtein": "npm:^1.1.3"
     "@types/lodash.camelcase": "npm:^4.3.7"
@@ -55477,6 +55669,7 @@ __metadata:
     hex-rgb: "npm:^5.0.0"
     http-server: "npm:^14.1.1"
     iframe-resizer-react: "npm:^1.1.0"
+    imapflow: "npm:^1.0.186"
     immer: "npm:^10.0.2"
     jest: "npm:29.7.0"
     jest-environment-jsdom: "npm:29.7.0"

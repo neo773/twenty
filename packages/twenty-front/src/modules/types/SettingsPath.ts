@@ -5,6 +5,7 @@ export enum SettingsPath {
   NewAccount = 'accounts/new',
   AccountsCalendars = 'accounts/calendars',
   AccountsEmails = 'accounts/emails',
+  NewImapConnection = 'accounts/new-imap-connection',
   Billing = 'billing',
   Objects = 'objects',
   ObjectOverview = 'objects/overview',
