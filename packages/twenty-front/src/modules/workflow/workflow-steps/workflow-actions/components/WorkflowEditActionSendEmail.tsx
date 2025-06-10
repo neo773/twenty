@@ -88,8 +88,7 @@ export const WorkflowEditActionSendEmail = ({
         case ConnectedAccountProvider.MICROSOFT:
           return scopes.some((scope) => scope === MICROSOFT_SEND_SCOPE);
         case ConnectedAccountProvider.IMAP:
-          // TODO: Handle this
-          return true;
+          return false;
         default:
           assertUnreachable(
             connectedAccount.provider,

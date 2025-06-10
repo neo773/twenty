@@ -14,6 +14,7 @@ import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
 import { PermissionsGraphqlApiExceptionFilter } from 'src/engine/metadata-modules/permissions/utils/permissions-graphql-api-exception.filter';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
 import { GraphqlValidationExceptionFilter } from 'src/filters/graphql-validation-exception.filter';
+import { IMAPAPIsService } from 'src/modules/connected-account/services/imap-apis.service';
 import { ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 
 @Resolver()
@@ -25,6 +26,7 @@ export class ImapConnectionResolver {
   constructor(
     private readonly imapConnectionService: ImapConnectionService,
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
+    private readonly imapApisService: IMAPAPIsService,
   ) {}
 
   @Mutation(() => Boolean)
@@ -73,14 +75,14 @@ export class ImapConnectionResolver {
       imapPassword,
     });
 
-    const connectedAccountRepository =
-      await this.twentyORMGlobalManager.getRepositoryForWorkspace<ConnectedAccountWorkspaceEntity>(
-        workspace.id,
-        'connectedAccount',
-      );
-
     if (id) {
       // Update existing connected account
+      const connectedAccountRepository =
+        await this.twentyORMGlobalManager.getRepositoryForWorkspace<ConnectedAccountWorkspaceEntity>(
+          workspace.id,
+          'connectedAccount',
+        );
+
       await connectedAccountRepository.update(
         { id },
         {
@@ -91,13 +93,16 @@ export class ImapConnectionResolver {
         },
       );
     } else {
-      // Create a new connected account
-      await connectedAccountRepository.save({
-        accountOwnerId,
+      // Use the IMAP APIs service to properly create both connected account and message channel
+      await this.imapApisService.setupIMAPAccount({
         handle,
-        provider: ConnectedAccountProvider.IMAP,
-        connectionType: 'IMAP',
-        customConnectionParams: validatedParams,
+        workspaceMemberId: accountOwnerId,
+        workspaceId: workspace.id,
+        imapServer: validatedParams.imapServer as string,
+        imapPort: validatedParams.imapPort as number,
+        imapEncryption: validatedParams.imapEncryption as string,
+        imapPassword: validatedParams.imapPassword as string,
+        messageVisibility: undefined, // Will use default SHARE_EVERYTHING
       });
     }
 

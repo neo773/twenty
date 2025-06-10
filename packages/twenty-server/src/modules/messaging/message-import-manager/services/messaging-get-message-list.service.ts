@@ -97,7 +97,7 @@ export class MessagingGetMessageListService {
       }
       default:
         throw new MessageImportException(
-          `Provider ${messageChannel.connectedAccount.provider} is not supported`,
+          `Provider ${messageChannel.connectedAccount.provider} is not supported xxx`,
           MessageImportExceptionCode.PROVIDER_NOT_SUPPORTED,
         );
     }

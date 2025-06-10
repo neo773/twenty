@@ -34,7 +34,7 @@ export class IMAPAPIsService {
     private readonly messageQueueService: MessageQueueService,
     private readonly twentryConfigService: TwentyConfigService,
     private readonly workspaceEventEmitter: WorkspaceEventEmitter,
-    @InjectRepository(ObjectMetadataEntity, 'metadata')
+    @InjectRepository(ObjectMetadataEntity, 'core')
     private readonly objectMetadataRepository: Repository<ObjectMetadataEntity>,
   ) {}
 

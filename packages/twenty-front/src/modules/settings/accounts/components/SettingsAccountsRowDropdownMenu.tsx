@@ -79,6 +79,7 @@ export const SettingsAccountsRowDropdownMenu = ({
                   LeftIcon={IconRefresh}
                   text={t`Reconnect`}
                   onClick={() => {
+                    // TODO: Handle IMAP provider
                     triggerApisOAuth(account.provider);
                     closeDropdown();
                   }}
