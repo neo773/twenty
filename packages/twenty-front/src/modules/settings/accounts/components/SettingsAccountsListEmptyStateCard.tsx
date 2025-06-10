@@ -6,12 +6,12 @@ import { useTriggerApisOAuth } from '@/settings/accounts/hooks/useTriggerApiOAut
 import { SettingsPath } from '@/types/SettingsPath';
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
-import { Link } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { ConnectedAccountProvider } from 'twenty-shared/types';
 import { IconGoogle, IconMail, IconMicrosoft } from 'twenty-ui/display';
 import { Button } from 'twenty-ui/input';
 import { Card, CardContent, CardHeader } from 'twenty-ui/layout';
+import { useNavigateSettings } from '~/hooks/useNavigateSettings';
 
 const StyledHeader = styled(CardHeader)`
   align-items: center;
@@ -49,20 +49,20 @@ export const SettingsAccountsListEmptyStateCard = ({
     isMicrosoftCalendarEnabledState,
   );
 
+  const navigate = useNavigateSettings();
+
   return (
     <Card>
       <StyledHeader>{label || t`No connected account`}</StyledHeader>
       <StyledBody>
-        <Link
-          to={SettingsPath.NewImapConnection}
-          style={{ textDecoration: 'none' }}
-        >
-          <Button
-            Icon={IconMail}
-            title={t`Connect with IMAP`}
-            variant="secondary"
-          />
-        </Link>
+        <Button
+          Icon={IconMail}
+          title={t`Connect with IMAP`}
+          variant="secondary"
+          // Apparantly <Link> Is broken so we resort to onClick
+          // eslint-disable-next-line @nx/workspace-no-navigate-prefer-link
+          onClick={() => navigate(SettingsPath.NewImapConnection)}
+        />
 
         {(isGoogleMessagingEnabled || isGoogleCalendarEnabled) && (
           <Button
