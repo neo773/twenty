@@ -31,7 +31,7 @@ export class ImapConnectionResolver {
   @UseGuards(WorkspaceAuthGuard)
   async validateImapConnection(
     @Args('input') input: ValidateImapConnectionInput,
-    @AuthWorkspace() workspace: Workspace,
+    @AuthWorkspace() _workspace: Workspace,
   ): Promise<boolean> {
     // Only validate if the provider is IMAP
     if (input.provider !== ConnectedAccountProvider.IMAP) {

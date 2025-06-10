@@ -1,12 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-
-import { EntityManager, Repository } from 'typeorm';
+import { ConnectedAccountProvider } from 'twenty-shared/types';
+import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
 
 import { DatabaseEventAction } from 'src/engine/api/graphql/graphql-query-runner/enums/database-event-action';
-
 import { InjectMessageQueue } from 'src/engine/core-modules/message-queue/decorators/message-queue.decorator';
 import { MessageQueue } from 'src/engine/core-modules/message-queue/message-queue.constants';
 import { MessageQueueService } from 'src/engine/core-modules/message-queue/services/message-queue.service';
@@ -26,7 +25,6 @@ import {
   MessagingMessageListFetchJob,
   MessagingMessageListFetchJobData,
 } from 'src/modules/messaging/message-import-manager/jobs/messaging-message-list-fetch.job';
-import { ConnectedAccountProvider } from 'twenty-shared/types';
 
 @Injectable()
 export class IMAPAPIsService {
@@ -85,7 +83,7 @@ export class IMAPAPIsService {
         workspaceId,
       });
 
-    await workspaceDataSource.transaction(async (manager: EntityManager) => {
+    await workspaceDataSource.transaction(async () => {
       if (!existingAccountId) {
         // Create a new connected account
         const newConnectedAccount = await connectedAccountRepository.save(
