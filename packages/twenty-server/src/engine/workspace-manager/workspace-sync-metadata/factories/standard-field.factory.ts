@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 
 import { FieldMetadataType } from 'twenty-shared/types';
 
-import { RelationType } from 'src/engine/metadata-modules/field-metadata/interfaces/relation-type.interface';
 import { WorkspaceDynamicRelationMetadataArgs } from 'src/engine/twenty-orm/interfaces/workspace-dynamic-relation-metadata-args.interface';
 import { WorkspaceEntityMetadataArgs } from 'src/engine/twenty-orm/interfaces/workspace-entity-metadata-args.interface';
 import { WorkspaceFieldMetadataArgs } from 'src/engine/twenty-orm/interfaces/workspace-field-metadata-args.interface';
@@ -13,11 +12,8 @@ import {
 } from 'src/engine/workspace-manager/workspace-sync-metadata/interfaces/partial-field-metadata.interface';
 import { WorkspaceSyncContext } from 'src/engine/workspace-manager/workspace-sync-metadata/interfaces/workspace-sync-context.interface';
 
-import { FeatureFlagKey } from 'src/engine/core-modules/feature-flag/enums/feature-flag-key.enum';
 import { BaseWorkspaceEntity } from 'src/engine/twenty-orm/base.workspace-entity';
 import { metadataArgsStorage } from 'src/engine/twenty-orm/storage/metadata-args.storage';
-import { getJoinColumn } from 'src/engine/twenty-orm/utils/get-join-column.util';
-import { createDeterministicUuid } from 'src/engine/workspace-manager/workspace-sync-metadata/utils/create-deterministic-uuid.util';
 import { isGatedAndNotEnabled } from 'src/engine/workspace-manager/workspace-sync-metadata/utils/is-gate-and-not-enabled.util';
 
 @Injectable()
@@ -169,21 +165,7 @@ export class StandardFieldFactory {
     workspaceRelationMetadataArgs: WorkspaceRelationMetadataArgs,
     context: WorkspaceSyncContext,
   ): PartialFieldMetadata[] {
-    const isNewRelationEnabled =
-      context.featureFlags[FeatureFlagKey.IsNewRelationEnabled];
-
     const fieldMetadataCollection: PartialFieldMetadata[] = [];
-    const foreignKeyStandardId = createDeterministicUuid(
-      workspaceRelationMetadataArgs.standardId,
-    );
-    const joinColumnMetadataArgsCollection =
-      metadataArgsStorage.filterJoinColumns(
-        workspaceRelationMetadataArgs.target,
-      );
-    const joinColumn = getJoinColumn(
-      joinColumnMetadataArgsCollection,
-      workspaceRelationMetadataArgs,
-    );
 
     if (
       isGatedAndNotEnabled(
@@ -192,28 +174,6 @@ export class StandardFieldFactory {
       )
     ) {
       return [];
-    }
-
-    // We don't want to create the join column field metadata for new relation
-    if (!isNewRelationEnabled && joinColumn) {
-      fieldMetadataCollection.push({
-        type: FieldMetadataType.UUID,
-        standardId: foreignKeyStandardId,
-        name: joinColumn,
-        label: `${workspaceRelationMetadataArgs.label} id (foreign key)`,
-        description: `${workspaceRelationMetadataArgs.description} id foreign key`,
-        icon: workspaceRelationMetadataArgs.icon,
-        defaultValue: null,
-        options: undefined,
-        settings: undefined,
-        workspaceId: context.workspaceId,
-        isCustom: false,
-        isSystem: true,
-        isNullable: workspaceRelationMetadataArgs.isNullable,
-        isUnique:
-          workspaceRelationMetadataArgs.type === RelationType.ONE_TO_ONE,
-        isActive: workspaceRelationMetadataArgs.isActive ?? true,
-      });
     }
 
     fieldMetadataCollection.push({
@@ -229,7 +189,7 @@ export class StandardFieldFactory {
         workspaceEntityMetadataArgs?.isSystem ||
         workspaceRelationMetadataArgs.isSystem,
       isNullable: true,
-      isUnique: workspaceRelationMetadataArgs.type === RelationType.ONE_TO_ONE,
+      isUnique: false,
       isActive: workspaceRelationMetadataArgs.isActive ?? true,
     });
 

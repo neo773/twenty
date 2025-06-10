@@ -5,7 +5,6 @@ import { DataSource, QueryFailedError } from 'typeorm';
 
 import { WorkspaceSyncContext } from 'src/engine/workspace-manager/workspace-sync-metadata/interfaces/workspace-sync-context.interface';
 
-import { FeatureFlagKey } from 'src/engine/core-modules/feature-flag/enums/feature-flag-key.enum';
 import { FeatureFlagService } from 'src/engine/core-modules/feature-flag/services/feature-flag.service';
 import { WorkspaceMetadataVersionService } from 'src/engine/metadata-modules/workspace-metadata-version/services/workspace-metadata-version.service';
 import {
@@ -18,7 +17,6 @@ import { WorkspaceSyncFieldMetadataService } from 'src/engine/workspace-manager/
 import { WorkspaceSyncIndexMetadataService } from 'src/engine/workspace-manager/workspace-sync-metadata/services/workspace-sync-index-metadata.service';
 import { WorkspaceSyncObjectMetadataIdentifiersService } from 'src/engine/workspace-manager/workspace-sync-metadata/services/workspace-sync-object-metadata-identifiers.service';
 import { WorkspaceSyncObjectMetadataService } from 'src/engine/workspace-manager/workspace-sync-metadata/services/workspace-sync-object-metadata.service';
-import { WorkspaceSyncRelationMetadataService } from 'src/engine/workspace-manager/workspace-sync-metadata/services/workspace-sync-relation-metadata.service';
 import { WorkspaceSyncStorage } from 'src/engine/workspace-manager/workspace-sync-metadata/storage/workspace-sync.storage';
 
 interface SynchronizeOptions {
@@ -30,11 +28,10 @@ export class WorkspaceSyncMetadataService {
   private readonly logger = new Logger(WorkspaceSyncMetadataService.name);
 
   constructor(
-    @InjectDataSource('metadata')
-    private readonly metadataDataSource: DataSource,
+    @InjectDataSource('core')
+    private readonly coreDataSource: DataSource,
     private readonly workspaceMigrationRunnerService: WorkspaceMigrationRunnerService,
     private readonly workspaceSyncObjectMetadataService: WorkspaceSyncObjectMetadataService,
-    private readonly workspaceSyncRelationMetadataService: WorkspaceSyncRelationMetadataService,
     private readonly workspaceSyncFieldMetadataService: WorkspaceSyncFieldMetadataService,
     private readonly workspaceSyncFieldMetadataRelationService: WorkspaceSyncFieldMetadataRelationService,
     private readonly workspaceSyncIndexMetadataService: WorkspaceSyncIndexMetadataService,
@@ -60,7 +57,7 @@ export class WorkspaceSyncMetadataService {
   }> {
     let workspaceMigrations: WorkspaceMigrationEntity[] = [];
     const storage = new WorkspaceSyncStorage();
-    const queryRunner = this.metadataDataSource.createQueryRunner();
+    const queryRunner = this.coreDataSource.createQueryRunner();
 
     this.logger.log('Syncing standard objects and fields metadata');
 
@@ -70,12 +67,6 @@ export class WorkspaceSyncMetadataService {
     const manager = queryRunner.manager;
 
     try {
-      const isNewRelationEnabled =
-        await this.featureFlagService.isFeatureEnabled(
-          FeatureFlagKey.IsNewRelationEnabled,
-          context.workspaceId,
-        );
-
       const workspaceMigrationRepository = manager.getRepository(
         WorkspaceMigrationEntity,
       );
@@ -127,21 +118,12 @@ export class WorkspaceSyncMetadataService {
 
       let workspaceRelationMigrations: Partial<WorkspaceMigrationEntity>[] = [];
 
-      if (isNewRelationEnabled) {
-        workspaceRelationMigrations =
-          await this.workspaceSyncFieldMetadataRelationService.synchronize(
-            context,
-            manager,
-            storage,
-          );
-      } else {
-        workspaceRelationMigrations =
-          await this.workspaceSyncRelationMetadataService.synchronize(
-            context,
-            manager,
-            storage,
-          );
-      }
+      workspaceRelationMigrations =
+        await this.workspaceSyncFieldMetadataRelationService.synchronize(
+          context,
+          manager,
+          storage,
+        );
 
       const workspaceRelationMigrationsEnd = performance.now();
 
@@ -149,24 +131,20 @@ export class WorkspaceSyncMetadataService {
         `Workspace relation migrations took ${workspaceRelationMigrationsEnd - workspaceRelationMigrationsStart}ms`,
       );
 
-      let workspaceIndexMigrations: Partial<WorkspaceMigrationEntity>[] = [];
-
       // 4 - Sync standard indexes on standard objects
-      if (!isNewRelationEnabled) {
-        const workspaceIndexMigrationsStart = performance.now();
+      const workspaceIndexMigrationsStart = performance.now();
 
-        workspaceIndexMigrations =
-          await this.workspaceSyncIndexMetadataService.synchronize(
-            context,
-            manager,
-            storage,
-          );
-        const workspaceIndexMigrationsEnd = performance.now();
-
-        this.logger.log(
-          `Workspace index migrations took ${workspaceIndexMigrationsEnd - workspaceIndexMigrationsStart}ms`,
+      const workspaceIndexMigrations =
+        await this.workspaceSyncIndexMetadataService.synchronize(
+          context,
+          manager,
+          storage,
         );
-      }
+      const workspaceIndexMigrationsEnd = performance.now();
+
+      this.logger.log(
+        `Workspace index migrations took ${workspaceIndexMigrationsEnd - workspaceIndexMigrationsStart}ms`,
+      );
 
       // 5 - Sync standard object metadata identifiers, does not need to return nor apply migrations
       const workspaceObjectMetadataIdentifiersStart = performance.now();
@@ -230,7 +208,9 @@ export class WorkspaceSyncMetadataService {
     } catch (error) {
       this.logger.error('Sync of standard objects failed with:', error);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (error instanceof QueryFailedError && (error as any).detail) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.logger.error((error as any).detail);
       }
       await queryRunner.rollbackTransaction();
@@ -257,6 +237,7 @@ export class WorkspaceSyncMetadataService {
     objectMigrations: Partial<WorkspaceMigrationEntity>[];
     fieldMigrations: Partial<WorkspaceMigrationEntity>[];
   } {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createMigrationsByTable = new Map<string, any>();
 
     for (const objectMigration of objectMigrations) {

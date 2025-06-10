@@ -16,6 +16,7 @@ import { KeyValuePair } from 'src/engine/core-modules/key-value-pair/key-value-p
 import { OnboardingModule } from 'src/engine/core-modules/onboarding/onboarding.module';
 import { UserWorkspace } from 'src/engine/core-modules/user-workspace/user-workspace.entity';
 import { UserWorkspaceModule } from 'src/engine/core-modules/user-workspace/user-workspace.module';
+import { DeletedWorkspaceMemberTranspiler } from 'src/engine/core-modules/user/services/deleted-workspace-member-transpiler.service';
 import { UserVarsModule } from 'src/engine/core-modules/user/user-vars/user-vars.module';
 import { User } from 'src/engine/core-modules/user/user.entity';
 import { UserResolver } from 'src/engine/core-modules/user/user.resolver';
@@ -39,7 +40,7 @@ import { UserService } from './services/user.service';
       ],
       resolvers: userAutoResolverOpts,
     }),
-    NestjsQueryTypeOrmModule.forFeature([ObjectMetadataEntity], 'metadata'),
+    NestjsQueryTypeOrmModule.forFeature([ObjectMetadataEntity], 'core'),
     DataSourceModule,
     FileUploadModule,
     WorkspaceModule,
@@ -53,7 +54,12 @@ import { UserService } from './services/user.service';
     PermissionsModule,
     UserWorkspaceModule,
   ],
-  exports: [UserService],
-  providers: [UserService, UserResolver, TypeORMService],
+  exports: [UserService, DeletedWorkspaceMemberTranspiler],
+  providers: [
+    UserService,
+    UserResolver,
+    TypeORMService,
+    DeletedWorkspaceMemberTranspiler,
+  ],
 })
 export class UserModule {}

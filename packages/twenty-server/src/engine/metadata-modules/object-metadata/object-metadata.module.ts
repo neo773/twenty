@@ -10,7 +10,6 @@ import { NestjsQueryTypeOrmModule } from '@ptc-org/nestjs-query-typeorm';
 
 import { TypeORMModule } from 'src/database/typeorm/typeorm.module';
 import { FeatureFlag } from 'src/engine/core-modules/feature-flag/feature-flag.entity';
-import { FeatureFlagModule } from 'src/engine/core-modules/feature-flag/feature-flag.module';
 import { SettingsPermissionsGuard } from 'src/engine/guards/settings-permissions.guard';
 import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
 import { DataSourceModule } from 'src/engine/metadata-modules/data-source/data-source.module';
@@ -22,16 +21,15 @@ import { ObjectMetadataResolver } from 'src/engine/metadata-modules/object-metad
 import { ObjectMetadataFieldRelationService } from 'src/engine/metadata-modules/object-metadata/services/object-metadata-field-relation.service';
 import { ObjectMetadataMigrationService } from 'src/engine/metadata-modules/object-metadata/services/object-metadata-migration.service';
 import { ObjectMetadataRelatedRecordsService } from 'src/engine/metadata-modules/object-metadata/services/object-metadata-related-records.service';
-import { ObjectMetadataRelationService } from 'src/engine/metadata-modules/object-metadata/services/object-metadata-relation.service';
 import { SettingPermissionType } from 'src/engine/metadata-modules/permissions/constants/setting-permission-type.constants';
 import { PermissionsModule } from 'src/engine/metadata-modules/permissions/permissions.module';
 import { PermissionsGraphqlApiExceptionFilter } from 'src/engine/metadata-modules/permissions/utils/permissions-graphql-api-exception.filter';
-import { RelationMetadataEntity } from 'src/engine/metadata-modules/relation-metadata/relation-metadata.entity';
 import { RemoteTableRelationsModule } from 'src/engine/metadata-modules/remote-server/remote-table/remote-table-relations/remote-table-relations.module';
 import { SearchVectorModule } from 'src/engine/metadata-modules/search-vector/search-vector.module';
 import { WorkspaceMetadataVersionModule } from 'src/engine/metadata-modules/workspace-metadata-version/workspace-metadata-version.module';
 import { WorkspaceMigrationModule } from 'src/engine/metadata-modules/workspace-migration/workspace-migration.module';
 import { WorkspacePermissionsCacheModule } from 'src/engine/metadata-modules/workspace-permissions-cache/workspace-permissions-cache.module';
+import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/workspace-cache-storage.module';
 import { WorkspaceMigrationRunnerModule } from 'src/engine/workspace-manager/workspace-migration-runner/workspace-migration-runner.module';
 
 import { ObjectMetadataEntity } from './object-metadata.entity';
@@ -47,8 +45,8 @@ import { UpdateObjectPayload } from './dtos/update-object.input';
       imports: [
         TypeORMModule,
         NestjsQueryTypeOrmModule.forFeature(
-          [ObjectMetadataEntity, FieldMetadataEntity, RelationMetadataEntity],
-          'metadata',
+          [ObjectMetadataEntity, FieldMetadataEntity],
+          'core',
         ),
         TypeOrmModule.forFeature([FeatureFlag], 'core'),
         DataSourceModule,
@@ -58,14 +56,13 @@ import { UpdateObjectPayload } from './dtos/update-object.input';
         RemoteTableRelationsModule,
         SearchVectorModule,
         IndexMetadataModule,
-        FeatureFlagModule,
         PermissionsModule,
         WorkspacePermissionsCacheModule,
+        WorkspaceCacheStorageModule,
       ],
       services: [
         ObjectMetadataService,
         ObjectMetadataMigrationService,
-        ObjectMetadataRelationService,
         ObjectMetadataFieldRelationService,
         ObjectMetadataRelatedRecordsService,
       ],

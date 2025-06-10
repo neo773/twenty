@@ -2,7 +2,7 @@ import { FieldCurrencyValue } from '@/object-record/record-field/types/FieldMeta
 import { RecordFilter } from '@/object-record/record-filter/types/RecordFilter';
 import { RecordFilterOperand } from '@/object-record/record-filter/types/RecordFilterOperand';
 import { RecordFilterValueDependencies } from '@/object-record/record-filter/types/RecordFilterValueDependencies';
-import { computeRecordGqlOperationFilter } from '@/object-record/record-filter/utils/computeViewRecordGqlOperationFilter';
+import { computeRecordGqlOperationFilter } from '@/object-record/record-filter/utils/computeRecordGqlOperationFilter';
 import { ViewFilterOperand } from '@/views/types/ViewFilterOperand';
 import { FieldMetadataType } from '~/generated/graphql';
 import { getCompaniesMock } from '~/testing/mock-data/companies';
@@ -12,6 +12,10 @@ const companiesMock = getCompaniesMock();
 
 const companyMockObjectMetadataItem = generatedMockObjectMetadataItems.find(
   (item) => item.nameSingular === 'company',
+)!;
+
+const petMockObjectMetadataItem = generatedMockObjectMetadataItems.find(
+  (item) => item.nameSingular === 'pet',
 )!;
 
 const personMockObjectMetadataItem = generatedMockObjectMetadataItems.find(
@@ -682,7 +686,7 @@ describe('should work as expected for the different field types', () => {
                   not: {
                     phones: {
                       additionalPhones: {
-                        like: `%1234567890%`,
+                        like: '%1234567890%',
                       },
                     },
                   },
@@ -865,6 +869,13 @@ describe('should work as expected for the different field types', () => {
                 },
               },
             },
+            {
+              emails: {
+                additionalEmails: {
+                  like: '%test@test.com%',
+                },
+              },
+            },
           ],
         },
         {
@@ -878,42 +889,106 @@ describe('should work as expected for the different field types', () => {
                 },
               },
             },
+            {
+              or: [
+                {
+                  not: {
+                    emails: {
+                      additionalEmails: {
+                        like: '%test@test.com%',
+                      },
+                    },
+                  },
+                },
+                {
+                  emails: {
+                    additionalEmails: {
+                      is: 'NULL',
+                    },
+                  },
+                },
+              ],
+            },
           ],
         },
         {
-          or: [
+          and: [
             {
-              emails: {
-                primaryEmail: {
-                  ilike: '',
+              or: [
+                {
+                  emails: {
+                    primaryEmail: {
+                      eq: '',
+                    },
+                  },
                 },
-              },
+                {
+                  emails: {
+                    primaryEmail: {
+                      is: 'NULL',
+                    },
+                  },
+                },
+              ],
             },
             {
-              emails: {
-                primaryEmail: {
-                  is: 'NULL',
+              or: [
+                {
+                  emails: {
+                    additionalEmails: {
+                      is: 'NULL',
+                    },
+                  },
                 },
-              },
+                {
+                  emails: {
+                    additionalEmails: {
+                      like: '[]',
+                    },
+                  },
+                },
+              ],
             },
           ],
         },
         {
           not: {
-            or: [
+            and: [
               {
-                emails: {
-                  primaryEmail: {
-                    ilike: '',
+                or: [
+                  {
+                    emails: {
+                      primaryEmail: {
+                        eq: '',
+                      },
+                    },
                   },
-                },
+                  {
+                    emails: {
+                      primaryEmail: {
+                        is: 'NULL',
+                      },
+                    },
+                  },
+                ],
               },
               {
-                emails: {
-                  primaryEmail: {
-                    is: 'NULL',
+                or: [
+                  {
+                    emails: {
+                      additionalEmails: {
+                        is: 'NULL',
+                      },
+                    },
                   },
-                },
+                  {
+                    emails: {
+                      additionalEmails: {
+                        like: '[]',
+                      },
+                    },
+                  },
+                ],
               },
             ],
           },
@@ -1293,21 +1368,21 @@ describe('should work as expected for the different field types', () => {
   });
 
   it('select field type with empty options', () => {
-    const selectFieldMetadata = companyMockObjectMetadataItem.fields.find(
+    const selectFieldMetadata = petMockObjectMetadataItem.fields.find(
       (field) => field.type === FieldMetadataType.SELECT,
     );
 
     if (!selectFieldMetadata) {
       throw new Error(
-        `Select field metadata not found ${companyMockObjectMetadataItem.fields.map((field) => [field.name, field.type])}`,
+        `Select field metadata not found ${petMockObjectMetadataItem.fields.map((field) => [field.name, field.type])}`,
       );
     }
 
     const selectFilterIs: RecordFilter = {
-      id: 'company-select-filter-is',
-      value: '["option1",""]',
+      id: 'pet-select-filter-is',
+      value: '["DOG",""]',
       fieldMetadataId: selectFieldMetadata?.id,
-      displayValue: '["option1",""]',
+      displayValue: '["Dog",""]',
       operand: ViewFilterOperand.Is,
       label: 'Select',
       type: FieldMetadataType.SELECT,
@@ -1315,9 +1390,9 @@ describe('should work as expected for the different field types', () => {
 
     const selectFilterIsNot: RecordFilter = {
       id: 'company-select-filter-is-not',
-      value: '["option1",""]',
+      value: '["DOG",""]',
       fieldMetadataId: selectFieldMetadata.id,
-      displayValue: '["option1",""]',
+      displayValue: '["Dog",""]',
       operand: ViewFilterOperand.IsNot,
       label: 'Select',
       type: FieldMetadataType.SELECT,
@@ -1327,7 +1402,7 @@ describe('should work as expected for the different field types', () => {
       filterValueDependencies: mockFilterValueDependencies,
       recordFilters: [selectFilterIs, selectFilterIsNot],
       recordFilterGroups: [],
-      fields: companyMockObjectMetadataItem.fields,
+      fields: petMockObjectMetadataItem.fields,
     });
 
     expect(result).toEqual({
@@ -1336,7 +1411,7 @@ describe('should work as expected for the different field types', () => {
           or: [
             {
               [selectFieldMetadata.name]: {
-                in: ['option1'],
+                in: ['DOG'],
               },
             },
             {
@@ -1351,7 +1426,7 @@ describe('should work as expected for the different field types', () => {
             {
               not: {
                 [selectFieldMetadata.name]: {
-                  in: ['option1'],
+                  in: ['DOG'],
                 },
               },
             },

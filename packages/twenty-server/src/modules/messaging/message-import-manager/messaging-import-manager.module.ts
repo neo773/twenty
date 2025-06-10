@@ -48,8 +48,10 @@ import { MessagingMonitoringModule } from 'src/modules/messaging/monitoring/mess
     MessagingMicrosoftDriverModule,
     MessagingIMAPDriverModule,
     MessagingCommonModule,
-    TypeOrmModule.forFeature([Workspace], 'core'),
-    TypeOrmModule.forFeature([DataSourceEntity], 'metadata'),
+    TypeOrmModule.forFeature(
+      [Workspace, DataSourceEntity, ObjectMetadataEntity],
+      'core',
+    ),
     BillingModule,
     EmailAliasManagerModule,
     FeatureFlagModule,
@@ -57,7 +59,6 @@ import { MessagingMonitoringModule } from 'src/modules/messaging/monitoring/mess
     MessagingMonitoringModule,
     MessagingMessageCleanerModule,
     WorkspaceEventEmitterModule,
-    TypeOrmModule.forFeature([ObjectMetadataEntity], 'metadata'),
   ],
   providers: [
     MessagingMessageListFetchCronCommand,

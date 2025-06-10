@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { Entity } from '@microsoft/microsoft-graph-types';
+import { QUERY_MAX_RECORDS } from 'twenty-shared/constants';
 import { ObjectLiteral } from 'typeorm';
 
 import {
@@ -10,10 +11,7 @@ import {
 } from 'src/engine/api/graphql/workspace-query-builder/interfaces/object-record.interface';
 import { WorkflowExecutor } from 'src/modules/workflow/workflow-executor/interfaces/workflow-executor.interface';
 
-import { QUERY_MAX_RECORDS } from 'src/engine/api/graphql/graphql-query-runner/constants/query-max-records.constant';
 import { GraphqlQueryParser } from 'src/engine/api/graphql/graphql-query-runner/graphql-query-parsers/graphql-query.parser';
-import { FeatureFlagKey } from 'src/engine/core-modules/feature-flag/enums/feature-flag-key.enum';
-import { FeatureFlagService } from 'src/engine/core-modules/feature-flag/services/feature-flag.service';
 import { ObjectMetadataItemWithFieldMaps } from 'src/engine/metadata-modules/types/object-metadata-item-with-field-maps';
 import { ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { ScopedWorkspaceContextFactory } from 'src/engine/twenty-orm/factories/scoped-workspace-context.factory';
@@ -40,7 +38,6 @@ export class FindRecordsWorkflowAction implements WorkflowExecutor {
   constructor(
     private readonly twentyORMManager: TwentyORMManager,
     private readonly scopedWorkspaceContextFactory: ScopedWorkspaceContextFactory,
-    private readonly featureFlagService: FeatureFlagService,
     private readonly workflowCommonWorkspaceService: WorkflowCommonWorkspaceService,
   ) {}
 
@@ -89,14 +86,10 @@ export class FindRecordsWorkflowAction implements WorkflowExecutor {
         workspaceId,
       );
 
-    const featureFlagMaps =
-      await this.featureFlagService.getWorkspaceFeatureFlagsMap(workspaceId);
-
     const graphqlQueryParser = new GraphqlQueryParser(
       objectMetadataItemWithFieldsMaps.fieldsByName,
       objectMetadataItemWithFieldsMaps.fieldsByJoinColumnName,
       objectMetadataMaps,
-      featureFlagMaps,
     );
 
     const objectRecords = await this.getObjectRecords(
@@ -129,11 +122,6 @@ export class FindRecordsWorkflowAction implements WorkflowExecutor {
     repository: WorkspaceRepository<T>,
     graphqlQueryParser: GraphqlQueryParser,
   ) {
-    const isNewRelationEnabled = await this.featureFlagService.isFeatureEnabled(
-      FeatureFlagKey.IsNewRelationEnabled,
-      objectMetadataItemWithFieldsMaps.workspaceId,
-    );
-
     const queryBuilder = repository.createQueryBuilder(
       workflowActionInput.objectName,
     );
@@ -141,7 +129,8 @@ export class FindRecordsWorkflowAction implements WorkflowExecutor {
     const withFilterQueryBuilder = graphqlQueryParser.applyFilterToBuilder(
       queryBuilder,
       workflowActionInput.objectName,
-      workflowActionInput.filter ?? ({} as ObjectRecordFilter),
+      workflowActionInput.filter?.gqlOperationFilter ??
+        ({} as ObjectRecordFilter),
     );
 
     const orderByWithIdCondition = [
@@ -164,7 +153,6 @@ export class FindRecordsWorkflowAction implements WorkflowExecutor {
       nonFormattedObjectRecords,
       objectMetadataItemWithFieldsMaps,
       objectMetadataMaps,
-      isNewRelationEnabled,
     );
   }
 
@@ -180,14 +168,15 @@ export class FindRecordsWorkflowAction implements WorkflowExecutor {
     const withFilterCountQueryBuilder = graphqlQueryParser.applyFilterToBuilder(
       countQueryBuilder,
       workflowActionInput.objectName,
-      workflowActionInput.filter ?? ({} as ObjectRecordFilter),
+      workflowActionInput.filter?.gqlOperationFilter ??
+        ({} as ObjectRecordFilter),
     );
 
     const withDeletedCountQueryBuilder =
       graphqlQueryParser.applyDeletedAtToBuilder(
         withFilterCountQueryBuilder,
-        workflowActionInput.filter
-          ? workflowActionInput.filter
+        workflowActionInput.filter?.gqlOperationFilter
+          ? workflowActionInput.filter.gqlOperationFilter
           : ({} as ObjectRecordFilter),
       );
 

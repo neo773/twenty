@@ -4,7 +4,7 @@ import assert from 'assert';
 
 import { TypeOrmQueryService } from '@ptc-org/nestjs-query-typeorm';
 import { isWorkspaceActiveOrSuspended } from 'twenty-shared/workspace';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 
 import { DatabaseEventAction } from 'src/engine/api/graphql/graphql-query-runner/enums/database-event-action';
 import {
@@ -16,7 +16,6 @@ import { User } from 'src/engine/core-modules/user/user.entity';
 import { userValidator } from 'src/engine/core-modules/user/user.validate';
 import { WorkspaceService } from 'src/engine/core-modules/workspace/services/workspace.service';
 import { Workspace } from 'src/engine/core-modules/workspace/workspace.entity';
-import { DataSourceService } from 'src/engine/metadata-modules/data-source/data-source.service';
 import { ObjectMetadataEntity } from 'src/engine/metadata-modules/object-metadata/object-metadata.entity';
 import {
   PermissionsException,
@@ -33,9 +32,8 @@ export class UserService extends TypeOrmQueryService<User> {
   constructor(
     @InjectRepository(User, 'core')
     private readonly userRepository: Repository<User>,
-    @InjectRepository(ObjectMetadataEntity, 'metadata')
+    @InjectRepository(ObjectMetadataEntity, 'core')
     private readonly objectMetadataRepository: Repository<ObjectMetadataEntity>,
-    private readonly dataSourceService: DataSourceService,
     private readonly workspaceEventEmitter: WorkspaceEventEmitter,
     private readonly workspaceService: WorkspaceService,
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
@@ -63,7 +61,7 @@ export class UserService extends TypeOrmQueryService<User> {
     });
   }
 
-  async loadWorkspaceMembers(workspace: Workspace) {
+  async loadWorkspaceMembers(workspace: Workspace, withDeleted = false) {
     if (!isWorkspaceActiveOrSuspended(workspace)) {
       return [];
     }
@@ -74,7 +72,24 @@ export class UserService extends TypeOrmQueryService<User> {
         'workspaceMember',
       );
 
-    return workspaceMemberRepository.find();
+    return await workspaceMemberRepository.find({ withDeleted: withDeleted });
+  }
+
+  async loadDeletedWorkspaceMembersOnly(workspace: Workspace) {
+    if (!isWorkspaceActiveOrSuspended(workspace)) {
+      return [];
+    }
+
+    const workspaceMemberRepository =
+      await this.twentyORMGlobalManager.getRepositoryForWorkspace<WorkspaceMemberWorkspaceEntity>(
+        workspace.id,
+        'workspaceMember',
+      );
+
+    return await workspaceMemberRepository.find({
+      where: { deletedAt: Not(IsNull()) },
+      withDeleted: true,
+    });
   }
 
   private async deleteUserFromWorkspace({
@@ -162,6 +177,7 @@ export class UserService extends TypeOrmQueryService<User> {
             userId,
             workspaceId: userWorkspace.workspaceId,
           });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
           if (
             error instanceof PermissionsException &&

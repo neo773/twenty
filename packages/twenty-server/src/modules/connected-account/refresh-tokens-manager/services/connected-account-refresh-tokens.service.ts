@@ -74,11 +74,11 @@ export class ConnectedAccountRefreshTokensService {
     try {
       switch (connectedAccount.provider) {
         case ConnectedAccountProvider.GOOGLE:
-          return this.googleAPIRefreshAccessTokenService.refreshAccessToken(
+          return await this.googleAPIRefreshAccessTokenService.refreshAccessToken(
             refreshToken,
           );
         case ConnectedAccountProvider.MICROSOFT:
-          return this.microsoftAPIRefreshAccessTokenService.refreshTokens(
+          return await this.microsoftAPIRefreshAccessTokenService.refreshTokens(
             refreshToken,
           );
         case ConnectedAccountProvider.IMAP:
