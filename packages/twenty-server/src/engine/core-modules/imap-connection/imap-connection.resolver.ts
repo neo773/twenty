@@ -3,7 +3,10 @@ import { Args, Mutation, Resolver } from '@nestjs/graphql';
 
 import { ConnectedAccountProvider } from 'twenty-shared/types';
 
-import { ImapConnectionInput, ValidateImapConnectionInput } from 'src/engine/core-modules/imap-connection/dtos/imap-connection.dto';
+import {
+  ImapConnectionInput,
+  ValidateImapConnectionInput,
+} from 'src/engine/core-modules/imap-connection/dtos/imap-connection.dto';
 import { ImapConnectionService } from 'src/engine/core-modules/imap-connection/services/imap-connection.service';
 import { Workspace } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AuthWorkspace } from 'src/engine/decorators/auth/auth-workspace.decorator';
@@ -12,8 +15,6 @@ import { PermissionsGraphqlApiExceptionFilter } from 'src/engine/metadata-module
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
 import { GraphqlValidationExceptionFilter } from 'src/filters/graphql-validation-exception.filter';
 import { ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
-
-
 
 @Resolver()
 @UseFilters(
@@ -85,6 +86,7 @@ export class ImapConnectionResolver {
         {
           handle,
           provider: ConnectedAccountProvider.IMAP,
+          connectionType: 'IMAP',
           customConnectionParams: validatedParams,
         },
       );
@@ -94,6 +96,7 @@ export class ImapConnectionResolver {
         accountOwnerId,
         handle,
         provider: ConnectedAccountProvider.IMAP,
+        connectionType: 'IMAP',
         customConnectionParams: validatedParams,
       });
     }
