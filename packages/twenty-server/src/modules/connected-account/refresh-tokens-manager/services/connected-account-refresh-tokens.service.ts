@@ -82,11 +82,10 @@ export class ConnectedAccountRefreshTokensService {
             refreshToken,
           );
         case ConnectedAccountProvider.IMAP:
-          // TODO: Handle this
-          return {
-            accessToken: refreshToken,
-            refreshToken: refreshToken,
-          };
+          throw new ConnectedAccountRefreshAccessTokenException(
+            `Token refresh is not supported for IMAP provider for connected account ${connectedAccount.id} in workspace ${workspaceId}`,
+            ConnectedAccountRefreshAccessTokenExceptionCode.REFRESH_ACCESS_TOKEN_FAILED,
+          );
         default:
           return assertUnreachable(
             connectedAccount.provider,

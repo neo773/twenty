@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-
 import { ImapClientProvider } from 'src/modules/messaging/message-import-manager/drivers/imap/providers/imap-client.provider';
 import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
 

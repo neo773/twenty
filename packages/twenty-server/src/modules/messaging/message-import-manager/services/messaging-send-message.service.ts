@@ -94,8 +94,7 @@ export class MessagingSendMessageService {
         break;
       }
       case ConnectedAccountProvider.IMAP: {
-        // TODO: Handle this
-        break;
+        return;
       }
       default:
         assertUnreachable(

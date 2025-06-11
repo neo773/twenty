@@ -48,21 +48,12 @@ export class MessagingGetMessagesService {
           messageIds,
           connectedAccount,
         );
-      case ConnectedAccountProvider.IMAP: {
-        // IMAP doesn't return MessageWithParticipants, just Message[]
-        // We need to transform it to match the expected type
-        const messages = await this.imapGetMessagesService.getMessages(
+      case ConnectedAccountProvider.IMAP:
+        return this.imapGetMessagesService.getMessages(
           messageIds,
           workspaceId,
           messageChannelId,
         );
-
-        // Transform Message[] to MessageWithParticipants[]
-        return messages.map((message) => ({
-          ...message,
-          participants: [],
-        }));
-      }
       default:
         throw new MessageImportException(
           `Provider ${connectedAccount.provider} is not supported`,
