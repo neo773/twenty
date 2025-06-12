@@ -28,13 +28,11 @@ export async function findSentMailbox(
   ];
 
   try {
-    // Get list of available mailboxes from the server
     const list = await client.list();
     const availableFolders = list.map((item) => item.path);
 
     logger.debug(`Available folders: ${availableFolders.join(', ')}`);
 
-    // First look for exact matches
     for (const folderName of possibleSentFolders) {
       if (availableFolders.includes(folderName)) {
         logger.log(`Found sent folder: ${folderName}`);
