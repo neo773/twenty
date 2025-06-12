@@ -53,6 +53,7 @@ export class MessagingGetMessagesService {
           messageIds,
           workspaceId,
           messageChannelId,
+          connectedAccount,
         );
       default:
         throw new MessageImportException(

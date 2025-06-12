@@ -2,11 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { ImapFlow } from 'imapflow';
 import { AddressObject, ParsedMail, simpleParser } from 'mailparser';
+// @ts-expect-error legacy noImplicitAny
+import planer from 'planer';
 
 import { InjectMessageQueue } from 'src/engine/core-modules/message-queue/decorators/message-queue.decorator';
 import { MessageQueue } from 'src/engine/core-modules/message-queue/message-queue.constants';
 import { MessageQueueService } from 'src/engine/core-modules/message-queue/services/message-queue.service';
-import { MessageDirection } from 'src/modules/messaging/common/enums/message-direction.enum';
+import { ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
+import { computeMessageDirection } from 'src/modules/messaging/message-import-manager/drivers/gmail/utils/compute-message-direction.util';
 import { ImapClientProvider } from 'src/modules/messaging/message-import-manager/drivers/imap/providers/imap-client.provider';
 import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
 import { sanitizeString } from 'src/modules/messaging/message-import-manager/drivers/imap/utils/sanitize-string.util';
@@ -31,6 +34,10 @@ export class ImapGetMessagesService {
     messageIds: string[],
     workspaceId: string,
     messageChannelId: string,
+    connectedAccount: Pick<
+      ConnectedAccountWorkspaceEntity,
+      'handle' | 'handleAliases'
+    >,
   ): Promise<MessageWithParticipants[]> {
     if (!messageIds.length) {
       return [];
@@ -48,7 +55,11 @@ export class ImapGetMessagesService {
       try {
         for (const messageId of messageIds) {
           try {
-            const message = await this.fetchAndParseMessage(messageId, client);
+            const message = await this.fetchAndParseMessage(
+              messageId,
+              client,
+              connectedAccount,
+            );
 
             if (message) {
               messages.push(message);
@@ -76,6 +87,10 @@ export class ImapGetMessagesService {
   private async fetchAndParseMessage(
     messageId: string,
     client: ImapFlow,
+    connectedAccount: Pick<
+      ConnectedAccountWorkspaceEntity,
+      'handle' | 'handleAliases'
+    >,
   ): Promise<MessageWithParticipants | null> {
     const results = await client.search({
       header: {
@@ -104,27 +119,64 @@ export class ImapGetMessagesService {
     const rawContent = fetchResult.source?.toString() || '';
     const parsed = await simpleParser(rawContent);
 
-    return this.createMessageFromParsedMail(parsed, messageId);
+    return this.createMessageFromParsedMail(
+      parsed,
+      messageId,
+      connectedAccount,
+    );
   }
 
   private createMessageFromParsedMail(
     parsed: ParsedMail,
     messageId: string,
+    connectedAccount: Pick<
+      ConnectedAccountWorkspaceEntity,
+      'handle' | 'handleAliases'
+    >,
   ): MessageWithParticipants {
     const participants = this.extractAllParticipants(parsed);
     const attachments = this.extractAttachments(parsed);
 
+    const threadId = this.extractThreadId(parsed);
+
+    const fromAddresses = this.extractAddresses(
+      parsed.from as AddressObject | undefined,
+      'from',
+    );
+
+    const fromHandle = fromAddresses.length > 0 ? fromAddresses[0].address : '';
+
+    const textWithoutReplyQuotations = parsed.text
+      ? planer.extractFrom(parsed.text, 'text/plain')
+      : '';
+
     return {
       externalId: messageId,
-      messageThreadExternalId: messageId,
-      headerMessageId: messageId,
+      messageThreadExternalId: threadId || messageId, // Use extracted threadId or fallback to messageId
+      headerMessageId: parsed.messageId || messageId, // Use the parsed messageId from headers
       subject: parsed.subject || '',
-      text: sanitizeString(parsed.text || ''),
+      text: sanitizeString(textWithoutReplyQuotations),
       receivedAt: parsed.date || new Date(),
-      direction: MessageDirection.INCOMING,
+      direction: computeMessageDirection(fromHandle, connectedAccount),
       attachments,
       participants,
     };
+  }
+
+  private extractThreadId(parsed: ParsedMail): string | null {
+    const references = parsed.references;
+
+    if (references && references.length > 0) {
+      return references[0];
+    }
+
+    const inReplyTo = parsed.inReplyTo;
+
+    if (inReplyTo) {
+      return inReplyTo;
+    }
+
+    return parsed.messageId || null;
   }
 
   private extractAllParticipants(parsed: ParsedMail) {
