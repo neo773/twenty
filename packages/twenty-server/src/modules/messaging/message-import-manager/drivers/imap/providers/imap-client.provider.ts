@@ -15,7 +15,7 @@ interface ImapClientInstance {
 @Injectable()
 export class ImapClientProvider {
   private readonly logger = new Logger(ImapClientProvider.name);
-  private clientInstances: Map<string, ImapClientInstance> = new Map();
+  private readonly clientInstances = new Map<string, ImapClientInstance>();
 
   constructor(
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
@@ -90,6 +90,17 @@ export class ImapClientProvider {
         `Connected to IMAP server for ${connectedAccount.handle}`,
       );
 
+      // Log available mailboxes to help with debugging
+      try {
+        const mailboxes = await client.list();
+
+        this.logger.log(
+          `Available mailboxes for ${connectedAccount.handle}: ${mailboxes.map((m) => m.path).join(', ')}`,
+        );
+      } catch (error) {
+        this.logger.warn(`Failed to list mailboxes: ${error.message}`);
+      }
+
       this.clientInstances.set(cacheKey, {
         client,
         isReady: true,
@@ -112,14 +123,12 @@ export class ImapClientProvider {
     const cacheKey = `${workspaceId}-${messageChannelId}`;
     const instance = this.clientInstances.get(cacheKey);
 
-    if (instance) {
+    if (instance?.isReady) {
       try {
         await instance.client.logout();
+        this.logger.log('Closed IMAP client');
       } catch (error) {
-        this.logger.error(
-          `Error closing IMAP connection: ${error.message}`,
-          error.stack,
-        );
+        this.logger.error(`Error closing IMAP client: ${error.message}`);
       } finally {
         this.clientInstances.delete(cacheKey);
       }

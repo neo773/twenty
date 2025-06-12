@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { ImapFlow } from 'imapflow';
+
 import { ImapClientProvider } from 'src/modules/messaging/message-import-manager/drivers/imap/providers/imap-client.provider';
 import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
+import { findSentMailbox } from 'src/modules/messaging/message-import-manager/drivers/imap/utils/find-sent-mailbox.util';
 
 @Injectable()
 export class ImapGetMessageListService {
@@ -23,48 +26,52 @@ export class ImapGetMessageListService {
         messageChannelId,
       );
 
-      const lock = await client.getMailboxLock('INBOX');
+      const mailboxes = ['INBOX'];
 
-      try {
-        let searchOptions = {};
+      const sentFolder = await findSentMailbox(client, this.logger);
 
-        if (cursor) {
-          searchOptions = {
-            since: new Date(cursor),
-          };
-        }
-
-        const messages: { id: string; date: string }[] = [];
-
-        for await (const message of client.fetch(searchOptions, {
-          envelope: true,
-        })) {
-          if (message.envelope?.messageId) {
-            messages.push({
-              id: message.envelope.messageId,
-              date:
-                message.envelope.date?.toISOString() ||
-                new Date().toISOString(),
-            });
-          }
-        }
-
-        messages.sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-        );
-
-        const messageIds = messages.map((message) => message.id);
-
-        const nextCursor =
-          messages.length > 0 ? messages[messages.length - 1].date : undefined;
-
-        return {
-          messageIds,
-          nextCursor,
-        };
-      } finally {
-        lock.release();
+      if (sentFolder) {
+        mailboxes.push(sentFolder);
       }
+
+      let allMessages: { id: string; date: string }[] = [];
+
+      for (const mailbox of mailboxes) {
+        try {
+          const messages = await this.getMessagesFromMailbox(
+            client,
+            mailbox,
+            cursor,
+          );
+
+          allMessages = [...allMessages, ...messages];
+          this.logger.log(
+            `Fetched ${messages.length} messages from ${mailbox}`,
+          );
+        } catch (error) {
+          // Log the error but continue with other mailboxes
+          this.logger.warn(
+            `Error fetching from mailbox ${mailbox}: ${error.message}. Continuing with other mailboxes.`,
+          );
+        }
+      }
+
+      // Sort all messages by date (newest first)
+      allMessages.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
+
+      const messageIds = allMessages.map((message) => message.id);
+
+      const nextCursor =
+        allMessages.length > 0
+          ? allMessages[allMessages.length - 1].date
+          : undefined;
+
+      return {
+        messageIds,
+        nextCursor,
+      };
     } catch (error) {
       this.logger.error(
         `Error getting message list: ${error.message}`,
@@ -76,6 +83,53 @@ export class ImapGetMessageListService {
       return { messageIds: [] };
     } finally {
       await this.imapClientProvider.closeClient(workspaceId, messageChannelId);
+    }
+  }
+
+  private async getMessagesFromMailbox(
+    client: ImapFlow,
+    mailbox: string,
+    cursor?: string,
+  ): Promise<{ id: string; date: string }[]> {
+    let lock;
+
+    try {
+      lock = await client.getMailboxLock(mailbox);
+
+      let searchOptions = {};
+
+      if (cursor) {
+        searchOptions = {
+          since: new Date(cursor),
+        };
+      }
+
+      const messages: { id: string; date: string }[] = [];
+
+      for await (const message of client.fetch(searchOptions, {
+        envelope: true,
+      })) {
+        if (message.envelope?.messageId) {
+          messages.push({
+            id: message.envelope.messageId,
+            date:
+              message.envelope.date?.toISOString() || new Date().toISOString(),
+          });
+        }
+      }
+
+      return messages;
+    } catch (error) {
+      this.logger.error(
+        `Error fetching from mailbox ${mailbox}: ${error.message}`,
+        error.stack,
+      );
+
+      return [];
+    } finally {
+      if (lock) {
+        lock.release();
+      }
     }
   }
 }

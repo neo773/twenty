@@ -12,6 +12,7 @@ import { ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/s
 import { computeMessageDirection } from 'src/modules/messaging/message-import-manager/drivers/gmail/utils/compute-message-direction.util';
 import { ImapClientProvider } from 'src/modules/messaging/message-import-manager/drivers/imap/providers/imap-client.provider';
 import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
+import { findSentMailbox } from 'src/modules/messaging/message-import-manager/drivers/imap/utils/find-sent-mailbox.util';
 import { sanitizeString } from 'src/modules/messaging/message-import-manager/drivers/imap/utils/sanitize-string.util';
 import { EmailAddress } from 'src/modules/messaging/message-import-manager/types/email-address';
 import { MessageWithParticipants } from 'src/modules/messaging/message-import-manager/types/message';
@@ -49,30 +50,60 @@ export class ImapGetMessagesService {
         messageChannelId,
       );
 
-      const lock = await client.getMailboxLock('INBOX');
       const messages: MessageWithParticipants[] = [];
 
-      try {
-        for (const messageId of messageIds) {
-          try {
-            const message = await this.fetchAndParseMessage(
-              messageId,
-              client,
-              connectedAccount,
-            );
+      const mailboxes = ['INBOX'];
 
-            if (message) {
-              messages.push(message);
-            }
-          } catch (messageError) {
-            this.handleSingleMessageError(messageError, messageId);
-          }
-        }
+      const sentFolder = await findSentMailbox(client, this.logger);
 
-        return messages;
-      } finally {
-        lock.release();
+      if (sentFolder) {
+        mailboxes.push(sentFolder);
       }
+
+      for (const mailbox of mailboxes) {
+        try {
+          const lock = await client.getMailboxLock(mailbox);
+
+          try {
+            for (const messageId of messageIds) {
+              try {
+                // Skip messages we've already found
+                const existingMessage = messages.find(
+                  (m) => m.externalId === messageId,
+                );
+
+                if (existingMessage) {
+                  continue;
+                }
+
+                const message = await this.fetchAndParseMessage(
+                  messageId,
+                  client,
+                  connectedAccount,
+                );
+
+                if (message) {
+                  messages.push(message);
+                  this.logger.log(
+                    `Found message ${messageId} in mailbox ${mailbox}`,
+                  );
+                }
+              } catch (messageError) {
+                this.handleSingleMessageError(messageError, messageId);
+              }
+            }
+          } finally {
+            lock.release();
+          }
+        } catch (error) {
+          // Log the error but continue with other mailboxes
+          this.logger.warn(
+            `Error accessing mailbox ${mailbox}: ${error.message}. Continuing with other mailboxes.`,
+          );
+        }
+      }
+
+      return messages;
     } catch (error) {
       this.logger.error(
         `Error getting messages: ${error.message}`,
@@ -99,7 +130,9 @@ export class ImapGetMessagesService {
     });
 
     if (!results.length) {
-      this.logger.debug(`Message with ID ${messageId} not found`);
+      this.logger.debug(
+        `Message with ID ${messageId} not found in current mailbox`,
+      );
 
       return null;
     }
@@ -150,14 +183,17 @@ export class ImapGetMessagesService {
       ? planer.extractFrom(parsed.text, 'text/plain')
       : '';
 
+    const direction = computeMessageDirection(fromHandle, connectedAccount);
+    const text = sanitizeString(textWithoutReplyQuotations);
+
     return {
       externalId: messageId,
       messageThreadExternalId: threadId || messageId, // Use extracted threadId or fallback to messageId
       headerMessageId: parsed.messageId || messageId, // Use the parsed messageId from headers
       subject: parsed.subject || '',
-      text: sanitizeString(textWithoutReplyQuotations),
+      text: text,
       receivedAt: parsed.date || new Date(),
-      direction: computeMessageDirection(fromHandle, connectedAccount),
+      direction: direction,
       attachments,
       participants,
     };
