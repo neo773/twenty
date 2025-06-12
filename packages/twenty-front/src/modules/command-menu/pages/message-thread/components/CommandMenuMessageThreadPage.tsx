@@ -109,8 +109,7 @@ export const CommandMenuMessageThreadPage = () => {
         window.open(url, '_blank');
         break;
       case ConnectedAccountProvider.IMAP:
-        // TODO: Handle this
-        break;
+        throw new Error('IMAP account provider not supported');
       case null:
         throw new Error('Account provider not provided');
       default:

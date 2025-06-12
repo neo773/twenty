@@ -35,7 +35,7 @@ export class EmailAliasManagerService {
           );
         break;
       case ConnectedAccountProvider.IMAP:
-        // TODO: Handle this
+        // IMAP Protocol does not support email aliases
         handleAliases = [];
         break;
       default:
