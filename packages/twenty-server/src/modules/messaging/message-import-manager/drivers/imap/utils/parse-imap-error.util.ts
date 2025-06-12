@@ -2,64 +2,61 @@ import {
   MessageImportDriverException,
   MessageImportDriverExceptionCode,
 } from 'src/modules/messaging/message-import-manager/drivers/exceptions/message-import-driver.exception';
+import { ImapFlowError } from 'src/modules/messaging/message-import-manager/drivers/imap/types/imap-error.type';
 
-/**
- * Parse IMAP errors and map them to specific MessageImportDriverException types
- */
 export const parseImapError = (
-  error: any,
+  error: Error,
 ): MessageImportDriverException | null => {
   if (!error) {
     return null;
   }
 
-  const errorMessage = error.message || '';
+  const errorObj = error as ImapFlowError;
 
-  // Connection errors
   if (
-    errorMessage.includes('Connection timed out') ||
-    errorMessage.includes('Network error') ||
-    errorMessage.includes('ECONNREFUSED') ||
-    errorMessage.includes('ENOTFOUND')
+    errorObj.code === 'ECONNREFUSED' ||
+    error.message === 'Failed to connect'
   ) {
     return new MessageImportDriverException(
-      `IMAP connection error: ${errorMessage}`,
+      `IMAP connection error: ${error.message}`,
       MessageImportDriverExceptionCode.UNKNOWN_NETWORK_ERROR,
     );
   }
 
-  // Authentication errors
-  if (
-    errorMessage.includes('Invalid credentials') ||
-    errorMessage.includes('Authentication failed') ||
-    errorMessage.includes('LOGIN failed')
-  ) {
+  if (errorObj.serverResponseCode) {
+    if (errorObj.serverResponseCode === 'AUTHENTICATIONFAILED') {
+      return new MessageImportDriverException(
+        `IMAP authentication error: ${errorObj.responseText || error.message}`,
+        MessageImportDriverExceptionCode.INSUFFICIENT_PERMISSIONS,
+      );
+    }
+
+    if (errorObj.serverResponseCode === 'NONEXISTENT') {
+      return new MessageImportDriverException(
+        `IMAP mailbox not found: ${errorObj.responseText || error.message}`,
+        MessageImportDriverExceptionCode.NOT_FOUND,
+      );
+    }
+  }
+
+  if (errorObj.authenticationFailed === true) {
     return new MessageImportDriverException(
-      `IMAP authentication error: ${errorMessage}`,
+      `IMAP authentication error: ${errorObj.responseText || error.message}`,
       MessageImportDriverExceptionCode.INSUFFICIENT_PERMISSIONS,
     );
   }
 
-  // Not found errors
-  if (
-    errorMessage.includes('Mailbox not found') ||
-    errorMessage.includes('No such mailbox')
-  ) {
-    return new MessageImportDriverException(
-      `IMAP mailbox not found: ${errorMessage}`,
-      MessageImportDriverExceptionCode.NOT_FOUND,
-    );
-  }
+  if (error.message === 'Command failed' && errorObj.responseText) {
+    if (errorObj.responseText.includes('Resource temporarily unavailable')) {
+      return new MessageImportDriverException(
+        `IMAP temporary error: ${errorObj.responseText}`,
+        MessageImportDriverExceptionCode.TEMPORARY_ERROR,
+      );
+    }
 
-  // Temporary errors
-  if (
-    errorMessage.includes('Too many simultaneous connections') ||
-    errorMessage.includes('Resource temporarily unavailable') ||
-    errorMessage.includes('Service unavailable')
-  ) {
     return new MessageImportDriverException(
-      `IMAP temporary error: ${errorMessage}`,
-      MessageImportDriverExceptionCode.TEMPORARY_ERROR,
+      `IMAP command failed: ${errorObj.responseText}`,
+      MessageImportDriverExceptionCode.UNKNOWN,
     );
   }
 

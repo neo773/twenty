@@ -85,7 +85,7 @@ export class ImapHandleErrorService {
     }
   }
 
-  public handleImapMessageListFetchError(error: any): void {
+  public handleImapMessageListFetchError(error: Error): void {
     const imapError = parseImapError(error);
 
     if (imapError) {
@@ -96,7 +96,7 @@ export class ImapHandleErrorService {
   }
 
   public handleImapMessagesImportError(
-    error: any,
+    error: Error,
     messageExternalId: string,
   ): void {
     const imapError = parseImapError(error);

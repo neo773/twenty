@@ -2,18 +2,48 @@ import {
   MessageImportDriverException,
   MessageImportDriverExceptionCode,
 } from 'src/modules/messaging/message-import-manager/drivers/exceptions/message-import-driver.exception';
+import { ImapFlowError } from 'src/modules/messaging/message-import-manager/drivers/imap/types/imap-error.type';
 
-/**
- * Parse IMAP message import errors and map them to specific MessageImportDriverException types
- */
 export const parseImapMessagesImportError = (
-  error: any,
+  error: Error,
   messageExternalId: string,
 ): MessageImportDriverException => {
-  // Handle message not found errors
+  if (!error) {
+    return new MessageImportDriverException(
+      `Unknown IMAP message import error for message ${messageExternalId}: No error provided`,
+      MessageImportDriverExceptionCode.UNKNOWN,
+    );
+  }
+
+  const errorObj = error as ImapFlowError;
+  const errorMessage = error.message || '';
+
+  if (errorObj.responseText) {
+    if (errorObj.responseText.includes('No such message')) {
+      return new MessageImportDriverException(
+        `IMAP message not found: ${messageExternalId}`,
+        MessageImportDriverExceptionCode.NOT_FOUND,
+      );
+    }
+
+    if (errorObj.responseText.includes('expunged')) {
+      return new MessageImportDriverException(
+        `IMAP message no longer exists (expunged): ${messageExternalId}`,
+        MessageImportDriverExceptionCode.NOT_FOUND,
+      );
+    }
+
+    if (errorObj.responseText.includes('message size exceeds')) {
+      return new MessageImportDriverException(
+        `IMAP message fetch error for message ${messageExternalId}: ${errorObj.responseText}`,
+        MessageImportDriverExceptionCode.TEMPORARY_ERROR,
+      );
+    }
+  }
+
   if (
-    error.message?.includes('Message not found') ||
-    error.message?.includes('No such message')
+    errorMessage.includes('Message not found') ||
+    errorMessage.includes('Invalid sequence set')
   ) {
     return new MessageImportDriverException(
       `IMAP message not found: ${messageExternalId}`,
@@ -21,19 +51,15 @@ export const parseImapMessagesImportError = (
     );
   }
 
-  // Handle message fetch errors
-  if (error.message?.includes('Failed to fetch message')) {
+  if (errorMessage.includes('Failed to fetch message')) {
     return new MessageImportDriverException(
-      `IMAP message fetch error for message ${messageExternalId}: ${error.message}`,
+      `IMAP message fetch error for message ${messageExternalId}: ${errorMessage}`,
       MessageImportDriverExceptionCode.TEMPORARY_ERROR,
     );
   }
 
-  // Default case
   return new MessageImportDriverException(
-    `Unknown IMAP message import error for message ${messageExternalId}: ${
-      error.message || 'No error message'
-    }`,
+    `Unknown IMAP message import error for message ${messageExternalId}: ${errorMessage}`,
     MessageImportDriverExceptionCode.UNKNOWN,
   );
 };

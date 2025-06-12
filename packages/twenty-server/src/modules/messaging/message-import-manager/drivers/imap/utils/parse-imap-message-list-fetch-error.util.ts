@@ -2,35 +2,56 @@ import {
   MessageImportDriverException,
   MessageImportDriverExceptionCode,
 } from 'src/modules/messaging/message-import-manager/drivers/exceptions/message-import-driver.exception';
+import { ImapFlowError } from 'src/modules/messaging/message-import-manager/drivers/imap/types/imap-error.type';
 
-/**
- * Parse IMAP message list fetch errors and map them to specific MessageImportDriverException types
- */
 export const parseImapMessageListFetchError = (
-  error: any,
+  error: Error,
 ): MessageImportDriverException => {
-  // Handle sync cursor errors
-  if (
-    error.message?.includes('Invalid search query') ||
-    error.message?.includes('Invalid sequence set')
-  ) {
+  if (!error) {
     return new MessageImportDriverException(
-      `IMAP sync cursor error: ${error.message}`,
+      'Unknown IMAP message list fetch error: No error provided',
+      MessageImportDriverExceptionCode.UNKNOWN,
+    );
+  }
+
+  const errorObj = error as ImapFlowError;
+  const errorMessage = error.message || '';
+
+  if (errorObj.responseText) {
+    if (
+      errorObj.responseText.includes('Invalid search') ||
+      errorObj.responseText.includes('invalid sequence set')
+    ) {
+      return new MessageImportDriverException(
+        `IMAP sync cursor error: ${errorObj.responseText}`,
+        MessageImportDriverExceptionCode.SYNC_CURSOR_ERROR,
+      );
+    }
+
+    if (errorObj.responseText.includes('No matching messages')) {
+      return new MessageImportDriverException(
+        'No messages found for next sync cursor',
+        MessageImportDriverExceptionCode.NO_NEXT_SYNC_CURSOR,
+      );
+    }
+  }
+
+  if (errorMessage.includes('Invalid sequence set')) {
+    return new MessageImportDriverException(
+      `IMAP sync cursor error: ${errorMessage}`,
       MessageImportDriverExceptionCode.SYNC_CURSOR_ERROR,
     );
   }
 
-  // Handle no next sync cursor errors
-  if (error.message?.includes('No messages found')) {
+  if (errorMessage.includes('No messages found')) {
     return new MessageImportDriverException(
       'No messages found for next sync cursor',
       MessageImportDriverExceptionCode.NO_NEXT_SYNC_CURSOR,
     );
   }
 
-  // Default case
   return new MessageImportDriverException(
-    `Unknown IMAP message list fetch error: ${error.message || 'No error message'}`,
+    `Unknown IMAP message list fetch error: ${errorMessage}`,
     MessageImportDriverExceptionCode.UNKNOWN,
   );
 };
