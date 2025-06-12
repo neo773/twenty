@@ -79,12 +79,11 @@ export class ImapClientProvider {
       },
       logger: false,
       tls: {
-        rejectUnauthorized: false, // Allow self-signed certificates
+        rejectUnauthorized: false,
       },
     });
 
     try {
-      // Connect to the server
       await client.connect();
 
       this.logger.log(

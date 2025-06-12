@@ -18,17 +18,14 @@ export class ImapGetMessageListService {
     cursor?: string,
   ): Promise<{ messageIds: string[]; nextCursor?: string }> {
     try {
-      // Get IMAP client
       const client = await this.imapClientProvider.getClient(
         workspaceId,
         messageChannelId,
       );
 
-      // Get the mailbox (INBOX by default)
       const lock = await client.getMailboxLock('INBOX');
 
       try {
-        // Set up search criteria
         let searchOptions = {};
 
         if (cursor) {
@@ -37,7 +34,6 @@ export class ImapGetMessageListService {
           };
         }
 
-        // Fetch message IDs and dates
         const messages: { id: string; date: string }[] = [];
 
         for await (const message of client.fetch(searchOptions, {
@@ -53,15 +49,12 @@ export class ImapGetMessageListService {
           }
         }
 
-        // Sort messages by date (newest first)
         messages.sort(
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
         );
 
-        // Extract message IDs
         const messageIds = messages.map((message) => message.id);
 
-        // Determine next cursor (date of the oldest message)
         const nextCursor =
           messages.length > 0 ? messages[messages.length - 1].date : undefined;
 
@@ -70,7 +63,6 @@ export class ImapGetMessageListService {
           nextCursor,
         };
       } finally {
-        // Release the mailbox lock when done
         lock.release();
       }
     } catch (error) {
@@ -79,12 +71,10 @@ export class ImapGetMessageListService {
         error.stack,
       );
 
-      // Use the specific error handling for message list
       this.imapHandleErrorService.handleImapMessageListFetchError(error);
 
       return { messageIds: [] };
     } finally {
-      // Close the client to free up resources
       await this.imapClientProvider.closeClient(workspaceId, messageChannelId);
     }
   }

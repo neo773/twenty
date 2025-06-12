@@ -42,7 +42,6 @@ export class ImapHandleErrorService {
         where: { id: messageChannelId },
       });
 
-      // Update the message channel with the error
       const updatedMessageChannel = await messageChannelRepository.update(
         { id: messageChannelId },
         {
@@ -50,11 +49,10 @@ export class ImapHandleErrorService {
         },
       );
 
-      // Emit database event
       const dataSource =
-        await this.twentyORMGlobalManager.getDataSourceForWorkspace(
-          {workspaceId},
-        );
+        await this.twentyORMGlobalManager.getDataSourceForWorkspace({
+          workspaceId,
+        });
       const messageChannelMetadata = await dataSource
         .getRepository(ObjectMetadataEntity)
         .findOneOrFail({
@@ -87,36 +85,26 @@ export class ImapHandleErrorService {
     }
   }
 
-  /**
-   * Handle IMAP message list fetch errors and throw appropriate exceptions
-   */
   public handleImapMessageListFetchError(error: any): void {
-    // Check for general IMAP errors first
     const imapError = parseImapError(error);
 
     if (imapError) {
       throw imapError;
     }
 
-    // Check for specific message list fetch errors
     throw parseImapMessageListFetchError(error);
   }
 
-  /**
-   * Handle IMAP message import errors and throw appropriate exceptions
-   */
   public handleImapMessagesImportError(
     error: any,
     messageExternalId: string,
   ): void {
-    // Check for general IMAP errors first
     const imapError = parseImapError(error);
 
     if (imapError) {
       throw imapError;
     }
 
-    // Check for specific message import errors
     throw parseImapMessagesImportError(error, messageExternalId);
   }
 }
