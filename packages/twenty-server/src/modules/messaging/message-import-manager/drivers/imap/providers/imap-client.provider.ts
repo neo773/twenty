@@ -10,12 +10,14 @@ import { ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/s
 interface ImapClientInstance {
   client: ImapFlow;
   isReady: boolean;
+  lastHealthCheck?: Date;
 }
 
 @Injectable()
 export class ImapClientProvider {
   private readonly logger = new Logger(ImapClientProvider.name);
   private readonly clientInstances = new Map<string, ImapClientInstance>();
+  private readonly HEALTH_CHECK_INTERVAL = 5 * 60 * 1000;
 
   constructor() {}
 
@@ -25,21 +27,29 @@ export class ImapClientProvider {
       'id' | 'provider' | 'connectionParameters' | 'handle'
     >,
   ): Promise<ImapFlow> {
-    const cacheKey = `${connectedAccount.id}`;
-
-    if (this.clientInstances.has(cacheKey)) {
-      const instance = this.clientInstances.get(cacheKey);
-
-      if (instance?.isReady) {
-        return instance.client;
-      }
-    }
-
     if (
       connectedAccount.provider !== ConnectedAccountProvider.IMAP_SMTP_CALDAV ||
       !isDefined(connectedAccount.connectionParameters?.IMAP)
     ) {
       throw new Error('Connected account is not an IMAP provider');
+    }
+
+    const cacheKey = `${connectedAccount.id}`;
+    const existingInstance = this.clientInstances.get(cacheKey);
+    const isHealthyConnection =
+      existingInstance?.isReady &&
+      (await this.isConnectionHealthy(existingInstance));
+
+    if (isHealthyConnection) {
+      return existingInstance.client;
+    }
+
+    if (existingInstance) {
+      this.logger.warn(
+        `Removing unhealthy IMAP connection for ${connectedAccount.handle}`,
+      );
+      await this.cleanupInstance(existingInstance);
+      this.clientInstances.delete(cacheKey);
     }
 
     const connectionParameters: ImapSmtpCaldavParams =
@@ -80,6 +90,7 @@ export class ImapClientProvider {
       this.clientInstances.set(cacheKey, {
         client,
         isReady: true,
+        lastHealthCheck: new Date(),
       });
 
       return client;
@@ -97,14 +108,46 @@ export class ImapClientProvider {
     const instance = this.clientInstances.get(cacheKey);
 
     if (instance?.isReady) {
-      try {
-        await instance.client.logout();
-        this.logger.log('Closed IMAP client');
-      } catch (error) {
-        this.logger.error(`Error closing IMAP client: ${error.message}`);
-      } finally {
-        this.clientInstances.delete(cacheKey);
+      await this.cleanupInstance(instance);
+      this.clientInstances.delete(cacheKey);
+    }
+  }
+
+  private async isConnectionHealthy(
+    instance: ImapClientInstance,
+  ): Promise<boolean> {
+    try {
+      if (instance.lastHealthCheck) {
+        const timeSinceLastCheck =
+          Date.now() - instance.lastHealthCheck.getTime();
+
+        if (timeSinceLastCheck < this.HEALTH_CHECK_INTERVAL) {
+          return true;
+        }
       }
+
+      if (!instance.client.usable) {
+        return false;
+      }
+
+      await instance.client.getQuota();
+
+      instance.lastHealthCheck = new Date();
+
+      return true;
+    } catch (error) {
+      this.logger.warn(`IMAP connection health check failed: ${error.message}`);
+
+      return false;
+    }
+  }
+
+  private async cleanupInstance(instance: ImapClientInstance): Promise<void> {
+    try {
+      await instance.client.logout();
+      this.logger.log('Closed IMAP client');
+    } catch (error) {
+      this.logger.error(`Error closing IMAP client: ${error.message}`);
     }
   }
 }

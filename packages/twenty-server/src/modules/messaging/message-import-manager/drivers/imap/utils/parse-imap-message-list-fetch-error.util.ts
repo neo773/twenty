@@ -56,6 +56,13 @@ export const parseImapMessageListFetchError = (
     );
   }
 
+  if (errorMessage.includes('Connection not available')) {
+    return new MessageImportDriverException(
+      `IMAP connection error: ${errorMessage}`,
+      MessageImportDriverExceptionCode.UNKNOWN_NETWORK_ERROR,
+    );
+  }
+
   return new MessageImportDriverException(
     `Unknown IMAP message list fetch error: ${errorMessage}`,
     MessageImportDriverExceptionCode.UNKNOWN,

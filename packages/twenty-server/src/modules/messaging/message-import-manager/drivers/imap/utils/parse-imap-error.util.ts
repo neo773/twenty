@@ -15,7 +15,11 @@ export const parseImapError = (
     return null;
   }
 
-  if (error.code === 'ECONNREFUSED' || error.message === 'Failed to connect') {
+  if (
+    error.code === 'ECONNREFUSED' ||
+    error.message === 'Failed to connect' ||
+    error.message === 'Connection not available'
+  ) {
     return new MessageImportDriverException(
       `IMAP connection error: ${error.message}`,
       MessageImportDriverExceptionCode.UNKNOWN_NETWORK_ERROR,

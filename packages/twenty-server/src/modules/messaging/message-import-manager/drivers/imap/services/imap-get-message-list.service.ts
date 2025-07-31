@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { ImapFlow } from 'imapflow';
 
+import { ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 import { ImapClientProvider } from 'src/modules/messaging/message-import-manager/drivers/imap/providers/imap-client.provider';
 import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
 import { MessageFolderName } from 'src/modules/messaging/message-import-manager/drivers/imap/types/folders';
@@ -38,10 +39,11 @@ export class ImapGetMessageListService {
         }
 
         try {
-          const response = await this.getMessageListForMailbox(
+          const response = await this.getMessageListForMailboxWithRetry(
             client,
             mailboxName,
             folder.syncCursor,
+            connectedAccount,
           );
 
           result.push({
@@ -99,6 +101,33 @@ export class ImapGetMessageListService {
     }
 
     return folderName;
+  }
+
+  private async getMessageListForMailboxWithRetry(
+    client: ImapFlow,
+    mailbox: string,
+    cursor: string | undefined,
+    connectedAccount: Pick<
+      ConnectedAccountWorkspaceEntity,
+      'id' | 'provider' | 'connectionParameters' | 'handle'
+    >,
+  ): Promise<GetOneMessageListResponse> {
+    try {
+      return await this.getMessageListForMailbox(client, mailbox, cursor);
+    } catch (error) {
+      if (error.message === 'Connection not available') {
+        this.logger.warn(
+          `Retrying with fresh connection for mailbox ${mailbox}`,
+        );
+
+        const newClient =
+          await this.imapClientProvider.getClient(connectedAccount);
+
+        return await this.getMessageListForMailbox(newClient, mailbox, cursor);
+      }
+
+      throw error;
+    }
   }
 
   private async getMessageListForMailbox(
@@ -166,6 +195,14 @@ export class ImapGetMessageListService {
 
       return messages;
     } catch (error) {
+      if (error.message === 'Connection not available') {
+        this.logger.warn(
+          `Connection not available for mailbox ${mailbox}, will retry with fresh connection`,
+        );
+
+        throw error;
+      }
+
       this.logger.error(
         `Error fetching from mailbox ${mailbox}: ${error.message}`,
         error.stack,
