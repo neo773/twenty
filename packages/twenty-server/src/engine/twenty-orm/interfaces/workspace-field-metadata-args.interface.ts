@@ -6,6 +6,7 @@ import { type FieldMetadataSettings } from 'src/engine/metadata-modules/field-me
 import { type Gate } from 'src/engine/twenty-orm/interfaces/gate.interface';
 
 import { type ObjectMetadataEntity } from 'src/engine/metadata-modules/object-metadata/object-metadata.entity';
+import { type PreComputedFieldFunction } from 'src/engine/twenty-orm/utils/define-compute-function.util';
 
 export interface WorkspaceFieldMetadataArgs {
   /**
@@ -105,6 +106,11 @@ export interface WorkspaceFieldMetadataArgs {
    * Is active field.
    */
   readonly asExpression?: string;
+
+  /**
+   * Compute function definition for pre-computed fields.
+   */
+  readonly preComputedFieldFunction?: PreComputedFieldFunction;
 
   readonly isLabelSyncedWithName: boolean;
 }

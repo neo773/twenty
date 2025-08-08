@@ -1,5 +1,6 @@
 import { msg } from '@lingui/core/macro';
 import { FieldMetadataType } from 'twenty-shared/types';
+import { Any } from 'typeorm';
 
 import { RelationOnDeleteAction } from 'src/engine/metadata-modules/field-metadata/interfaces/relation-on-delete-action.interface';
 import { RelationType } from 'src/engine/metadata-modules/field-metadata/interfaces/relation-type.interface';
@@ -23,6 +24,8 @@ import { WorkspaceIsSystem } from 'src/engine/twenty-orm/decorators/workspace-is
 import { WorkspaceIsUnique } from 'src/engine/twenty-orm/decorators/workspace-is-unique.decorator';
 import { WorkspaceJoinColumn } from 'src/engine/twenty-orm/decorators/workspace-join-column.decorator';
 import { WorkspaceRelation } from 'src/engine/twenty-orm/decorators/workspace-relation.decorator';
+import { PreComputedFieldDependencies } from 'src/engine/twenty-orm/types/pre-computed-field-dependencies.enum';
+import { definePreComputedFieldFunction } from 'src/engine/twenty-orm/utils/define-compute-function.util';
 import { COMPANY_STANDARD_FIELD_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-field-ids';
 import { STANDARD_OBJECT_ICONS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-icons';
 import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-ids';
@@ -271,6 +274,54 @@ export class CompanyWorkspaceEntity extends BaseWorkspaceEntity {
   @WorkspaceIsDeprecated()
   @WorkspaceIsNullable()
   addressOld: string;
+
+  @WorkspaceField({
+    standardId: COMPANY_STANDARD_FIELD_IDS.lastCalendarEventDate,
+    type: FieldMetadataType.DATE_TIME,
+    label: { id: 'lastCalendarEventDate', message: 'Last Calendar Event Date' },
+    description: msg`Last Calendar Event Date`,
+    icon: 'IconCalendar',
+    preComputedFieldFunction: definePreComputedFieldFunction(
+      async (ctx) => {
+        const personRepository =
+          await ctx.twentyORMManager.getRepositoryForWorkspace(
+            ctx.workspaceId,
+            'person',
+          );
+
+        const people = await personRepository.find({
+          where: { companyId: ctx.entityId },
+          select: { id: true },
+        });
+
+        if (people.length === 0) {
+          return null;
+        }
+
+        const personIds = people.map((person) => person.id);
+
+        const calendarEventRepository =
+          await ctx.twentyORMManager.getRepositoryForWorkspace(
+            ctx.workspaceId,
+            'calendarEvent',
+          );
+
+        const lastEvent = await calendarEventRepository.findOne({
+          where: {
+            calendarEventParticipants: {
+              personId: Any(personIds),
+            },
+          },
+          order: { startsAt: 'ASC' },
+        });
+
+        return lastEvent?.startsAt || null;
+      },
+      [PreComputedFieldDependencies.CalendarEvent],
+    ),
+  })
+  @WorkspaceIsNullable()
+  lastCalendarEventDate: string | null;
 
   @WorkspaceField({
     standardId: COMPANY_STANDARD_FIELD_IDS.searchVector,

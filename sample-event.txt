@@ -1,0 +1,236 @@
+ProcessComputedFieldsJob - Processing events: {
+  workspaceId: '3b8e6458-5fc1-4e63-8563-008ccddaa6db',
+  eventCount: 1,
+  eventTypes: [ 'calendarEvent' ]
+}
+[
+  {
+    recordId: '7df9767e-92bd-4da6-909a-2e3ef75968ae',
+    objectMetadata: {
+      id: '3b7477a3-baf5-42d6-a171-d0b32d52b76b',
+      standardId: '20202020-8f1d-4eef-9f85-0d1965e27221',
+      dataSourceId: 'ddea45b0-0005-4a78-8e92-d28994ed7284',
+      nameSingular: 'calendarEvent',
+      namePlural: 'calendarEvents',
+      labelSingular: 'Calendar event',
+      labelPlural: 'Calendar events',
+      description: 'Calendar events',
+      icon: 'IconCalendar',
+      standardOverrides: null,
+      targetTableName: 'DEPRECATED',
+      isCustom: false,
+      isRemote: false,
+      isActive: true,
+      isSystem: true,
+      isAuditLogged: false,
+      isSearchable: false,
+      duplicateCriteria: null,
+      shortcut: null,
+      labelIdentifierFieldMetadataId: 'c1aa51ea-3a7a-4bb2-8258-f7ba348087a2',
+      imageIdentifierFieldMetadataId: null,
+      isLabelSyncedWithName: false,
+      workspaceId: '3b8e6458-5fc1-4e63-8563-008ccddaa6db',
+      createdAt: '2025-08-05T20:24:45.221Z',
+      updatedAt: '2025-08-05T20:24:45.221Z',
+      indexMetadatas: [],
+      fieldsById: {
+
+        '2d376d74-b131-4086-ac34-3c0a69592e1f': {
+          id: '2d376d74-b131-4086-ac34-3c0a69592e1f',
+          standardId: '20202020-bdf8-4572-a2cc-ecbb6bcc3a02',
+          objectMetadataId: '3b7477a3-baf5-42d6-a171-d0b32d52b76b',
+          type: 'RELATION',
+          name: 'calendarChannelEventAssociations',
+          label: 'Calendar Channel Event Associations',
+          defaultValue: null,
+          description: 'Calendar Channel Event Associations',
+          icon: 'IconCalendar',
+          standardOverrides: null,
+          options: null,
+          settings: { relationType: 'ONE_TO_MANY' },
+          isCustom: false,
+          isActive: true,
+          isSystem: true,
+          isNullable: true,
+          isUnique: false,
+          workspaceId: '3b8e6458-5fc1-4e63-8563-008ccddaa6db',
+          isLabelSyncedWithName: true,
+          relationTargetFieldMetadataId: 'c56172ac-74df-4c66-b6b7-2ed8bb174526',
+          relationTargetObjectMetadataId: 'b6ac37fe-054c-40ff-afd4-7b7c7a902917',
+          createdAt: '2025-08-05T20:24:45.221Z',
+          updatedAt: '2025-08-05T20:24:45.221Z'
+        },
+        '644565bf-c986-4c96-af03-c082b1e62c57': {
+          id: '644565bf-c986-4c96-af03-c082b1e62c57',
+          standardId: '20202020-e07e-4ccb-88f5-6f3d00458eec',
+          objectMetadataId: '3b7477a3-baf5-42d6-a171-d0b32d52b76b',
+          type: 'RELATION',
+          name: 'calendarEventParticipants',
+          label: 'Event Participants',
+          defaultValue: null,
+          description: 'Event Participants',
+          icon: 'IconUserCircle',
+          standardOverrides: null,
+          options: null,
+          settings: { relationType: 'ONE_TO_MANY' },
+          isCustom: false,
+          isActive: true,
+          isSystem: true,
+          isNullable: true,
+          isUnique: false,
+          workspaceId: '3b8e6458-5fc1-4e63-8563-008ccddaa6db',
+          isLabelSyncedWithName: false,
+          relationTargetFieldMetadataId: 'b9e47bb6-1720-4ab9-8b96-4d58ba43cb4d',
+          relationTargetObjectMetadataId: '2fee2284-169a-460d-9b45-386722fe3a78',
+          createdAt: '2025-08-05T20:24:45.221Z',
+          updatedAt: '2025-08-05T20:24:45.221Z'
+        }
+      },
+      fieldIdByName: {
+        title: 'c1aa51ea-3a7a-4bb2-8258-f7ba348087a2',
+        isCanceled: 'ef58b523-4a70-4359-836a-615764f8daab',
+        isFullDay: '9d2acdb0-6814-4acc-9e97-640b355138fa',
+        startsAt: '7b62bef4-57e3-4f65-a8b7-698594b6ffe0',
+        endsAt: '5c6ba8c9-91e8-4409-b549-6abda1b093c2',
+        externalCreatedAt: 'b81aae37-267b-4738-bd34-86f7b60e0637',
+        externalUpdatedAt: 'c8c5548c-ddaf-4060-914c-44918bbf64b7',
+        description: '2fea90db-9e0b-4e46-9b52-74d9d2cbdf4b',
+        location: '0dd0ac5c-70ad-485b-a4b1-35b5860ebce6',
+        iCalUID: '065b55a9-f541-4113-870f-e52acd0f7feb',
+        conferenceSolution: '34c56f2d-7e37-4950-a855-d7c23b8a1d7a',
+        id: 'e9113a6a-aec9-488c-87c0-4c2dfde26a82',
+        createdAt: '0230359f-86fc-4588-a32b-8f78c682d4fa',
+        updatedAt: 'c7ca6fa3-6f87-481d-ad14-12f6f5b97d89',
+        deletedAt: 'ab63035b-c257-44da-99db-bf1b5ae0a36d',
+        conferenceLink: 'a76dce7c-3f74-4e72-8b73-c1f17fbd1b25',
+        calendarChannelEventAssociations: '2d376d74-b131-4086-ac34-3c0a69592e1f',
+        calendarEventParticipants: '644565bf-c986-4c96-af03-c082b1e62c57'
+      },
+      fieldIdByJoinColumnName: {},
+      fields: [
+        {
+          id: '2d376d74-b131-4086-ac34-3c0a69592e1f',
+          standardId: '20202020-bdf8-4572-a2cc-ecbb6bcc3a02',
+          objectMetadataId: '3b7477a3-baf5-42d6-a171-d0b32d52b76b',
+          type: 'RELATION',
+          name: 'calendarChannelEventAssociations',
+          label: 'Calendar Channel Event Associations',
+          defaultValue: null,
+          description: 'Calendar Channel Event Associations',
+          icon: 'IconCalendar',
+          standardOverrides: null,
+          options: null,
+          settings: { relationType: 'ONE_TO_MANY' },
+          isCustom: false,
+          isActive: true,
+          isSystem: true,
+          isNullable: true,
+          isUnique: false,
+          workspaceId: '3b8e6458-5fc1-4e63-8563-008ccddaa6db',
+          isLabelSyncedWithName: true,
+          relationTargetFieldMetadataId: 'c56172ac-74df-4c66-b6b7-2ed8bb174526',
+          relationTargetObjectMetadataId: 'b6ac37fe-054c-40ff-afd4-7b7c7a902917',
+          createdAt: '2025-08-05T20:24:45.221Z',
+          updatedAt: '2025-08-05T20:24:45.221Z'
+        },
+        {
+          id: '644565bf-c986-4c96-af03-c082b1e62c57',
+          standardId: '20202020-e07e-4ccb-88f5-6f3d00458eec',
+          objectMetadataId: '3b7477a3-baf5-42d6-a171-d0b32d52b76b',
+          type: 'RELATION',
+          name: 'calendarEventParticipants',
+          label: 'Event Participants',
+          defaultValue: null,
+          description: 'Event Participants',
+          icon: 'IconUserCircle',
+          standardOverrides: null,
+          options: null,
+          settings: { relationType: 'ONE_TO_MANY' },
+          isCustom: false,
+          isActive: true,
+          isSystem: true,
+          isNullable: true,
+          isUnique: false,
+          workspaceId: '3b8e6458-5fc1-4e63-8563-008ccddaa6db',
+          isLabelSyncedWithName: false,
+          relationTargetFieldMetadataId: 'b9e47bb6-1720-4ab9-8b96-4d58ba43cb4d',
+          relationTargetObjectMetadataId: '2fee2284-169a-460d-9b45-386722fe3a78',
+          createdAt: '2025-08-05T20:24:45.221Z',
+          updatedAt: '2025-08-05T20:24:45.221Z'
+        }
+      ]
+    },
+    properties: {
+      before: {
+        title: 'demo5',
+        isCanceled: false,
+        isFullDay: false,
+        startsAt: '2025-08-15T03:00:00.000Z',
+        endsAt: '2025-08-15T03:45:00.000Z',
+        externalCreatedAt: '2025-08-09T14:17:10.000Z',
+        externalUpdatedAt: '2025-08-09T14:17:10.000Z',
+        description: '',
+        location: '',
+        iCalUID: 'f8b182141ed34fee87cd773c8abf21a8@zoho.in',
+        conferenceSolution: '',
+        id: '7df9767e-92bd-4da6-909a-2e3ef75968ae',
+        createdAt: '2025-08-09T14:20:01.256Z',
+        updatedAt: '2025-08-09T14:20:01.256Z',
+        deletedAt: null,
+        conferenceLink: {
+          primaryLinkLabel: '',
+          primaryLinkUrl: '',
+          secondaryLinks: []
+        }
+      },
+      after: {
+        id: '7df9767e-92bd-4da6-909a-2e3ef75968ae',
+        iCalUID: 'f8b182141ed34fee87cd773c8abf21a8@zoho.in',
+        title: 'demo5',
+        description: '',
+        startsAt: '2025-08-15T03:00:00.000Z',
+        endsAt: '2025-08-15T03:45:00.000Z',
+        location: '',
+        isFullDay: false,
+        isCanceled: false,
+        conferenceSolution: '',
+        conferenceLink: { primaryLinkLabel: '', secondaryLinks: [] },
+        externalCreatedAt: '2025-08-09T14:17:10.000Z',
+        externalUpdatedAt: '2025-08-09T14:17:10.000Z'
+      },
+      updatedFields: [
+        'startsAt',
+        'endsAt',
+        'conferenceLink',
+        'externalCreatedAt',
+        'externalUpdatedAt'
+      ],
+      diff: {
+        startsAt: {
+          before: '2025-08-15T03:00:00.000Z',
+          after: '2025-08-15T03:00:00.000Z'
+        },
+        endsAt: {
+          before: '2025-08-15T03:45:00.000Z',
+          after: '2025-08-15T03:45:00.000Z'
+        },
+        conferenceLink: {
+          before: {
+            primaryLinkLabel: '',
+            primaryLinkUrl: '',
+            secondaryLinks: []
+          },
+          after: { primaryLinkLabel: '', secondaryLinks: [] }
+        },
+        externalCreatedAt: {
+          before: '2025-08-09T14:17:10.000Z',
+          after: '2025-08-09T14:17:10.000Z'
+        },
+        externalUpdatedAt: {
+          before: '2025-08-09T14:17:10.000Z',
+          after: '2025-08-09T14:17:10.000Z'
+        }
+      }
+    }
+  }
+]

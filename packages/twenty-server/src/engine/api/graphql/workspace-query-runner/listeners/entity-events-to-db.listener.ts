@@ -13,11 +13,12 @@ import { type ObjectRecordUpdateEvent } from 'src/engine/core-modules/event-emit
 import { InjectMessageQueue } from 'src/engine/core-modules/message-queue/decorators/message-queue.decorator';
 import { MessageQueue } from 'src/engine/core-modules/message-queue/message-queue.constants';
 import { MessageQueueService } from 'src/engine/core-modules/message-queue/services/message-queue.service';
-import { SubscriptionsJob } from 'src/engine/subscriptions/subscriptions.job';
-import { WorkspaceEventBatch } from 'src/engine/workspace-event-emitter/types/workspace-event.type';
-import { UpsertTimelineActivityFromInternalEvent } from 'src/modules/timeline/jobs/upsert-timeline-activity-from-internal-event.job';
 import { CallWebhookJobsJob } from 'src/engine/core-modules/webhook/jobs/call-webhook-jobs.job';
 import { type ObjectRecordEventForWebhook } from 'src/engine/core-modules/webhook/types/object-record-event-for-webhook.type';
+import { SubscriptionsJob } from 'src/engine/subscriptions/subscriptions.job';
+import { WorkspaceEventBatch } from 'src/engine/workspace-event-emitter/types/workspace-event.type';
+import { ProcessPreComputedFieldsJob } from 'src/modules/pre-computed-fields/jobs/process-pre-computed-fields.job';
+import { UpsertTimelineActivityFromInternalEvent } from 'src/modules/timeline/jobs/upsert-timeline-activity-from-internal-event.job';
 
 @Injectable()
 export class EntityEventsToDbListener {
@@ -109,6 +110,16 @@ export class EntityEventsToDbListener {
             >(UpsertTimelineActivityFromInternalEvent.name, {
               ...batchEvent,
               events: auditLogsEvents,
+            }),
+          ]
+        : []),
+      ...(action !== DatabaseEventAction.DESTROYED
+        ? [
+            this.entityEventsToDbQueueService.add<
+              WorkspaceEventBatch<ObjectRecordNonDestructiveEvent>
+            >(ProcessPreComputedFieldsJob.name, {
+              ...batchEvent,
+              events: batchEvent.events as ObjectRecordNonDestructiveEvent[],
             }),
           ]
         : []),

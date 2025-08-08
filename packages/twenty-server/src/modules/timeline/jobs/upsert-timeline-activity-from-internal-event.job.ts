@@ -21,6 +21,8 @@ export class UpsertTimelineActivityFromInternalEvent {
   async handle(
     workspaceEventBatch: WorkspaceEventBatch<ObjectRecordNonDestructiveEvent>,
   ): Promise<void> {
+    console.log('UpsertTimelineActivityFromInternalEvent');
+    console.dir({ workspaceEventBatch }, { depth: null });
     const workspaceMemberRepository =
       await this.twentyORMGlobalManager.getRepositoryForWorkspace(
         workspaceEventBatch.workspaceId,

@@ -134,6 +134,7 @@ export const COMPANY_STANDARD_FIELD_IDS = {
   favorites: '20202020-4d1d-41ac-b13b-621631298d55',
   attachments: '20202020-c1b5-4120-b0f0-987ca401ed53',
   timelineActivities: '20202020-0414-4daf-9c0d-64fe7b27f89f',
+  lastCalendarEventDate: 'f07c5b3a-6b75-4f36-90d4-17b95504bdca',
   searchVector: '85c71601-72f9-4b7b-b343-d46100b2c74d',
 };
 
