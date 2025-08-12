@@ -218,63 +218,34 @@ export const useMultipleRecordPickerPerformSearch = () => {
               ),
           );
 
-        // For fresh searches, ignore all existing state and only use new search results
-        const newMorphItems = loadMore
-          ? [
-              ...updatedPickedItems,
-              ...updatedNonPickedExistingItems,
-              ...searchRecordsFilteredOnPickedRecordsWithoutDuplicates.map(
-                ({ recordId, objectNameSingular }) => ({
-                  isMatchingSearchFilter: true,
-                  isSelected: true,
-                  objectMetadataId:
-                    searchableObjectMetadataItems.find(
-                      (objectMetadata) =>
-                        objectMetadata.nameSingular === objectNameSingular,
-                    )?.id ?? '',
-                  recordId,
-                }),
-              ),
-              ...searchRecordsExcludingPickedRecordsWithoutDuplicates.map(
-                ({ recordId, objectNameSingular }) => ({
-                  isMatchingSearchFilter: true,
-                  isSelected: false,
-                  objectMetadataId:
-                    searchableObjectMetadataItems.find(
-                      (objectMetadata) =>
-                        objectMetadata.nameSingular === objectNameSingular,
-                    )?.id ?? '',
-                  recordId,
-                }),
-              ),
-            ]
-          : [
-              // Fresh search: only use new search results, ignore existing state
-              ...searchRecordsFilteredOnPickedRecords.map(
-                ({ recordId, objectNameSingular }) => ({
-                  isMatchingSearchFilter: true,
-                  isSelected: true,
-                  objectMetadataId:
-                    searchableObjectMetadataItems.find(
-                      (objectMetadata) =>
-                        objectMetadata.nameSingular === objectNameSingular,
-                    )?.id ?? '',
-                  recordId,
-                }),
-              ),
-              ...searchRecordsExcludingPickedRecords.map(
-                ({ recordId, objectNameSingular }) => ({
-                  isMatchingSearchFilter: true,
-                  isSelected: false,
-                  objectMetadataId:
-                    searchableObjectMetadataItems.find(
-                      (objectMetadata) =>
-                        objectMetadata.nameSingular === objectNameSingular,
-                    )?.id ?? '',
-                  recordId,
-                }),
-              ),
-            ];
+        const newMorphItems = [
+          ...updatedPickedItems,
+          ...updatedNonPickedExistingItems,
+          ...searchRecordsFilteredOnPickedRecordsWithoutDuplicates.map(
+            ({ recordId, objectNameSingular }) => ({
+              isMatchingSearchFilter: true,
+              isSelected: true,
+              objectMetadataId:
+                searchableObjectMetadataItems.find(
+                  (objectMetadata) =>
+                    objectMetadata.nameSingular === objectNameSingular,
+                )?.id ?? '',
+              recordId,
+            }),
+          ),
+          ...searchRecordsExcludingPickedRecordsWithoutDuplicates.map(
+            ({ recordId, objectNameSingular }) => ({
+              isMatchingSearchFilter: true,
+              isSelected: false,
+              objectMetadataId:
+                searchableObjectMetadataItems.find(
+                  (objectMetadata) =>
+                    objectMetadata.nameSingular === objectNameSingular,
+                )?.id ?? '',
+              recordId,
+            }),
+          ),
+        ];
 
         const morphItems = loadMore
           ? newMorphItems.reduce(
