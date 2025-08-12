@@ -9,6 +9,7 @@ import { multipleRecordPickerPickableMorphItemsComponentState } from '@/object-r
 import { multipleRecordPickerSearchFilterComponentState } from '@/object-record/record-picker/multiple-record-picker/states/multipleRecordPickerSearchFilterComponentState';
 import { multipleRecordPickerSearchableObjectMetadataItemsComponentState } from '@/object-record/record-picker/multiple-record-picker/states/multipleRecordPickerSearchableObjectMetadataItemsComponentState';
 import { searchRecordStoreComponentFamilyState } from '@/object-record/record-picker/multiple-record-picker/states/searchRecordStoreComponentFamilyState';
+import { sortRecordsByTSRank } from '@/object-record/record-picker/multiple-record-picker/utils/sortRecordsByTSRank';
 import { type RecordPickerPickableMorphItem } from '@/object-record/record-picker/types/RecordPickerPickableMorphItem';
 import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
 import { type ApolloClient } from '@apollo/client';
@@ -217,34 +218,63 @@ export const useMultipleRecordPickerPerformSearch = () => {
               ),
           );
 
-        const newMorphItems = [
-          ...updatedPickedItems,
-          ...updatedNonPickedExistingItems,
-          ...searchRecordsFilteredOnPickedRecordsWithoutDuplicates.map(
-            ({ recordId, objectNameSingular }) => ({
-              isMatchingSearchFilter: true,
-              isSelected: true,
-              objectMetadataId:
-                searchableObjectMetadataItems.find(
-                  (objectMetadata) =>
-                    objectMetadata.nameSingular === objectNameSingular,
-                )?.id ?? '',
-              recordId,
-            }),
-          ),
-          ...searchRecordsExcludingPickedRecordsWithoutDuplicates.map(
-            ({ recordId, objectNameSingular }) => ({
-              isMatchingSearchFilter: true,
-              isSelected: false,
-              objectMetadataId:
-                searchableObjectMetadataItems.find(
-                  (objectMetadata) =>
-                    objectMetadata.nameSingular === objectNameSingular,
-                )?.id ?? '',
-              recordId,
-            }),
-          ),
-        ];
+        // For fresh searches, ignore all existing state and only use new search results
+        const newMorphItems = loadMore
+          ? [
+              ...updatedPickedItems,
+              ...updatedNonPickedExistingItems,
+              ...searchRecordsFilteredOnPickedRecordsWithoutDuplicates.map(
+                ({ recordId, objectNameSingular }) => ({
+                  isMatchingSearchFilter: true,
+                  isSelected: true,
+                  objectMetadataId:
+                    searchableObjectMetadataItems.find(
+                      (objectMetadata) =>
+                        objectMetadata.nameSingular === objectNameSingular,
+                    )?.id ?? '',
+                  recordId,
+                }),
+              ),
+              ...searchRecordsExcludingPickedRecordsWithoutDuplicates.map(
+                ({ recordId, objectNameSingular }) => ({
+                  isMatchingSearchFilter: true,
+                  isSelected: false,
+                  objectMetadataId:
+                    searchableObjectMetadataItems.find(
+                      (objectMetadata) =>
+                        objectMetadata.nameSingular === objectNameSingular,
+                    )?.id ?? '',
+                  recordId,
+                }),
+              ),
+            ]
+          : [
+              // Fresh search: only use new search results, ignore existing state
+              ...searchRecordsFilteredOnPickedRecords.map(
+                ({ recordId, objectNameSingular }) => ({
+                  isMatchingSearchFilter: true,
+                  isSelected: true,
+                  objectMetadataId:
+                    searchableObjectMetadataItems.find(
+                      (objectMetadata) =>
+                        objectMetadata.nameSingular === objectNameSingular,
+                    )?.id ?? '',
+                  recordId,
+                }),
+              ),
+              ...searchRecordsExcludingPickedRecords.map(
+                ({ recordId, objectNameSingular }) => ({
+                  isMatchingSearchFilter: true,
+                  isSelected: false,
+                  objectMetadataId:
+                    searchableObjectMetadataItems.find(
+                      (objectMetadata) =>
+                        objectMetadata.nameSingular === objectNameSingular,
+                    )?.id ?? '',
+                  recordId,
+                }),
+              ),
+            ];
 
         const morphItems = loadMore
           ? newMorphItems.reduce(
@@ -260,19 +290,38 @@ export const useMultipleRecordPickerPerformSearch = () => {
             )
           : newMorphItems;
 
-        set(
-          multipleRecordPickerPickableMorphItemsComponentState.atomFamily({
-            instanceId: multipleRecordPickerInstanceId,
-          }),
-          morphItems,
-        );
-
         const searchRecords = [
           ...searchRecordsFilteredOnPickedRecords,
           ...searchRecordsExcludingPickedRecordsWithoutDuplicates,
         ];
 
-        searchRecords.forEach((searchRecord) => {
+        const sortedSearchRecords = sortRecordsByTSRank(searchRecords);
+
+        // Create tsRank map for sorting
+        const tsRankMap = new Map();
+        sortedSearchRecords.forEach((record, index) => {
+          tsRankMap.set(record.recordId, record.tsRank ?? -index);
+        });
+
+        // Sort morphItems by tsRank (selected items first, then by tsRank desc)
+        const sortedMorphItems = morphItems.sort((a, b) => {
+          if (a.isSelected && !b.isSelected) return -1;
+          if (!a.isSelected && b.isSelected) return 1;
+
+          const aTsRank = tsRankMap.get(a.recordId) ?? -1000;
+          const bTsRank = tsRankMap.get(b.recordId) ?? -1000;
+
+          return bTsRank - aTsRank;
+        });
+
+        set(
+          multipleRecordPickerPickableMorphItemsComponentState.atomFamily({
+            instanceId: multipleRecordPickerInstanceId,
+          }),
+          sortedMorphItems,
+        );
+
+        sortedSearchRecords.forEach((searchRecord) => {
           set(
             searchRecordStoreComponentFamilyState.atomFamily({
               instanceId: multipleRecordPickerInstanceId,
