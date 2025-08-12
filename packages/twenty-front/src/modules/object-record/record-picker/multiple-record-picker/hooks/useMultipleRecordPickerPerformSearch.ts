@@ -9,7 +9,7 @@ import { multipleRecordPickerPickableMorphItemsComponentState } from '@/object-r
 import { multipleRecordPickerSearchFilterComponentState } from '@/object-record/record-picker/multiple-record-picker/states/multipleRecordPickerSearchFilterComponentState';
 import { multipleRecordPickerSearchableObjectMetadataItemsComponentState } from '@/object-record/record-picker/multiple-record-picker/states/multipleRecordPickerSearchableObjectMetadataItemsComponentState';
 import { searchRecordStoreComponentFamilyState } from '@/object-record/record-picker/multiple-record-picker/states/searchRecordStoreComponentFamilyState';
-import { sortRecordsByTSRank } from '@/object-record/record-picker/multiple-record-picker/utils/sortRecordsByTSRank';
+import { sortMorphItemsByTSRank } from '@/object-record/record-picker/multiple-record-picker/utils/sortMorphItemsByTSRank';
 import { type RecordPickerPickableMorphItem } from '@/object-record/record-picker/types/RecordPickerPickableMorphItem';
 import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
 import { type ApolloClient } from '@apollo/client';
@@ -295,24 +295,10 @@ export const useMultipleRecordPickerPerformSearch = () => {
           ...searchRecordsExcludingPickedRecordsWithoutDuplicates,
         ];
 
-        const sortedSearchRecords = sortRecordsByTSRank(searchRecords);
-
-        // Create tsRank map for sorting
-        const tsRankMap = new Map();
-        sortedSearchRecords.forEach((record, index) => {
-          tsRankMap.set(record.recordId, record.tsRank ?? -index);
-        });
-
-        // Sort morphItems by tsRank (selected items first, then by tsRank desc)
-        const sortedMorphItems = morphItems.sort((a, b) => {
-          if (a.isSelected && !b.isSelected) return -1;
-          if (!a.isSelected && b.isSelected) return 1;
-
-          const aTsRank = tsRankMap.get(a.recordId) ?? -1000;
-          const bTsRank = tsRankMap.get(b.recordId) ?? -1000;
-
-          return bTsRank - aTsRank;
-        });
+        const sortedMorphItems = sortMorphItemsByTSRank(
+          morphItems,
+          searchRecords,
+        );
 
         set(
           multipleRecordPickerPickableMorphItemsComponentState.atomFamily({
@@ -321,7 +307,7 @@ export const useMultipleRecordPickerPerformSearch = () => {
           sortedMorphItems,
         );
 
-        sortedSearchRecords.forEach((searchRecord) => {
+        searchRecords.forEach((searchRecord) => {
           set(
             searchRecordStoreComponentFamilyState.atomFamily({
               instanceId: multipleRecordPickerInstanceId,
