@@ -1008,6 +1008,7 @@ export enum FieldMetadataType {
 
 export type FieldPermission = {
   __typename?: 'FieldPermission';
+  canEditInUI?: Maybe<Scalars['Boolean']>;
   canReadFieldValue?: Maybe<Scalars['Boolean']>;
   canUpdateFieldValue?: Maybe<Scalars['Boolean']>;
   fieldMetadataId: Scalars['UUID'];

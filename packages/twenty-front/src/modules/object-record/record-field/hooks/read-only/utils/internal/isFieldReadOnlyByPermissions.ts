@@ -1,3 +1,4 @@
+import { isFieldReadOnlyBySystem } from '@/object-record/record-field/hooks/read-only/utils/internal/isFieldReadOnlyBySystem';
 import { isObjectReadOnly } from '@/object-record/record-field/hooks/read-only/utils/isObjectReadOnly';
 import { type ObjectPermission } from '~/generated/graphql';
 
@@ -17,5 +18,12 @@ export const isFieldReadOnlyByPermissions = ({
   const fieldMetadataIsRestrictedForUpdate =
     objectPermissions.restrictedFields[fieldMetadataId]?.canUpdate === false;
 
-  return fieldMetadataIsRestrictedForUpdate;
+  // Get the canEditInUI value from field permissions
+  const canEditInUI =
+    objectPermissions.restrictedFields[fieldMetadataId]?.canEditInUI;
+
+  // Check if field is read-only by system using the clean permission
+  const fieldReadOnlyBySystem = isFieldReadOnlyBySystem({ canEditInUI });
+
+  return fieldMetadataIsRestrictedForUpdate || fieldReadOnlyBySystem;
 };

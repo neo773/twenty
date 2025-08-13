@@ -30,12 +30,17 @@ const FIND_RECORDS_DISPLAYABLE_FIELD_TYPES = [
 export const shouldDisplayFormField = ({
   fieldMetadataItem,
   actionType,
+  canEditInUI,
 }: {
   fieldMetadataItem: FieldMetadataItem;
   actionType: WorkflowActionType;
+  canEditInUI?: boolean | null;
 }) => {
   let isTypeAllowedForAction = false;
   const isIdField = fieldMetadataItem.name === 'id';
+
+  // Use clean permission logic - if canEditInUI is false, field is not editable
+  const isFieldEditable = canEditInUI !== false;
 
   switch (actionType) {
     case 'CREATE_RECORD':
@@ -43,18 +48,14 @@ export const shouldDisplayFormField = ({
         fieldMetadataItem.type !== FieldMetadataType.RELATION ||
         fieldMetadataItem.settings?.['relationType'] === 'MANY_TO_ONE';
       return (
-        isTypeAllowedForAction &&
-        !fieldMetadataItem.isSystem &&
-        fieldMetadataItem.isActive
+        isTypeAllowedForAction && isFieldEditable && fieldMetadataItem.isActive
       );
     case 'UPDATE_RECORD':
       isTypeAllowedForAction =
         COMMON_DISPLAYABLE_FIELD_TYPES.includes(fieldMetadataItem.type) ||
         fieldMetadataItem.settings?.['relationType'] === 'MANY_TO_ONE';
       return (
-        isTypeAllowedForAction &&
-        !fieldMetadataItem.isSystem &&
-        fieldMetadataItem.isActive
+        isTypeAllowedForAction && isFieldEditable && fieldMetadataItem.isActive
       );
     case 'FIND_RECORDS':
       isTypeAllowedForAction = FIND_RECORDS_DISPLAYABLE_FIELD_TYPES.includes(
@@ -62,7 +63,7 @@ export const shouldDisplayFormField = ({
       );
       return (
         isTypeAllowedForAction &&
-        (!fieldMetadataItem.isSystem || isIdField) &&
+        (isFieldEditable || isIdField) &&
         fieldMetadataItem.isActive
       );
     default:

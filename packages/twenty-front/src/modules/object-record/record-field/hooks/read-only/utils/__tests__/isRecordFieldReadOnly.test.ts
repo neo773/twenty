@@ -1,91 +1,70 @@
-import { isRecordFieldReadOnly } from '@/object-record/record-field/hooks/read-only/utils/isRecordFieldReadOnly';
-import { FieldMetadataType } from '~/generated-metadata/graphql';
+import { isRecordFieldReadOnly } from '../isRecordFieldReadOnly';
 
 describe('isRecordFieldReadOnly', () => {
   const mockObjectPermissions = {
+    canReadObjectRecords: true,
     canUpdateObjectRecords: true,
-    objectMetadataId: '123',
-    restrictedFields: {},
+    restrictedFields: {
+      field1: { canUpdate: false, canEditInUI: false },
+      field2: { canUpdate: true, canEditInUI: null },
+    },
   };
 
-  const mockParams = {
-    isRecordReadOnly: false,
-    objectPermissions: mockObjectPermissions,
-    fieldMetadataId: 'field-123',
-    objectNameSingular: 'person',
-    fieldName: 'firstName',
-    fieldType: FieldMetadataType.TEXT,
-    isCustom: false,
-  };
-
-  it('should return true when record is read-only', () => {
+  it('should return true when record is read only', () => {
     const result = isRecordFieldReadOnly({
-      ...mockParams,
       isRecordReadOnly: true,
+      objectPermissions: mockObjectPermissions,
+      fieldMetadataId: 'field1',
     });
 
     expect(result).toBe(true);
   });
 
-  it('should return true when object lacks update permissions', () => {
+  it('should return true when field cannot be updated', () => {
     const result = isRecordFieldReadOnly({
-      ...mockParams,
-      objectPermissions: {
-        ...mockObjectPermissions,
-        canUpdateObjectRecords: false,
-      },
+      isRecordReadOnly: false,
+      objectPermissions: mockObjectPermissions,
+      fieldMetadataId: 'field1',
     });
 
     expect(result).toBe(true);
   });
 
-  it('should return true when field is restricted by permissions', () => {
+  it('should return false when field can be updated and record is not read only', () => {
     const result = isRecordFieldReadOnly({
-      ...mockParams,
+      isRecordReadOnly: false,
+      objectPermissions: mockObjectPermissions,
+      fieldMetadataId: 'field2',
+    });
+
+    expect(result).toBe(false);
+  });
+
+  it('should return true when canEditInUI is false', () => {
+    const result = isRecordFieldReadOnly({
+      isRecordReadOnly: false,
       objectPermissions: {
         ...mockObjectPermissions,
         restrictedFields: {
-          'field-123': { canUpdate: false },
+          field1: { canUpdate: true, canEditInUI: false },
         },
       },
+      fieldMetadataId: 'field1',
     });
 
     expect(result).toBe(true);
   });
 
-  it('should return true for system read-only fields like createdAt', () => {
+  it('should return false when canEditInUI is null', () => {
     const result = isRecordFieldReadOnly({
-      ...mockParams,
-      fieldName: 'createdAt',
-      fieldType: FieldMetadataType.DATE_TIME,
-    });
-
-    expect(result).toBe(true);
-  });
-
-  it('should return true for calendar event objects (system read-only)', () => {
-    const result = isRecordFieldReadOnly({
-      ...mockParams,
-      objectNameSingular: 'calendarEvent',
-    });
-
-    expect(result).toBe(true);
-  });
-
-  it('should return true for workflow non-name fields (system read-only)', () => {
-    const result = isRecordFieldReadOnly({
-      ...mockParams,
-      objectNameSingular: 'workflow',
-      fieldName: 'status',
-      isCustom: false,
-    });
-
-    expect(result).toBe(true);
-  });
-
-  it('should return false when all conditions allow editing', () => {
-    const result = isRecordFieldReadOnly({
-      ...mockParams,
+      isRecordReadOnly: false,
+      objectPermissions: {
+        ...mockObjectPermissions,
+        restrictedFields: {
+          field1: { canUpdate: true, canEditInUI: null },
+        },
+      },
+      fieldMetadataId: 'field1',
     });
 
     expect(result).toBe(false);

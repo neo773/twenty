@@ -71,10 +71,6 @@ export const RecordTableCellFieldContextLabelIdentifier = ({
         displayedMaxRows: 1,
         isRecordFieldReadOnly: isRecordFieldReadOnly({
           objectPermissions,
-          objectNameSingular: objectMetadataItem.nameSingular,
-          fieldName: columnDefinition.metadata.fieldName,
-          fieldType: columnDefinition.type,
-          isCustom: objectMetadataItem.isCustom,
           fieldMetadataId: columnDefinition.fieldMetadataId,
           isRecordReadOnly: isRecordReadOnly ?? false,
         }),

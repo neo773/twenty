@@ -144,10 +144,6 @@ export const FieldsCard = ({
                           objectMetadataId: objectMetadataItem.id,
                         }),
                       fieldMetadataId: fieldMetadataItem.id,
-                      objectNameSingular,
-                      fieldName: fieldMetadataItem.name,
-                      fieldType: fieldMetadataItem.type,
-                      isCustom: fieldMetadataItem.isCustom ?? false,
                     }),
                   }}
                 >
@@ -195,10 +191,6 @@ export const FieldsCard = ({
                         objectMetadataId: objectMetadataItem.id,
                       }),
                     fieldMetadataId: fieldMetadataItem.id,
-                    objectNameSingular,
-                    fieldName: fieldMetadataItem.name,
-                    fieldType: fieldMetadataItem.type,
-                    isCustom: fieldMetadataItem.isCustom ?? false,
                   }),
                 }}
               >
@@ -247,10 +239,6 @@ export const FieldsCard = ({
                 objectMetadataId: objectMetadataItem.id,
               }),
               fieldMetadataId: fieldMetadataItem.id,
-              objectNameSingular,
-              fieldName: fieldMetadataItem.name,
-              fieldType: fieldMetadataItem.type,
-              isCustom: fieldMetadataItem.isCustom ?? false,
             }),
           }}
         >

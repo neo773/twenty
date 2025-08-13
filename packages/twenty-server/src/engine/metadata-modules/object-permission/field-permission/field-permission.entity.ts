@@ -75,6 +75,16 @@ export class FieldPermissionEntity {
   @Column({ nullable: true, type: 'boolean' })
   canUpdateFieldValue?: boolean | null;
 
+  @ValidateBy({
+    name: 'isFalseOrNull',
+    validator: {
+      validate: (value: boolean | null) => value === false || value === null,
+      defaultMessage: () => 'value must be either false or null',
+    },
+  })
+  @Column({ nullable: true, type: 'boolean' })
+  canEditInUI?: boolean | null;
+
   @Column({ nullable: false, type: 'uuid' })
   workspaceId: string;
 

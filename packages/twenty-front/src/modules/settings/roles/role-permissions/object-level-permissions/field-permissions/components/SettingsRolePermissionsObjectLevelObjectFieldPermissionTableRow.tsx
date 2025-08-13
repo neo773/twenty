@@ -15,11 +15,7 @@ import { useMemo } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 import { useIcons } from 'twenty-ui/display';
 import { v4 } from 'uuid';
-import {
-  FieldMetadataType,
-  type FieldPermission,
-  RelationType,
-} from '~/generated/graphql';
+import { type FieldPermission, RelationType } from '~/generated/graphql';
 
 export const StyledObjectFieldTableRow = styled(TableRow)`
   grid-template-columns: 180px 1fr 60px 60px;
@@ -75,20 +71,13 @@ export const SettingsRolePermissionsObjectLevelObjectFieldPermissionTableRow =
     const { upsertFieldPermissionInDraftRole } =
       useUpsertFieldPermissionInDraftRole(roleId);
 
-    const fieldIsCreatedBy =
-      fieldMetadataItem.name === 'createdBy' &&
-      fieldMetadataItem.type === FieldMetadataType.ACTOR;
-
-    const fieldIsDeletedAt =
-      fieldMetadataItem.name === 'deletedAt' &&
-      fieldMetadataItem.type === FieldMetadataType.DATE_TIME;
-
     const fieldIsLabelIdentifier =
       fieldMetadataItem.id ===
       objectMetadataItem.labelIdentifierFieldMetadataId;
 
     const fieldMustBeReadableAndUpdatable =
-      fieldIsLabelIdentifier || fieldIsCreatedBy || fieldIsDeletedAt;
+      fieldIsLabelIdentifier ||
+      fieldPermissionForThisFieldMetadataItem?.canEditInUI === false;
 
     const handleSeeChange = () => {
       if (isDefined(fieldPermissionForThisFieldMetadataItem)) {

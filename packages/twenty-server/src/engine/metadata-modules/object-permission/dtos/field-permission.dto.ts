@@ -21,4 +21,7 @@ export class FieldPermissionDTO {
 
   @Field(() => Boolean, { nullable: true })
   canUpdateFieldValue?: boolean | null;
+
+  @Field(() => Boolean, { nullable: true })
+  canEditInUI?: boolean | null;
 }
