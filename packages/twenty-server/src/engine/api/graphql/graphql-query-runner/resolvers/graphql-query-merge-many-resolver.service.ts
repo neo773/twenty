@@ -302,6 +302,25 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
       }
     });
 
+    const result: Record<string, unknown> = {};
+
+    const allTextProperties = compositeType.properties.filter(
+      (prop) => prop.type === FieldMetadataType.TEXT,
+    );
+
+    allTextProperties.forEach((property) => {
+      if (property.isIncludedInUniqueConstraint) {
+        const priorityPropertyValue = priorityValue?.[property.name] as string;
+
+        result[property.name] =
+          priorityPropertyValue || allPrimaryValues[0] || '';
+      } else {
+        const priorityPropertyValue = priorityValue?.[property.name] as string;
+
+        result[property.name] = priorityPropertyValue || null;
+      }
+    });
+
     if (fieldMetadata.type === FieldMetadataType.EMAILS) {
       const allStringValues = [
         ...allPrimaryValues,
@@ -316,92 +335,40 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
           ) || lowerVal,
       );
 
-      const priorityPrimaryValue = priorityValue?.[
-        primaryProperty.name
-      ] as string;
-      const finalPrimaryValue = priorityPrimaryValue || uniqueValues[0] || '';
-
+      const finalPrimaryValue = result[primaryProperty.name] as string;
       const finalAdditionalValues = uniqueValues.filter(
         (val) => val.toLowerCase() !== finalPrimaryValue.toLowerCase(),
       );
 
-      return {
-        [primaryProperty.name]: finalPrimaryValue,
-        [additionalProperty.name]:
-          finalAdditionalValues.length > 0 ? finalAdditionalValues : null,
-      };
-    }
+      result[additionalProperty.name] =
+        finalAdditionalValues.length > 0 ? finalAdditionalValues : null;
+    } else {
+      const uniqueAdditionalValues = allAdditionalValues.filter(
+        (item, index, arr) => {
+          if (typeof item === 'string') {
+            return (
+              arr.findIndex((v) => typeof v === 'string' && v === item) ===
+              index
+            );
+          } else if (typeof item === 'object') {
+            const itemStr = JSON.stringify(item);
 
-    if (fieldMetadata.type === FieldMetadataType.PHONES) {
-      const priorityPrimaryValue = priorityValue?.[
-        primaryProperty.name
-      ] as string;
-      const priorityCountryCode = priorityValue?.[
-        'primaryPhoneCountryCode'
-      ] as string;
-      const priorityCallingCode = priorityValue?.[
-        'primaryPhoneCallingCode'
-      ] as string;
+            return (
+              arr.findIndex(
+                (v) => typeof v === 'object' && JSON.stringify(v) === itemStr,
+              ) === index
+            );
+          }
 
-      const finalPrimaryValue =
-        priorityPrimaryValue || allPrimaryValues[0] || '';
-
-      const allPhoneObjects = allAdditionalValues.filter(
-        (val) =>
-          typeof val === 'object' &&
-          val !== null &&
-          typeof (val as { number: string }).number === 'string',
+          return false;
+        },
       );
 
-      const uniquePhoneObjects = allPhoneObjects.filter((phone, index, arr) => {
-        const phoneStr = JSON.stringify(phone);
-
-        return arr.findIndex((p) => JSON.stringify(p) === phoneStr) === index;
-      });
-
-      return {
-        [primaryProperty.name]: finalPrimaryValue,
-        primaryPhoneCountryCode: priorityCountryCode || null,
-        primaryPhoneCallingCode: priorityCallingCode || null,
-        [additionalProperty.name]:
-          uniquePhoneObjects.length > 0 ? uniquePhoneObjects : null,
-      };
+      result[additionalProperty.name] =
+        uniqueAdditionalValues.length > 0 ? uniqueAdditionalValues : null;
     }
 
-    const allValidValues = allAdditionalValues.filter(
-      (val) => val !== null && val !== undefined,
-    );
-
-    const uniqueValues = allValidValues.filter((item, index, arr) => {
-      if (typeof item === 'string') {
-        return (
-          arr.findIndex((v) => typeof v === 'string' && v === item) === index
-        );
-      } else if (typeof item === 'object') {
-        const itemStr = JSON.stringify(item);
-
-        return (
-          arr.findIndex(
-            (v) => typeof v === 'object' && JSON.stringify(v) === itemStr,
-          ) === index
-        );
-      }
-
-      return false;
-    });
-
-    const priorityPrimaryValue = priorityValue?.[
-      primaryProperty.name
-    ] as string;
-    const finalPrimaryValue = priorityPrimaryValue || allPrimaryValues[0] || '';
-
-    const finalAdditionalValues = [...uniqueValues];
-
-    return {
-      [primaryProperty.name]: finalPrimaryValue,
-      [additionalProperty.name]:
-        finalAdditionalValues.length > 0 ? finalAdditionalValues : null,
-    };
+    return result;
   }
 
   private createDryRunResponse(
