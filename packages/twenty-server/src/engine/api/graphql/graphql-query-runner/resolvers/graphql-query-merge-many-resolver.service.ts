@@ -302,42 +302,45 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
       }
     });
 
-    const allValues = [...allPrimaryValues, ...allAdditionalValues];
-    const uniqueValues = uniq(
-      allValues.map((val) =>
-        typeof val === 'string'
-          ? val.toLowerCase()
-          : JSON.stringify(val).toLowerCase(),
-      ),
+    const allStringValues = [...allPrimaryValues];
+    const allObjectValues = allAdditionalValues.filter(
+      (val) => typeof val === 'object' && val !== null,
+    );
+    const allStringFromAdditional = allAdditionalValues.filter(
+      (val) => typeof val === 'string',
+    );
+
+    allStringValues.push(...allStringFromAdditional);
+
+    const uniqueStringValues = uniq(
+      allStringValues.map((val) => val.toLowerCase()),
     ).map(
       (lowerVal) =>
-        allValues.find((originalVal) => {
-          const normalizedOriginal =
-            typeof originalVal === 'string'
-              ? originalVal.toLowerCase()
-              : JSON.stringify(originalVal).toLowerCase();
-
-          return normalizedOriginal === lowerVal;
-        }) || lowerVal,
+        allStringValues.find(
+          (originalVal) => originalVal.toLowerCase() === lowerVal,
+        ) || lowerVal,
     );
+
+    const uniqueObjectValues = allObjectValues.filter((obj, index, arr) => {
+      const objStr = JSON.stringify(obj);
+
+      return arr.findIndex((o) => JSON.stringify(o) === objStr) === index;
+    });
 
     const priorityPrimaryValue = priorityValue?.[
       primaryProperty.name
     ] as string;
-
     const finalPrimaryValue =
-      priorityPrimaryValue ||
-      (typeof uniqueValues[0] === 'string' ? uniqueValues[0] : '');
+      priorityPrimaryValue || uniqueStringValues[0] || '';
 
-    const finalAdditionalValues = uniqueValues.filter((val) => {
-      const normalizedVal =
-        typeof val === 'string'
-          ? val.toLowerCase()
-          : JSON.stringify(val).toLowerCase();
-      const normalizedPrimary = finalPrimaryValue.toLowerCase();
+    const finalAdditionalStringValues = uniqueStringValues.filter(
+      (val) => val.toLowerCase() !== finalPrimaryValue.toLowerCase(),
+    );
 
-      return normalizedVal !== normalizedPrimary;
-    });
+    const finalAdditionalValues = [
+      ...uniqueObjectValues,
+      ...finalAdditionalStringValues,
+    ];
 
     return {
       [primaryProperty.name]: finalPrimaryValue,
