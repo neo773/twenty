@@ -121,11 +121,11 @@ describe('merge people resolvers (integration)', () => {
             lastName: 'Johnson',
           },
           phones: {
-            primaryPhoneNumber: '+1234567890',
+            primaryPhoneNumber: '234567890',
             primaryPhoneCountryCode: 'US',
             primaryPhoneCallingCode: '+1',
             additionalPhones: [
-              { number: '+1987654321', countryCode: 'US', callingCode: '+1' },
+              { number: '987654321', countryCode: 'US', callingCode: '+1' },
             ],
           },
         },
@@ -135,10 +135,12 @@ describe('merge people resolvers (integration)', () => {
             lastName: 'Johnson',
           },
           phones: {
-            primaryPhoneNumber: '+33123456789',
+            primaryPhoneNumber: '123456789',
             primaryPhoneCountryCode: 'FR',
             primaryPhoneCallingCode: '+33',
-            additionalPhones: null,
+            additionalPhones: [
+              { number: '123456789', countryCode: 'FR', callingCode: '+33' },
+            ],
           },
         },
       ],
@@ -169,7 +171,7 @@ describe('merge people resolvers (integration)', () => {
     expect(mergedPerson.phones.additionalPhones).toEqual(
       expect.arrayContaining([
         { number: '987654321', countryCode: 'US', callingCode: '+1' },
-        '123456789',
+        { number: '123456789', countryCode: 'FR', callingCode: '+33' },
       ]),
     );
     expect(mergedPerson.phones.additionalPhones).toHaveLength(2);
@@ -204,7 +206,9 @@ describe('merge people resolvers (integration)', () => {
           linkedinLink: {
             primaryLinkLabel: 'GitHub',
             primaryLinkUrl: 'https://github.com/bob',
-            secondaryLinks: null,
+            secondaryLinks: [
+              { label: 'GitHub', url: 'https://github.com/bob' },
+            ],
           },
         },
       ],
@@ -237,7 +241,7 @@ describe('merge people resolvers (integration)', () => {
     expect(mergedPerson.linkedinLink.secondaryLinks).toEqual(
       expect.arrayContaining([
         { label: 'Twitter', url: 'https://twitter.com/bob' },
-        'https://github.com/bob',
+        { label: 'GitHub', url: 'https://github.com/bob' },
       ]),
     );
     expect(mergedPerson.linkedinLink.secondaryLinks).toHaveLength(2);

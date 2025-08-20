@@ -302,45 +302,66 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
       }
     });
 
-    const allStringValues = [...allPrimaryValues];
-    const allObjectValues = allAdditionalValues.filter(
-      (val) => typeof val === 'object' && val !== null,
+    const isStringArrayField = fieldMetadata.type === FieldMetadataType.EMAILS;
+
+    if (isStringArrayField) {
+      const allStringValues = [
+        ...allPrimaryValues,
+        ...allAdditionalValues.filter((val) => typeof val === 'string'),
+      ];
+      const uniqueValues = uniq(
+        allStringValues.map((val) => val.toLowerCase()),
+      ).map(
+        (lowerVal) =>
+          allStringValues.find(
+            (originalVal) => originalVal.toLowerCase() === lowerVal,
+          ) || lowerVal,
+      );
+
+      const priorityPrimaryValue = priorityValue?.[
+        primaryProperty.name
+      ] as string;
+      const finalPrimaryValue = priorityPrimaryValue || uniqueValues[0] || '';
+
+      const finalAdditionalValues = uniqueValues.filter(
+        (val) => val.toLowerCase() !== finalPrimaryValue.toLowerCase(),
+      );
+
+      return {
+        [primaryProperty.name]: finalPrimaryValue,
+        [additionalProperty.name]:
+          finalAdditionalValues.length > 0 ? finalAdditionalValues : null,
+      };
+    }
+
+    const allValidValues = allAdditionalValues.filter(
+      (val) => val !== null && val !== undefined,
     );
-    const allStringFromAdditional = allAdditionalValues.filter(
-      (val) => typeof val === 'string',
-    );
 
-    allStringValues.push(...allStringFromAdditional);
+    const uniqueValues = allValidValues.filter((item, index, arr) => {
+      if (typeof item === 'string') {
+        return (
+          arr.findIndex((v) => typeof v === 'string' && v === item) === index
+        );
+      } else if (typeof item === 'object') {
+        const itemStr = JSON.stringify(item);
 
-    const uniqueStringValues = uniq(
-      allStringValues.map((val) => val.toLowerCase()),
-    ).map(
-      (lowerVal) =>
-        allStringValues.find(
-          (originalVal) => originalVal.toLowerCase() === lowerVal,
-        ) || lowerVal,
-    );
+        return (
+          arr.findIndex(
+            (v) => typeof v === 'object' && JSON.stringify(v) === itemStr,
+          ) === index
+        );
+      }
 
-    const uniqueObjectValues = allObjectValues.filter((obj, index, arr) => {
-      const objStr = JSON.stringify(obj);
-
-      return arr.findIndex((o) => JSON.stringify(o) === objStr) === index;
+      return false;
     });
 
     const priorityPrimaryValue = priorityValue?.[
       primaryProperty.name
     ] as string;
-    const finalPrimaryValue =
-      priorityPrimaryValue || uniqueStringValues[0] || '';
+    const finalPrimaryValue = priorityPrimaryValue || allPrimaryValues[0] || '';
 
-    const finalAdditionalStringValues = uniqueStringValues.filter(
-      (val) => val.toLowerCase() !== finalPrimaryValue.toLowerCase(),
-    );
-
-    const finalAdditionalValues = [
-      ...uniqueObjectValues,
-      ...finalAdditionalStringValues,
-    ];
+    const finalAdditionalValues = [...uniqueValues];
 
     return {
       [primaryProperty.name]: finalPrimaryValue,
