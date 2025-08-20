@@ -33,7 +33,6 @@ describe('merge people resolvers (integration)', () => {
   });
 
   it('should merge people with email consolidation', async () => {
-    // Create test people with different emails
     const createPeopleOperation = createManyOperationFactory({
       objectMetadataSingularName: 'person',
       objectMetadataPluralName: 'people',
@@ -72,7 +71,6 @@ describe('merge people resolvers (integration)', () => {
     const createdPeople = createResponse.body.data.createPeople;
     const personIds = createdPeople.map((person: any) => person.id);
 
-    // Merge the people
     const mergeOperation = {
       query: gql`
         mutation mergePeople($ids: [UUID!]!, $conflictPriorityIndex: Int!) {
@@ -94,7 +92,6 @@ describe('merge people resolvers (integration)', () => {
 
     const mergedPerson = mergeResponse.body.data.mergePeople;
 
-    // Verify email consolidation
     expect(mergedPerson.emails.primaryEmail).toBe('john@example.com');
     expect(mergedPerson.emails.additionalEmails).toEqual(
       expect.arrayContaining([
@@ -105,7 +102,6 @@ describe('merge people resolvers (integration)', () => {
     );
     expect(mergedPerson.emails.additionalEmails).toHaveLength(3);
 
-    // Verify other fields use priority logic
     expect(mergedPerson.jobTitle).toBe('Software Engineer');
     expect(mergedPerson.name.firstName).toBe('John');
     expect(mergedPerson.name.lastName).toBe('Doe');
