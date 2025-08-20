@@ -302,9 +302,7 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
       }
     });
 
-    const isStringArrayField = fieldMetadata.type === FieldMetadataType.EMAILS;
-
-    if (isStringArrayField) {
+    if (fieldMetadata.type === FieldMetadataType.EMAILS) {
       const allStringValues = [
         ...allPrimaryValues,
         ...allAdditionalValues.filter((val) => typeof val === 'string'),
@@ -331,6 +329,42 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
         [primaryProperty.name]: finalPrimaryValue,
         [additionalProperty.name]:
           finalAdditionalValues.length > 0 ? finalAdditionalValues : null,
+      };
+    }
+
+    if (fieldMetadata.type === FieldMetadataType.PHONES) {
+      const priorityPrimaryValue = priorityValue?.[
+        primaryProperty.name
+      ] as string;
+      const priorityCountryCode = priorityValue?.[
+        'primaryPhoneCountryCode'
+      ] as string;
+      const priorityCallingCode = priorityValue?.[
+        'primaryPhoneCallingCode'
+      ] as string;
+
+      const finalPrimaryValue =
+        priorityPrimaryValue || allPrimaryValues[0] || '';
+
+      const allPhoneObjects = allAdditionalValues.filter(
+        (val) =>
+          typeof val === 'object' &&
+          val !== null &&
+          typeof (val as { number: string }).number === 'string',
+      );
+
+      const uniquePhoneObjects = allPhoneObjects.filter((phone, index, arr) => {
+        const phoneStr = JSON.stringify(phone);
+
+        return arr.findIndex((p) => JSON.stringify(p) === phoneStr) === index;
+      });
+
+      return {
+        [primaryProperty.name]: finalPrimaryValue,
+        primaryPhoneCountryCode: priorityCountryCode || null,
+        primaryPhoneCallingCode: priorityCallingCode || null,
+        [additionalProperty.name]:
+          uniquePhoneObjects.length > 0 ? uniquePhoneObjects : null,
       };
     }
 
