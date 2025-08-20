@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import uniq from 'lodash.uniq';
 import {
   MUTATION_MAX_MERGE_RECORDS,
   QUERY_MAX_RECORDS,
@@ -27,6 +28,8 @@ import { ObjectRecordsToGraphqlConnectionHelper } from 'src/engine/api/graphql/g
 import { buildColumnsToReturn } from 'src/engine/api/graphql/graphql-query-runner/utils/build-columns-to-return';
 import { hasRecordFieldValue } from 'src/engine/api/graphql/graphql-query-runner/utils/has-record-field-value.util';
 import { type AuthContext } from 'src/engine/core-modules/auth/types/auth-context.type';
+import { compositeTypeDefinitions } from 'src/engine/metadata-modules/field-metadata/composite-types';
+import { isCompositeFieldMetadataType } from 'src/engine/metadata-modules/field-metadata/utils/is-composite-field-metadata-type.util';
 import { assertMutationNotOnRemoteObject } from 'src/engine/metadata-modules/object-metadata/utils/assert-mutation-not-on-remote-object.util';
 import { type ObjectMetadataItemWithFieldMaps } from 'src/engine/metadata-modules/types/object-metadata-item-with-field-maps';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
@@ -188,6 +191,25 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
       } else if (recordsWithValues.length === 1) {
         mergedResult[fieldName] = recordsWithValues[0].value;
       } else {
+        const fieldMetadata = Object.values(
+          objectMetadataItemWithFieldMaps.fieldsById,
+        ).find((field) => field?.name === fieldName);
+
+        if (fieldMetadata && isCompositeFieldMetadataType(fieldMetadata.type)) {
+          const mergedCompositeValue = this.mergeCompositeField(
+            fieldName,
+            recordsWithValues,
+            priorityRecordId,
+            objectMetadataItemWithFieldMaps,
+          );
+
+          if (mergedCompositeValue !== null) {
+            mergedResult[fieldName] = mergedCompositeValue;
+
+            return;
+          }
+        }
+
         const priorityValue = recordsWithValues.find(
           (item) => item.recordId === priorityRecordId,
         );
@@ -216,6 +238,112 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
     }
 
     return false;
+  }
+
+  private mergeCompositeField(
+    fieldName: string,
+    recordsWithValues: { value: unknown; recordId: string }[],
+    priorityRecordId: string,
+    objectMetadataItemWithFieldMaps: ObjectMetadataItemWithFieldMaps,
+  ): unknown {
+    const fieldMetadata = Object.values(
+      objectMetadataItemWithFieldMaps.fieldsById,
+    ).find((field) => field?.name === fieldName);
+
+    if (!fieldMetadata || !isCompositeFieldMetadataType(fieldMetadata.type)) {
+      return null;
+    }
+
+    const compositeType = compositeTypeDefinitions.get(fieldMetadata.type);
+
+    if (!compositeType) {
+      return null;
+    }
+
+    const primaryProperty = compositeType.properties.find(
+      (prop) =>
+        prop.isIncludedInUniqueConstraint &&
+        prop.type === FieldMetadataType.TEXT,
+    );
+    const additionalProperty = compositeType.properties.find(
+      (prop) => prop.type === FieldMetadataType.RAW_JSON,
+    );
+
+    if (!primaryProperty || !additionalProperty) {
+      return null;
+    }
+
+    const priorityRecord = recordsWithValues.find(
+      (item) => item.recordId === priorityRecordId,
+    );
+    const priorityValue = priorityRecord?.value as
+      | Record<string, unknown>
+      | undefined;
+
+    const allPrimaryValues: string[] = [];
+    const allAdditionalValues: unknown[] = [];
+
+    recordsWithValues.forEach((item) => {
+      const value = item.value as Record<string, unknown> | undefined;
+
+      if (value) {
+        const primaryValue = value[primaryProperty.name] as string;
+        const additionalValues = value[additionalProperty.name] as
+          | unknown[]
+          | null;
+
+        if (primaryValue && typeof primaryValue === 'string') {
+          allPrimaryValues.push(primaryValue);
+        }
+
+        if (Array.isArray(additionalValues)) {
+          allAdditionalValues.push(...additionalValues);
+        }
+      }
+    });
+
+    const allValues = [...allPrimaryValues, ...allAdditionalValues];
+    const uniqueValues = uniq(
+      allValues.map((val) =>
+        typeof val === 'string'
+          ? val.toLowerCase()
+          : JSON.stringify(val).toLowerCase(),
+      ),
+    ).map(
+      (lowerVal) =>
+        allValues.find((originalVal) => {
+          const normalizedOriginal =
+            typeof originalVal === 'string'
+              ? originalVal.toLowerCase()
+              : JSON.stringify(originalVal).toLowerCase();
+
+          return normalizedOriginal === lowerVal;
+        }) || lowerVal,
+    );
+
+    const priorityPrimaryValue = priorityValue?.[
+      primaryProperty.name
+    ] as string;
+
+    const finalPrimaryValue =
+      priorityPrimaryValue ||
+      (typeof uniqueValues[0] === 'string' ? uniqueValues[0] : '');
+
+    const finalAdditionalValues = uniqueValues.filter((val) => {
+      const normalizedVal =
+        typeof val === 'string'
+          ? val.toLowerCase()
+          : JSON.stringify(val).toLowerCase();
+      const normalizedPrimary = finalPrimaryValue.toLowerCase();
+
+      return normalizedVal !== normalizedPrimary;
+    });
+
+    return {
+      [primaryProperty.name]: finalPrimaryValue,
+      [additionalProperty.name]:
+        finalAdditionalValues.length > 0 ? finalAdditionalValues : null,
+    };
   }
 
   private createDryRunResponse(
