@@ -155,10 +155,14 @@ export class ImapMessageProcessorService {
     try {
       const uidSet = uids.join(',');
 
-      const fetchResults = client.fetch(uidSet, {
-        uid: true,
-        source: true,
-      });
+      const fetchResults = client.fetch(
+        uidSet,
+        {
+          uid: true,
+          source: true,
+        },
+        { uid: true },
+      );
 
       const messagesData = new Map<number, FetchMessageObject>();
 
@@ -207,10 +211,14 @@ export class ImapMessageProcessorService {
       const uids = messageLocations.map((loc) => loc.uid.toString());
       const uidSet = uids.join(',');
 
-      const fetchResults = client.fetch(uidSet, {
-        uid: true,
-        source: true,
-      });
+      const fetchResults = client.fetch(
+        uidSet,
+        {
+          uid: true,
+          source: true,
+        },
+        { uid: true },
+      );
 
       const messagesData = new Map<number, FetchMessageObject>();
 
