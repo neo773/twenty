@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { type FetchMessageObject, type ImapFlow } from 'imapflow';
 import { type ParsedMail, simpleParser } from 'mailparser';
 
-import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
+// import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
 import { type MessageLocation } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-message-locator.service';
 
 export type MessageFetchResult = {
@@ -16,9 +16,7 @@ export type MessageFetchResult = {
 export class ImapMessageProcessorService {
   private readonly logger = new Logger(ImapMessageProcessorService.name);
 
-  constructor(
-    private readonly imapHandleErrorService: ImapHandleErrorService,
-  ) {}
+  constructor() {} // private readonly imapHandleErrorService: ImapHandleErrorService,
 
   async processMessagesByIds(
     messageIds: string[],
@@ -210,7 +208,7 @@ export class ImapMessageProcessorService {
 
     this.logger.error(`Failed to fetch message ${messageId}: ${error.message}`);
 
-    this.imapHandleErrorService.handleImapMessagesImportError(error, messageId);
+    // this.imapHandleErrorService.handleImapMessagesImportError(error, messageId);
 
     return {
       messageId,
@@ -225,10 +223,10 @@ export class ImapMessageProcessorService {
         `Failed to fetch message ${messageId}: ${error.message}`,
       );
 
-      this.imapHandleErrorService.handleImapMessagesImportError(
-        error,
-        messageId,
-      );
+      // this.imapHandleErrorService.handleImapMessagesImportError(
+      //   error,
+      //   messageId,
+      // );
 
       return {
         messageId,
