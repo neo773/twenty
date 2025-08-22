@@ -29,14 +29,19 @@ export class ImapGetMessagesService {
   async getMessages(
     messageIds: string[],
     connectedAccount: ConnectedAccountType,
+    folder: string = 'INBOX',
   ): Promise<MessageWithParticipants[]> {
     if (!messageIds.length) {
       return [];
     }
 
+    // Convert messageIds (strings) to UIDs (numbers) for processing
+    const uids = messageIds.map((id) => parseInt(id, 10));
+
     const { batchResults } = await this.fetchByBatchService.fetchAllByBatches(
-      messageIds,
+      uids,
       connectedAccount,
+      folder,
     );
 
     this.logger.log(`IMAP fetch completed`);
@@ -71,7 +76,7 @@ export class ImapGetMessagesService {
     const messages = batchResults.map((result) => {
       if (!result.parsed) {
         this.logger.warn(
-          `Message ${result.messageId} could not be parsed - likely not found in current folders`,
+          `Message UID ${result.uid} could not be parsed - likely not found in current folders`,
         );
 
         return undefined;
@@ -79,7 +84,7 @@ export class ImapGetMessagesService {
 
       return this.createMessageFromParsedMail(
         result.parsed,
-        result.messageId,
+        result.uid.toString(),
         connectedAccount,
       );
     });
@@ -95,7 +100,7 @@ export class ImapGetMessagesService {
 
   private createMessageFromParsedMail(
     parsed: ParsedMail,
-    messageId: string,
+    externalId: string,
     connectedAccount: Pick<
       ConnectedAccountWorkspaceEntity,
       'handle' | 'handleAliases'
@@ -120,9 +125,9 @@ export class ImapGetMessagesService {
     const subject = sanitizeString(parsed.subject || '');
 
     return {
-      externalId: messageId,
-      messageThreadExternalId: threadId || messageId,
-      headerMessageId: parsed.messageId || messageId,
+      externalId: externalId,
+      messageThreadExternalId: threadId || parsed.messageId || externalId,
+      headerMessageId: parsed.messageId || externalId,
       subject: subject,
       text: text,
       receivedAt: parsed.date || new Date(),

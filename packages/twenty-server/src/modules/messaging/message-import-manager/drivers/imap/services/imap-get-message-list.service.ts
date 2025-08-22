@@ -96,22 +96,22 @@ export class ImapGetMessageListService {
     folder: string,
     messageFolder: Pick<MessageFolderWorkspaceEntity, 'syncCursor'>,
   ): Promise<GetOneMessageListResponse> {
-    const { messages, messageExternalIdsToDelete, syncCursor } =
+    const { messages, messageExternalUidsToDelete, syncCursor } =
       await this.getMessagesFromFolder(
         client,
         folder,
         messageFolder.syncCursor,
       );
 
-    messages.sort((a, b) => parseInt(b.uid) - parseInt(a.uid));
+    messages.sort((a, b) => b.uid - a.uid);
 
-    const messageExternalIds = messages.map((message) => message.id);
+    const messageExternalIds = messages.map((message) => message.uid.toString());
 
     return {
       messageExternalIds,
       nextSyncCursor: JSON.stringify(syncCursor),
       previousSyncCursor: messageFolder.syncCursor || '',
-      messageExternalIdsToDelete,
+      messageExternalIdsToDelete: messageExternalUidsToDelete.map(uid => uid.toString()),
       folderId: undefined,
     };
   }
@@ -145,8 +145,8 @@ export class ImapGetMessageListService {
     folder: string,
     cursor?: string,
   ): Promise<{
-    messages: { id: string; uid: string }[];
-    messageExternalIdsToDelete: string[];
+    messages: { uid: number }[];
+    messageExternalUidsToDelete: number[];
     syncCursor: ImapSyncCursor;
   }> {
     let lock;
@@ -162,7 +162,7 @@ export class ImapGetMessageListService {
       const mailboxState = extractMailboxState(mailbox);
       const previousCursor = parseSyncCursor(cursor);
 
-      const { messages, messageExternalIdsToDelete } =
+      const { messages, messageExternalUidsToDelete } =
         await this.imapIncrementalSyncService.syncMessages(
           client,
           previousCursor,
@@ -178,7 +178,7 @@ export class ImapGetMessageListService {
 
       return {
         messages,
-        messageExternalIdsToDelete,
+        messageExternalUidsToDelete,
         syncCursor: newSyncCursor,
       };
     } catch (err) {

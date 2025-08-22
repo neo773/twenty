@@ -2,7 +2,7 @@ import { type MailboxState } from './extract-mailbox-state.util';
 import { type ImapSyncCursor } from './parse-sync-cursor.util';
 
 export const createSyncCursor = (
-  messages: { id: string; uid: string }[],
+  messages: { uid: number }[],
   previousCursor: ImapSyncCursor | null,
   mailboxState: MailboxState,
 ): ImapSyncCursor => {
@@ -11,7 +11,7 @@ export const createSyncCursor = (
 
   const highestUid =
     messages.length > 0
-      ? Math.max(...messages.map((message) => parseInt(message.uid)))
+      ? Math.max(...messages.map((message) => message.uid))
       : lastSeenUid;
 
   return {

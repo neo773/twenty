@@ -1,27 +1,24 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { FetchQueryObject, type ImapFlow } from 'imapflow';
+import { type ImapFlow } from 'imapflow';
 
 @Injectable()
 export class ImapMessageFetcherService {
   private readonly logger = new Logger(ImapMessageFetcherService.name);
 
-  public async getAllMessageIds(client: ImapFlow): Promise<string[]> {
+  public async getAllMessageUids(client: ImapFlow): Promise<number[]> {
     try {
-      const fetchQuery: FetchQueryObject = { envelope: true };
-      const messages: string[] = [];
+      const uids: number[] = [];
 
-      for await (const msg of client.fetch('1:*', fetchQuery, { uid: true })) {
-        const messageId = msg.envelope?.messageId ?? '';
-
-        if (messageId) {
-          messages.push(messageId);
+      for await (const msg of client.fetch('1:*', {}, { uid: true })) {
+        if (msg.uid) {
+          uids.push(msg.uid);
         }
       }
 
-      return messages;
+      return uids;
     } catch (err) {
-      this.logger.error(`Error getting all message IDs: ${err.message}`);
+      this.logger.error(`Error getting all message UIDs: ${err.message}`);
 
       return [];
     }
@@ -31,7 +28,7 @@ export class ImapMessageFetcherService {
     client: ImapFlow,
     lastSeenUid: number,
     maxUid: number,
-  ): Promise<{ id: string; uid: string }[]> {
+  ): Promise<{ uid: number }[]> {
     try {
       let allUids = await client.search({ all: true }, { uid: true });
 
@@ -47,8 +44,7 @@ export class ImapMessageFetcherService {
         return [];
       }
 
-      const fetchQuery: FetchQueryObject = { envelope: true };
-      const messages: { id: string; uid: string }[] = [];
+      const messages: { uid: number }[] = [];
 
       this.logger.log(
         `Fetching ${wantedUids.length} messages, UIDs ${wantedUids[0]}..${
@@ -56,13 +52,16 @@ export class ImapMessageFetcherService {
         }`,
       );
 
-      for await (const msg of client.fetch(wantedUids, fetchQuery, {
-        uid: true,
-      })) {
-        const uid = msg.uid ? String(msg.uid) : '';
-        const messageId = msg.envelope?.messageId ?? '';
-
-        messages.push({ id: messageId, uid });
+      for await (const msg of client.fetch(
+        wantedUids,
+        {},
+        {
+          uid: true,
+        },
+      )) {
+        if (msg.uid) {
+          messages.push({ uid: msg.uid });
+        }
       }
 
       return messages;
@@ -76,7 +75,7 @@ export class ImapMessageFetcherService {
     client: ImapFlow,
     lastSeenUid: number,
     lastModSeq: bigint,
-  ): Promise<{ id: string; uid: string }[]> {
+  ): Promise<{ uid: number }[]> {
     try {
       const vanished = await client.search(
         {
@@ -86,21 +85,23 @@ export class ImapMessageFetcherService {
         { uid: true },
       );
 
-      const fetchQuery: FetchQueryObject = { envelope: true };
-      const messages: { id: string; uid: string }[] = [];
+      const messages: { uid: number }[] = [];
 
       if (vanished && Array.isArray(vanished) && vanished.length > 0) {
         this.logger.log(
           `QRESYNC: Fetching ${vanished.length} new/modified messages`,
         );
 
-        for await (const msg of client.fetch(vanished, fetchQuery, {
-          uid: true,
-        })) {
-          const uid = msg.uid ? String(msg.uid) : '';
-          const messageId = msg.envelope?.messageId ?? '';
-
-          messages.push({ id: messageId, uid });
+        for await (const msg of client.fetch(
+          vanished,
+          {},
+          {
+            uid: true,
+          },
+        )) {
+          if (msg.uid) {
+            messages.push({ uid: msg.uid });
+          }
         }
       }
 

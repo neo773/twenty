@@ -17,7 +17,6 @@ import { ImapGetMessagesService } from 'src/modules/messaging/message-import-man
 import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
 import { ImapIncrementalSyncService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-incremental-sync.service';
 import { ImapMessageFetcherService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-message-fetcher.service';
-import { ImapMessageLocatorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-message-locator.service';
 import { ImapMessageProcessorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-message-processor.service';
 import { MessageParticipantManagerModule } from 'src/modules/messaging/message-participant-manager/message-participant-manager.module';
 
@@ -40,7 +39,6 @@ import { MessageParticipantManagerModule } from 'src/modules/messaging/message-p
     ImapHandleErrorService,
     ImapIncrementalSyncService,
     ImapMessageFetcherService,
-    ImapMessageLocatorService,
     ImapMessageProcessorService,
     ImapFindSentFolderService,
   ],

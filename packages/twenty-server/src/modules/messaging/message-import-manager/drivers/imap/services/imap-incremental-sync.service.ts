@@ -9,8 +9,8 @@ import { type ImapSyncCursor } from 'src/modules/messaging/message-import-manage
 import { ImapMessageFetcherService } from './imap-message-fetcher.service';
 
 type SyncStrategyResult = {
-  messages: { id: string; uid: string }[];
-  messageExternalIdsToDelete: string[];
+  messages: { uid: number }[];
+  messageExternalUidsToDelete: number[];
 };
 
 @Injectable()
@@ -27,7 +27,7 @@ export class ImapIncrementalSyncService {
     mailboxState: MailboxState,
     folder: string,
   ): Promise<SyncStrategyResult> {
-    const messageExternalIdsToDelete = await this.checkUidValidityChange(
+    const messageExternalUidsToDelete = await this.checkUidValidityChange(
       client,
       previousCursor,
       mailboxState,
@@ -43,7 +43,7 @@ export class ImapIncrementalSyncService {
 
     return {
       messages,
-      messageExternalIdsToDelete,
+      messageExternalUidsToDelete,
     };
   }
 
@@ -52,7 +52,7 @@ export class ImapIncrementalSyncService {
     previousCursor: ImapSyncCursor | null,
     mailboxState: MailboxState,
     folder: string,
-  ): Promise<string[]> {
+  ): Promise<number[]> {
     const lastUidValidity = previousCursor?.uidValidity ?? 0;
     const { uidValidity } = mailboxState;
 
@@ -61,7 +61,7 @@ export class ImapIncrementalSyncService {
         `UID validity changed from ${lastUidValidity} to ${uidValidity} in ${folder}. Full resync required.`,
       );
 
-      return this.imapMessageFetcherService.getAllMessageIds(client);
+      return this.imapMessageFetcherService.getAllMessageUids(client);
     }
 
     return [];
@@ -72,7 +72,7 @@ export class ImapIncrementalSyncService {
     previousCursor: ImapSyncCursor | null,
     mailboxState: MailboxState,
     folder: string,
-  ): Promise<{ id: string; uid: string }[]> {
+  ): Promise<{ uid: number }[]> {
     const lastSeenUid = previousCursor?.highestUid ?? 0;
     const supportsQresync = client.capabilities.has('QRESYNC');
     const { maxUid } = mailboxState;
