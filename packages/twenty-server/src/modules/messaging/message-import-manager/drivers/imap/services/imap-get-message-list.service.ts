@@ -105,13 +105,17 @@ export class ImapGetMessageListService {
 
     messages.sort((a, b) => b.uid - a.uid);
 
-    const messageExternalIds = messages.map((message) => message.uid.toString());
+    const messageExternalIds = messages.map((message) =>
+      message.uid.toString(),
+    );
 
     return {
       messageExternalIds,
       nextSyncCursor: JSON.stringify(syncCursor),
       previousSyncCursor: messageFolder.syncCursor || '',
-      messageExternalIdsToDelete: messageExternalUidsToDelete.map(uid => uid.toString()),
+      messageExternalIdsToDelete: messageExternalUidsToDelete.map((uid) =>
+        uid.toString(),
+      ),
       folderId: undefined,
     };
   }
