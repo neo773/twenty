@@ -29,7 +29,7 @@ export class ImapFetchByBatchService {
   async fetchAllByBatches(
     uids: number[],
     connectedAccount: ConnectedAccount,
-    folder: string = 'INBOX',
+    folder: string,
   ): Promise<FetchAllResult> {
     const batchLimit = 20;
     const batchResults: MessageFetchResult[][] = [];

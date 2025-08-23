@@ -55,6 +55,7 @@ export class ImapGetMessagesService {
       const messages = this.formatBatchResponsesAsMessages(
         batchResults,
         connectedAccount,
+        folder,
       );
 
       allMessages.push(...messages);
@@ -91,9 +92,14 @@ export class ImapGetMessagesService {
       ConnectedAccountWorkspaceEntity,
       'handle' | 'handleAliases'
     >,
+    folder: string,
   ): MessageWithParticipants[] {
     return batchResults.flatMap((batchResult) => {
-      return this.formatBatchResponseAsMessages(batchResult, connectedAccount);
+      return this.formatBatchResponseAsMessages(
+        batchResult,
+        connectedAccount,
+        folder,
+      );
     });
   }
 
@@ -103,6 +109,7 @@ export class ImapGetMessagesService {
       ConnectedAccountWorkspaceEntity,
       'handle' | 'handleAliases'
     >,
+    folder: string,
   ): MessageWithParticipants[] {
     const messages = batchResults.map((result) => {
       if (!result.parsed) {
@@ -117,12 +124,11 @@ export class ImapGetMessagesService {
         result.parsed,
         result.uid.toString(),
         connectedAccount,
+        folder,
       );
     });
 
     const validMessages = messages.filter(isDefined);
-
-    console.dir(validMessages, { depth: null });
 
     this.logger.log(
       `Successfully parsed ${validMessages.length} out of ${batchResults.length} messages`,
@@ -138,6 +144,7 @@ export class ImapGetMessagesService {
       ConnectedAccountWorkspaceEntity,
       'handle' | 'handleAliases'
     >,
+    folder: string,
   ): MessageWithParticipants {
     const participants = this.extractAllParticipants(parsed);
     const attachments = this.extractAttachments(parsed);
@@ -158,7 +165,7 @@ export class ImapGetMessagesService {
     const subject = sanitizeString(parsed.subject || '');
 
     return {
-      externalId: uid,
+      externalId: `${folder}:${uid}`,
       messageThreadExternalId: threadId || parsed.messageId || uid,
       headerMessageId: parsed.messageId || uid,
       subject: subject,
