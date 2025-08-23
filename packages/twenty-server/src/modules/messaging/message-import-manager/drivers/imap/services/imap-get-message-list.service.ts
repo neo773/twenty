@@ -105,8 +105,8 @@ export class ImapGetMessageListService {
 
     messages.sort((a, b) => b.uid - a.uid);
 
-    const messageExternalIds = messages.map((message) =>
-      message.uid.toString(),
+    const messageExternalIds = messages.map(
+      (message) => `${folder}:${message.uid.toString()}`,
     );
 
     return {

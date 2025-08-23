@@ -8,6 +8,7 @@ import { computeMessageDirection } from 'src/modules/messaging/message-import-ma
 import { ImapFetchByBatchService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-fetch-by-batch.service';
 import { type MessageFetchResult } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-message-processor.service';
 import { extractTextWithoutReplyQuotations } from 'src/modules/messaging/message-import-manager/drivers/imap/utils/extract-message-text.util';
+import { parseMessageId } from 'src/modules/messaging/message-import-manager/drivers/imap/utils/parse-message-id.util';
 import { type EmailAddress } from 'src/modules/messaging/message-import-manager/types/email-address';
 import { type MessageWithParticipants } from 'src/modules/messaging/message-import-manager/types/message';
 import { formatAddressObjectAsParticipants } from 'src/modules/messaging/message-import-manager/utils/format-address-object-as-participants.util';
@@ -29,29 +30,59 @@ export class ImapGetMessagesService {
   async getMessages(
     messageIds: string[],
     connectedAccount: ConnectedAccountType,
-    folder: string = 'INBOX',
   ): Promise<MessageWithParticipants[]> {
     if (!messageIds.length) {
       return [];
     }
 
-    // Convert messageIds (strings) to UIDs (numbers) for processing
-    const uids = messageIds.map((id) => parseInt(id, 10));
+    const folderToUidsMap = this.groupMessageIdsByFolder(messageIds);
 
-    const { batchResults } = await this.fetchByBatchService.fetchAllByBatches(
-      uids,
-      connectedAccount,
-      folder,
-    );
+    const allMessages: MessageWithParticipants[] = [];
 
-    this.logger.log(`IMAP fetch completed`);
+    for (const [folder, uids] of folderToUidsMap.entries()) {
+      if (!uids.length) {
+        continue;
+      }
 
-    const messages = this.formatBatchResponsesAsMessages(
-      batchResults,
-      connectedAccount,
-    );
+      const { batchResults } = await this.fetchByBatchService.fetchAllByBatches(
+        uids,
+        connectedAccount,
+        folder,
+      );
 
-    return messages;
+      this.logger.log(`IMAP fetch completed for folder: ${folder}`);
+
+      const messages = this.formatBatchResponsesAsMessages(
+        batchResults,
+        connectedAccount,
+      );
+
+      allMessages.push(...messages);
+    }
+
+    return allMessages;
+  }
+
+  private groupMessageIdsByFolder(messageIds: string[]): Map<string, number[]> {
+    const folderToUidsMap = new Map<string, number[]>();
+
+    for (const messageId of messageIds) {
+      const parsedMessageId = parseMessageId(messageId);
+
+      if (!parsedMessageId) {
+        this.logger.warn(`Invalid messageId format: ${messageId}`);
+        continue;
+      }
+
+      const { folder, uid } = parsedMessageId;
+
+      if (!folderToUidsMap.has(folder)) {
+        folderToUidsMap.set(folder, []);
+      }
+      folderToUidsMap.get(folder)!.push(uid);
+    }
+
+    return folderToUidsMap;
   }
 
   public formatBatchResponsesAsMessages(
@@ -91,6 +122,8 @@ export class ImapGetMessagesService {
 
     const validMessages = messages.filter(isDefined);
 
+    console.dir(validMessages, { depth: null });
+
     this.logger.log(
       `Successfully parsed ${validMessages.length} out of ${batchResults.length} messages`,
     );
@@ -100,7 +133,7 @@ export class ImapGetMessagesService {
 
   private createMessageFromParsedMail(
     parsed: ParsedMail,
-    externalId: string,
+    uid: string,
     connectedAccount: Pick<
       ConnectedAccountWorkspaceEntity,
       'handle' | 'handleAliases'
@@ -125,9 +158,9 @@ export class ImapGetMessagesService {
     const subject = sanitizeString(parsed.subject || '');
 
     return {
-      externalId: externalId,
-      messageThreadExternalId: threadId || parsed.messageId || externalId,
-      headerMessageId: parsed.messageId || externalId,
+      externalId: uid,
+      messageThreadExternalId: threadId || parsed.messageId || uid,
+      headerMessageId: parsed.messageId || uid,
       subject: subject,
       text: text,
       receivedAt: parsed.date || new Date(),
