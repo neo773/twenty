@@ -1,14 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { type gmail_v1 as gmailV1 } from 'googleapis';
-
+import { type FolderInfo } from 'src/engine/core-modules/auth/services/create-message-folder.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 import { MESSAGING_GMAIL_EXCLUDED_CATEGORIES } from 'src/modules/messaging/message-import-manager/drivers/gmail/constants/messaging-gmail-excluded-categories';
 import { GmailClientProvider } from 'src/modules/messaging/message-import-manager/drivers/gmail/providers/gmail-client.provider';
 import { GmailHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/gmail/services/gmail-handle-error.service';
-import { GmailDefaultMessageFolder } from 'src/modules/messaging/message-import-manager/drivers/gmail/types/gmail-default-message-folder.type';
 import { computeGmailCategoryLabelId } from 'src/modules/messaging/message-import-manager/drivers/gmail/utils/compute-gmail-category-label-id.util';
-import { type FolderInfo } from 'src/engine/core-modules/auth/services/create-message-folder.service';
 
 type GmailFolderInfo = FolderInfo;
 
@@ -28,32 +25,31 @@ export class GmailGetAllFoldersService {
     >,
   ): Promise<GmailFolderInfo[]> {
     try {
-      const gmailClient = await this.gmailClientProvider.getGmailClient(
-        connectedAccount,
-      );
+      const gmailClient =
+        await this.gmailClientProvider.getGmailClient(connectedAccount);
 
       const response = await gmailClient.users.labels.list({
         userId: 'me',
       });
 
       const labels = response.data.labels || [];
-      
+
       // Build excluded label IDs using existing utilities
       const excludedCategoryLabelIds = new Set(
-        MESSAGING_GMAIL_EXCLUDED_CATEGORIES.map(category => 
-          computeGmailCategoryLabelId(category)
-        )
+        MESSAGING_GMAIL_EXCLUDED_CATEGORIES.map((category) =>
+          computeGmailCategoryLabelId(category),
+        ),
       );
 
       // Add other system labels we want to exclude
       const additionalExcludedLabels = new Set([
         'CHAT',
-        'SPAM', 
+        'SPAM',
         'TRASH',
         'IMPORTANT',
         'STARRED',
         'UNREAD',
-        'DRAFT'
+        'DRAFT',
       ]);
 
       const folders: GmailFolderInfo[] = [];
@@ -75,7 +71,7 @@ export class GmailGetAllFoldersService {
 
         // Map Gmail label names to standardized folder names
         let folderName = label.name;
-        
+
         // Handle system labels with standard mapping
         if (label.id === 'INBOX') {
           folderName = 'INBOX';
@@ -102,17 +98,14 @@ export class GmailGetAllFoldersService {
         error,
       );
 
-      await this.gmailHandleErrorService.handleGoogleAPIError(
-        error,
-        'gmail',
-        connectedAccount,
-      );
+      // await this.gmailHandleErrorService.handleGoogleAPIError(
+      //   error,
+      //   'gmail',
+      //   connectedAccount,
+      // );
 
       // Return default folders as fallback
-      return [
-        { name: 'INBOX' },
-        { name: 'SENT_ITEMS' },
-      ];
+      return [{ name: 'INBOX' }, { name: 'SENT_ITEMS' }];
     }
   }
 }

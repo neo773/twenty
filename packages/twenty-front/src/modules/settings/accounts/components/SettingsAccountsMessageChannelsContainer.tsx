@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil';
 
 import { type ConnectedAccount } from '@/accounts/types/ConnectedAccount';
 import { type MessageChannel } from '@/accounts/types/MessageChannel';
+import { type MessageFolder } from '@/accounts/types/MessageFolder';
 import { currentWorkspaceMemberState } from '@/auth/states/currentWorkspaceMemberState';
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
 import { useFindManyRecords } from '@/object-record/hooks/useFindManyRecords';
@@ -51,6 +52,16 @@ export const SettingsAccountsMessageChannelsContainer = () => {
     skip: !accounts.length,
   });
 
+  const { records: messageFolders } = useFindManyRecords<MessageFolder>({
+    objectNameSingular: CoreObjectNameSingular.MessageFolder,
+    filter: {
+      messageChannelId: {
+        in: messageChannels.map((channel) => channel.id),
+      },
+    },
+    skip: !messageChannels.length,
+  });
+
   const tabs = [
     ...messageChannels.map((messageChannel) => ({
       id: messageChannel.id,
@@ -74,16 +85,23 @@ export const SettingsAccountsMessageChannelsContainer = () => {
           />
         </StyledMessageContainer>
       )}
-      {messageChannels.map((messageChannel) => (
-        <React.Fragment key={messageChannel.id}>
-          {(messageChannels.length === 1 ||
-            messageChannel.id === activeTabId) && (
-            <SettingsAccountsMessageChannelDetails
-              messageChannel={messageChannel}
-            />
-          )}
-        </React.Fragment>
-      ))}
+      {messageChannels.map((messageChannel) => {
+        const channelMessageFolders = messageFolders.filter(
+          (folder) => folder.messageChannelId === messageChannel.id,
+        );
+
+        return (
+          <React.Fragment key={messageChannel.id}>
+            {(messageChannels.length === 1 ||
+              messageChannel.id === activeTabId) && (
+              <SettingsAccountsMessageChannelDetails
+                messageChannel={messageChannel}
+                messageFolders={channelMessageFolders}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
     </>
   );
 };

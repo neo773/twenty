@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { type FolderInfo } from 'src/engine/core-modules/auth/services/create-message-folder.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 import { MicrosoftClientProvider } from 'src/modules/messaging/message-import-manager/drivers/microsoft/providers/microsoft-client.provider';
 import { MicrosoftHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/microsoft/services/microsoft-handle-error.service';
 import { MessageFolderName } from 'src/modules/messaging/message-import-manager/drivers/microsoft/types/folders';
-import { type FolderInfo } from 'src/engine/core-modules/auth/services/create-message-folder.service';
 
 type MicrosoftFolderInfo = FolderInfo;
 
@@ -30,16 +30,15 @@ export class MicrosoftGetAllFoldersService {
     >,
   ): Promise<MicrosoftFolderInfo[]> {
     try {
-      const microsoftClient = await this.microsoftClientProvider.getMicrosoftClient(
-        connectedAccount,
-      );
+      const microsoftClient =
+        await this.microsoftClientProvider.getMicrosoftClient(connectedAccount);
 
       const response = await microsoftClient
         .api('/me/mailFolders')
         .select('id,displayName,wellKnownName')
         .get();
 
-      const folders = response.value as MicrosoftGraphFolder[] || [];
+      const folders = (response.value as MicrosoftGraphFolder[]) || [];
 
       const folderInfos: MicrosoftFolderInfo[] = [];
 
@@ -87,7 +86,7 @@ export class MicrosoftGetAllFoldersService {
         error,
       );
 
-      await this.microsoftHandleErrorService.handleMicrosoftError(error);
+      // await this.microsoftHandleErrorService.handleMicrosoftError(error);
 
       // Return default folders as fallback
       return [

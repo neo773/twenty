@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { ConnectedAccountProvider } from 'twenty-shared/types';
 import { v4 } from 'uuid';
 
 import { FeatureFlagKey } from 'src/engine/core-modules/feature-flag/enums/feature-flag-key.enum';
@@ -12,7 +13,6 @@ import { GmailGetAllFoldersService } from 'src/modules/messaging/message-import-
 import { ImapGetAllFoldersService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-get-all-folders.service';
 import { MicrosoftGetAllFoldersService } from 'src/modules/messaging/message-import-manager/drivers/microsoft/services/microsoft-get-all-folders.service';
 import { MessageFolderName } from 'src/modules/messaging/message-import-manager/drivers/microsoft/types/folders';
-import { ConnectedAccountProvider } from 'twenty-shared/types';
 
 export type CreateMessageFoldersInput = {
   workspaceId: string;
@@ -37,10 +37,11 @@ export class CreateMessageFolderService {
   async createMessageFolders(input: CreateMessageFoldersInput): Promise<void> {
     const { workspaceId, messageChannelId, manager } = input;
 
-    const isFolderControlEnabled = await this.featureFlagService.isFeatureEnabled(
-      FeatureFlagKey.IS_MESSAGE_FOLDER_CONTROL_ENABLED,
-      workspaceId,
-    );
+    const isFolderControlEnabled =
+      await this.featureFlagService.isFeatureEnabled(
+        FeatureFlagKey.IS_MESSAGE_FOLDER_CONTROL_ENABLED,
+        workspaceId,
+      );
 
     const messageFolderRepository =
       await this.twentyORMGlobalManager.getRepositoryForWorkspace<MessageFolderWorkspaceEntity>(
@@ -85,7 +86,9 @@ export class CreateMessageFolderService {
     }
   }
 
-  private async createAllDiscoveredFolders(input: CreateMessageFoldersInput): Promise<void> {
+  private async createAllDiscoveredFolders(
+    input: CreateMessageFoldersInput,
+  ): Promise<void> {
     const { workspaceId, messageChannelId, manager } = input;
 
     // Get the message channel to determine provider
@@ -161,6 +164,7 @@ export class CreateMessageFolderService {
     } catch (error) {
       // Log error and fallback to default folders
       console.error('Failed to discover folders:', error);
+
       return [
         { name: MessageFolderName.INBOX },
         { name: MessageFolderName.SENT_ITEMS },
@@ -179,6 +183,7 @@ export class CreateMessageFolderService {
       'SENT_MAIL',
       'SENTMAIL',
     ];
+
     return sentFolderNames.includes(folderName.toUpperCase());
   }
 }
