@@ -4,7 +4,6 @@ import {
   type MessageChannel,
   type MessageChannelContactAutoCreationPolicy,
 } from '@/accounts/types/MessageChannel';
-import { type MessageFolder } from '@/accounts/types/MessageFolder';
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
 import { useUpdateOneRecord } from '@/object-record/hooks/useUpdateOneRecord';
 import { SettingsAccountsMessageAutoCreationCard } from '@/settings/accounts/components/SettingsAccountsMessageAutoCreationCard';
@@ -31,7 +30,6 @@ type SettingsAccountsMessageChannelDetailsProps = {
     | 'isSyncEnabled'
     | 'messageFolders'
   >;
-  messageFolders?: MessageFolder[];
 };
 
 const StyledDetailsContainer = styled.div`
