@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { isDefined } from 'class-validator';
 import { ImapFlow, type ListResponse } from 'imapflow';
+import { isDefined } from 'twenty-shared/utils';
 
 import { type FolderInfo } from 'src/engine/core-modules/auth/services/create-message-folder.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
@@ -54,22 +54,30 @@ export class ImapGetAllFoldersService {
     mailboxList: ListResponse[],
   ): Promise<FolderInfo[]> {
     const folders: FolderInfo[] = [];
+    const sentFolder =
+      await this.imapFindSentFolderService.findSentFolder(client);
+
+    if (isDefined(sentFolder)) {
+      folders.push({
+        name: sentFolder,
+        isSynced: true,
+        isSentFolder: true,
+      });
+    }
 
     for (const mailbox of mailboxList) {
       if (this.shouldExcludeFolder(mailbox)) {
         continue;
       }
-
-      const sentFolder =
-        await this.imapFindSentFolderService.findSentFolder(client);
-
-      const isSentFolder = isDefined(sentFolder);
+      if (folders.some((folder) => folder.name === mailbox.path)) {
+        continue;
+      }
       const isInboxFolder = await this.isInboxFolder(mailbox);
 
       folders.push({
         name: mailbox.path,
-        isSynced: isInboxFolder || isSentFolder,
-        isSentFolder: isSentFolder,
+        isSynced: isInboxFolder,
+        isSentFolder: false,
       });
     }
 
