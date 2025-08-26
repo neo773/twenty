@@ -11,10 +11,10 @@ export const SettingsMessageFoldersTableHeader = () => {
           <Trans>Folder</Trans>
         </TableHeader>
         <TableHeader align="center">
-          <Trans>Sent</Trans>
+          <Trans>Is Sent Folder</Trans>
         </TableHeader>
         <TableHeader align="center">
-          <Trans>Sync</Trans>
+          <Trans>Synced</Trans>
         </TableHeader>
       </TableRow>
     </Table>
