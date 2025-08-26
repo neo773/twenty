@@ -38,6 +38,7 @@ export const SettingsAccountsMessageChannelsContainer = () => {
   const { records: messageChannels } = useFindManyRecords<
     MessageChannel & {
       connectedAccount: ConnectedAccount;
+      messageFolders: MessageFolder[];
     }
   >({
     objectNameSingular: CoreObjectNameSingular.MessageChannel,
@@ -49,17 +50,11 @@ export const SettingsAccountsMessageChannelsContainer = () => {
         eq: true,
       },
     },
-    skip: !accounts.length,
-  });
-
-  const { records: messageFolders } = useFindManyRecords<MessageFolder>({
-    objectNameSingular: CoreObjectNameSingular.MessageFolder,
-    filter: {
-      messageChannelId: {
-        in: messageChannels.map((channel) => channel.id),
-      },
+    recordGqlFields: {
+      messageFolders: true,
+      connectedAccount: true,
     },
-    skip: !messageChannels.length,
+    skip: !accounts.length,
   });
 
   const tabs = [
@@ -86,17 +81,12 @@ export const SettingsAccountsMessageChannelsContainer = () => {
         </StyledMessageContainer>
       )}
       {messageChannels.map((messageChannel) => {
-        const channelMessageFolders = messageFolders.filter(
-          (folder) => folder.messageChannelId === messageChannel.id,
-        );
-
         return (
           <React.Fragment key={messageChannel.id}>
             {(messageChannels.length === 1 ||
               messageChannel.id === activeTabId) && (
               <SettingsAccountsMessageChannelDetails
                 messageChannel={messageChannel}
-                messageFolders={channelMessageFolders}
               />
             )}
           </React.Fragment>

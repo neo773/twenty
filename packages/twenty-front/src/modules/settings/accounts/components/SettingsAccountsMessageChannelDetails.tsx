@@ -29,6 +29,7 @@ type SettingsAccountsMessageChannelDetailsProps = {
     | 'excludeNonProfessionalEmails'
     | 'excludeGroupEmails'
     | 'isSyncEnabled'
+    | 'messageFolders'
   >;
   messageFolders?: MessageFolder[];
 };
@@ -41,7 +42,6 @@ const StyledDetailsContainer = styled.div`
 
 export const SettingsAccountsMessageChannelDetails = ({
   messageChannel,
-  messageFolders,
 }: SettingsAccountsMessageChannelDetailsProps) => {
   const { updateOneRecord } = useUpdateOneRecord<MessageChannel>({
     objectNameSingular: CoreObjectNameSingular.MessageChannel,
@@ -91,7 +91,7 @@ export const SettingsAccountsMessageChannelDetails = ({
 
   return (
     <StyledDetailsContainer>
-      {isFolderControlEnabled && messageFolders && (
+      {isFolderControlEnabled && messageChannel.messageFolders && (
         <Section>
           <H2Title
             title={t`Folder Management`}
@@ -99,7 +99,7 @@ export const SettingsAccountsMessageChannelDetails = ({
           />
           <SettingsAccountsMessageFoldersCard
             messageChannelId={messageChannel.id}
-            messageFolders={messageFolders}
+            messageFolders={messageChannel.messageFolders}
           />
         </Section>
       )}
