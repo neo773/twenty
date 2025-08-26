@@ -22,6 +22,8 @@ export type CreateMessageFoldersInput = {
 
 export type FolderInfo = {
   name: string;
+  isSynced: boolean;
+  isSentFolder: boolean;
 };
 
 @Injectable()
@@ -49,41 +51,41 @@ export class CreateMessageFolderService {
         'messageFolder',
       );
 
-    if (!isFolderControlEnabled) {
-      // Default behavior: only INBOX and SENT folders
-      await messageFolderRepository.save(
-        {
-          id: v4(),
-          messageChannelId,
-          name: MessageFolderName.INBOX,
-          syncCursor: '',
-          isSynced: true,
-          isSentFolder: false,
-        },
-        {},
-        manager,
-      );
-
-      await messageFolderRepository.save(
-        {
-          id: v4(),
-          messageChannelId,
-          name: MessageFolderName.SENT_ITEMS,
-          syncCursor: '',
-          isSynced: true,
-          isSentFolder: true,
-        },
-        {},
-        manager,
-      );
-    } else {
-      // Feature enabled: discover all folders and set appropriate defaults
+    if (isFolderControlEnabled) {
       await this.createAllDiscoveredFolders({
         workspaceId,
         messageChannelId,
         manager,
       });
+
+      return;
     }
+
+    await messageFolderRepository.save(
+      {
+        id: v4(),
+        messageChannelId,
+        name: MessageFolderName.INBOX,
+        syncCursor: '',
+        isSynced: true,
+        isSentFolder: false,
+      },
+      {},
+      manager,
+    );
+
+    await messageFolderRepository.save(
+      {
+        id: v4(),
+        messageChannelId,
+        name: MessageFolderName.SENT_ITEMS,
+        syncCursor: '',
+        isSynced: true,
+        isSentFolder: true,
+      },
+      {},
+      manager,
+    );
   }
 
   private async createAllDiscoveredFolders(
@@ -91,7 +93,6 @@ export class CreateMessageFolderService {
   ): Promise<void> {
     const { workspaceId, messageChannelId, manager } = input;
 
-    // Get the message channel to determine provider
     const messageChannelRepository =
       await this.twentyORMGlobalManager.getRepositoryForWorkspace<MessageChannelWorkspaceEntity>(
         workspaceId,
@@ -118,18 +119,14 @@ export class CreateMessageFolderService {
       );
 
     for (const folder of folders) {
-      const isSentFolder = this.isSentFolderName(folder.name);
-      const isInboxFolder = folder.name.toUpperCase() === 'INBOX';
-      const isSynced = isInboxFolder || isSentFolder;
-
       await messageFolderRepository.save(
         {
           id: v4(),
           messageChannelId,
           name: folder.name,
           syncCursor: '',
-          isSynced,
-          isSentFolder,
+          isSynced: folder.isSynced,
+          isSentFolder: folder.isSentFolder,
         },
         {},
         manager,
@@ -139,51 +136,24 @@ export class CreateMessageFolderService {
 
   private async discoverAllFolders(
     messageChannel: MessageChannelWorkspaceEntity,
-  ): Promise<Array<{ name: string }>> {
-    try {
-      switch (messageChannel.connectedAccount.provider) {
-        case ConnectedAccountProvider.GOOGLE:
-          return await this.gmailGetAllFoldersService.getAllFolders(
-            messageChannel.connectedAccount,
-          );
-        case ConnectedAccountProvider.MICROSOFT:
-          return await this.microsoftGetAllFoldersService.getAllFolders(
-            messageChannel.connectedAccount,
-          );
-        case ConnectedAccountProvider.IMAP_SMTP_CALDAV:
-          return await this.imapGetAllFoldersService.getAllFolders(
-            messageChannel.connectedAccount,
-          );
-        default:
-          // Fallback to default folders if provider not supported
-          return [
-            { name: MessageFolderName.INBOX },
-            { name: MessageFolderName.SENT_ITEMS },
-          ];
-      }
-    } catch (error) {
-      // Log error and fallback to default folders
-      console.error('Failed to discover folders:', error);
-
-      return [
-        { name: MessageFolderName.INBOX },
-        { name: MessageFolderName.SENT_ITEMS },
-      ];
+  ): Promise<FolderInfo[]> {
+    switch (messageChannel.connectedAccount.provider) {
+      case ConnectedAccountProvider.GOOGLE:
+        return await this.gmailGetAllFoldersService.getAllFolders(
+          messageChannel.connectedAccount,
+        );
+      case ConnectedAccountProvider.MICROSOFT:
+        return await this.microsoftGetAllFoldersService.getAllFolders(
+          messageChannel.connectedAccount,
+        );
+      case ConnectedAccountProvider.IMAP_SMTP_CALDAV:
+        return await this.imapGetAllFoldersService.getAllFolders(
+          messageChannel.connectedAccount,
+        );
+      default:
+        throw new Error(
+          `Provider ${messageChannel.connectedAccount.provider} is not supported`,
+        );
     }
-  }
-
-  private isSentFolderName(folderName: string): boolean {
-    const sentFolderNames = [
-      'SENT',
-      'SENT_ITEMS',
-      'SENTITEMS',
-      'SENT ITEMS',
-      'OUTBOX',
-      'SENT MAIL',
-      'SENT_MAIL',
-      'SENTMAIL',
-    ];
-
-    return sentFolderNames.includes(folderName.toUpperCase());
   }
 }

@@ -41,8 +41,16 @@ export class ImapGetAllFoldersService {
       );
 
       return [
-        { name: MessageFolderName.INBOX },
-        { name: MessageFolderName.SENT_ITEMS },
+        {
+          name: MessageFolderName.INBOX,
+          isSynced: true,
+          isSentFolder: false,
+        },
+        {
+          name: MessageFolderName.SENT_ITEMS,
+          isSynced: true,
+          isSentFolder: true,
+        },
       ];
     }
   }
@@ -57,7 +65,11 @@ export class ImapGetAllFoldersService {
         continue;
       }
 
-      folders.push({ name: mailbox.path });
+      folders.push({
+        name: mailbox.path,
+        isSynced: true,
+        isSentFolder: false,
+      });
     }
 
     return folders;
