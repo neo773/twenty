@@ -64,10 +64,10 @@ export class ImapGetAllFoldersService {
       if (this.shouldExcludeFolder(mailbox)) {
         continue;
       }
-
+      // TODO: mark primary inbox and sent folder as synced
       folders.push({
         name: mailbox.path,
-        isSynced: true,
+        isSynced: false,
         isSentFolder: false,
       });
     }
