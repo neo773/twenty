@@ -73,7 +73,6 @@ export class MessagingMessageListFetchService {
           refreshToken,
         },
       };
-
       const messageLists =
         await this.messagingGetMessageListService.getMessageLists(
           messageChannelWithFreshTokens,
