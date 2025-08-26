@@ -3,9 +3,10 @@ import { useRecoilValue } from 'recoil';
 
 import { type ConnectedAccount } from '@/accounts/types/ConnectedAccount';
 import { type MessageChannel } from '@/accounts/types/MessageChannel';
-import { type MessageFolder } from '@/accounts/types/MessageFolder';
 import { currentWorkspaceMemberState } from '@/auth/states/currentWorkspaceMemberState';
+import { useObjectMetadataItem } from '@/object-metadata/hooks/useObjectMetadataItem';
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
+import { generateDepthOneRecordGqlFields } from '@/object-record/graphql/utils/generateDepthOneRecordGqlFields';
 import { useFindManyRecords } from '@/object-record/hooks/useFindManyRecords';
 import { SettingsAccountsMessageChannelDetails } from '@/settings/accounts/components/SettingsAccountsMessageChannelDetails';
 import { SettingsNewAccountSection } from '@/settings/accounts/components/SettingsNewAccountSection';
@@ -26,6 +27,10 @@ export const SettingsAccountsMessageChannelsContainer = () => {
   );
   const currentWorkspaceMember = useRecoilValue(currentWorkspaceMemberState);
 
+  const messageChannelObjectMetadataItem = useObjectMetadataItem({
+    objectNameSingular: CoreObjectNameSingular.MessageChannel,
+  });
+
   const { records: accounts } = useFindManyRecords<ConnectedAccount>({
     objectNameSingular: CoreObjectNameSingular.ConnectedAccount,
     filter: {
@@ -38,7 +43,6 @@ export const SettingsAccountsMessageChannelsContainer = () => {
   const { records: messageChannels } = useFindManyRecords<
     MessageChannel & {
       connectedAccount: ConnectedAccount;
-      messageFolders: MessageFolder[];
     }
   >({
     objectNameSingular: CoreObjectNameSingular.MessageChannel,
@@ -46,14 +50,10 @@ export const SettingsAccountsMessageChannelsContainer = () => {
       connectedAccountId: {
         in: accounts.map((account) => account.id),
       },
-      isSyncEnabled: {
-        eq: true,
-      },
     },
-    recordGqlFields: {
-      messageFolders: true,
-      connectedAccount: true,
-    },
+    recordGqlFields: generateDepthOneRecordGqlFields(
+      messageChannelObjectMetadataItem,
+    ),
     skip: !accounts.length,
   });
 
