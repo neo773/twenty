@@ -72,14 +72,7 @@ export class MicrosoftGetAllFoldersService {
         error,
       );
 
-      return [
-        { name: MessageFolderName.INBOX, isSynced: true, isSentFolder: false },
-        {
-          name: MessageFolderName.SENT_ITEMS,
-          isSynced: true,
-          isSentFolder: true,
-        },
-      ];
+      throw error;
     }
   }
 

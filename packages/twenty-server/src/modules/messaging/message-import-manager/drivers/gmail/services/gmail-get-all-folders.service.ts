@@ -39,6 +39,7 @@ export class GmailGetAllFoldersService {
         });
 
       const labels = response.data.labels || [];
+
       const excludedCategoryLabelIds = new Set(
         MESSAGING_GMAIL_EXCLUDED_CATEGORIES.map(computeGmailCategoryLabelId),
       );
@@ -72,10 +73,7 @@ export class GmailGetAllFoldersService {
         error,
       );
 
-      return [
-        { name: 'INBOX', isSynced: true, isSentFolder: false },
-        { name: 'SENT_ITEMS', isSynced: true, isSentFolder: true },
-      ];
+      throw error;
     }
   }
 }
