@@ -6,12 +6,9 @@ import { MicrosoftClientProvider } from 'src/modules/messaging/message-import-ma
 import { MicrosoftHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/microsoft/services/microsoft-handle-error.service';
 import { MessageFolderName } from 'src/modules/messaging/message-import-manager/drivers/microsoft/types/folders';
 
-type MicrosoftFolderInfo = FolderInfo;
-
 type MicrosoftGraphFolder = {
   id: string;
   displayName: string;
-  wellKnownName?: string;
 };
 
 @Injectable()
@@ -28,50 +25,39 @@ export class MicrosoftGetAllFoldersService {
       ConnectedAccountWorkspaceEntity,
       'refreshToken' | 'id' | 'handle'
     >,
-  ): Promise<MicrosoftFolderInfo[]> {
+  ): Promise<FolderInfo[]> {
     try {
       const microsoftClient =
         await this.microsoftClientProvider.getMicrosoftClient(connectedAccount);
 
       const response = await microsoftClient
         .api('/me/mailFolders')
-        .select('id,displayName,wellKnownName')
-        .get();
+        .get()
+        .catch((error) => {
+          this.logger.error(
+            `Connected account ${connectedAccount.id}: Error fetching folders: ${error.message}`,
+          );
 
+          return { value: [] };
+        });
+
+      console.dir(response, { depth: null });
       const folders = (response.value as MicrosoftGraphFolder[]) || [];
-
-      const folderInfos: MicrosoftFolderInfo[] = [];
+      const folderInfos: FolderInfo[] = [];
 
       for (const folder of folders) {
         if (!folder.displayName) {
           continue;
         }
 
-        // Map Microsoft folder display names to standardized folder names
-        let folderName = folder.displayName;
-
-        // Handle well-known folders with standard mapping
-        if (folder.wellKnownName) {
-          switch (folder.wellKnownName.toLowerCase()) {
-            case 'inbox':
-              folderName = MessageFolderName.INBOX;
-              break;
-            case 'sentitems':
-              folderName = MessageFolderName.SENT_ITEMS;
-              break;
-            case 'drafts':
-            case 'junkemail':
-            case 'deleteditems':
-              // Skip these system folders
-              continue;
-            default:
-              // Use the display name for other well-known folders
-              folderName = folder.displayName;
-          }
+        if (this.shouldExcludeFolder(folder.displayName)) {
+          continue;
         }
 
         folderInfos.push({
-          name: folderName,
+          name: folder.displayName,
+          isSynced: folder.displayName === MessageFolderName.INBOX,
+          isSentFolder: false,
         });
       }
 
@@ -86,13 +72,21 @@ export class MicrosoftGetAllFoldersService {
         error,
       );
 
-      // await this.microsoftHandleErrorService.handleMicrosoftError(error);
-
-      // Return default folders as fallback
       return [
-        { name: MessageFolderName.INBOX },
-        { name: MessageFolderName.SENT_ITEMS },
+        { name: MessageFolderName.INBOX, isSynced: true, isSentFolder: false },
+        {
+          name: MessageFolderName.SENT_ITEMS,
+          isSynced: true,
+          isSentFolder: true,
+        },
       ];
     }
+  }
+
+  private shouldExcludeFolder(displayName: string): boolean {
+    const lowerName = displayName.toLowerCase();
+    const excludedFolders = ['drafts', 'junk email', 'deleted items', 'trash'];
+
+    return excludedFolders.some((excluded) => lowerName.includes(excluded));
   }
 }
