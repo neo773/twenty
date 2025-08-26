@@ -50,12 +50,19 @@ export const SettingsMessageFoldersTableRow = ({
     });
   };
 
+  const formatName = (name: string) => {
+    return name
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
   return (
-    <StyledTableRow gridAutoColumns="1fr 120px 120px">
+    <StyledTableRow gridAutoColumns="1fr 120px 70px">
       <TableCell>
         <StyledFolderNameCell>
           <IconFolder size={theme.icon.size.md} stroke={theme.icon.stroke.sm} />
-          {folder.name}
+          {formatName(folder.name)}
         </StyledFolderNameCell>
       </TableCell>
       <TableCell align="center">

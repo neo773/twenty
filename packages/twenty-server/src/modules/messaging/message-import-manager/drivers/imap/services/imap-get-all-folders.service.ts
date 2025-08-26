@@ -31,6 +31,10 @@ export class ImapGetAllFoldersService {
 
       const folders = await this.filterAndMapFolders(mailboxList);
 
+      console.log('------folders------');
+      console.dir(folders, { depth: null });
+      console.log('------folders------');
+
       await this.imapClientProvider.closeClient(client);
 
       return folders;

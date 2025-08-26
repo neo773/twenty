@@ -6,7 +6,7 @@ import { Trans } from '@lingui/react/macro';
 export const SettingsMessageFoldersTableHeader = () => {
   return (
     <Table>
-      <TableRow gridAutoColumns="1fr 120px 120px">
+      <TableRow gridAutoColumns="1fr 120px 70px">
         <TableHeader>
           <Trans>Folder</Trans>
         </TableHeader>
