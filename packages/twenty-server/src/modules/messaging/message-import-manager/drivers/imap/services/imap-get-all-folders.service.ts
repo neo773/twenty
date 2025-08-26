@@ -54,34 +54,47 @@ export class ImapGetAllFoldersService {
     mailboxList: ListResponse[],
   ): Promise<FolderInfo[]> {
     const folders: FolderInfo[] = [];
-    const sentFolder =
+    const sentFolderPath =
       await this.imapFindSentFolderService.findSentFolder(client);
 
-    if (isDefined(sentFolder)) {
+    if (isDefined(sentFolderPath)) {
       folders.push({
-        name: sentFolder,
+        name: sentFolderPath,
         isSynced: true,
         isSentFolder: true,
       });
     }
 
-    for (const mailbox of mailboxList) {
-      if (this.shouldExcludeFolder(mailbox)) {
-        continue;
-      }
-      if (folders.some((folder) => folder.name === mailbox.path)) {
-        continue;
-      }
-      const isInboxFolder = await this.isInboxFolder(mailbox);
+    const validMailboxes = mailboxList.filter((mailbox) =>
+      this.isValidMailbox(mailbox, folders),
+    );
+
+    for (const mailbox of validMailboxes) {
+      const isInbox = await this.isInboxFolder(mailbox);
 
       folders.push({
         name: mailbox.path,
-        isSynced: isInboxFolder,
+        isSynced: isInbox,
         isSentFolder: false,
       });
     }
 
     return folders;
+  }
+
+  private isValidMailbox(
+    mailbox: ListResponse,
+    existingFolders: FolderInfo[],
+  ): boolean {
+    if (this.shouldExcludeFolder(mailbox)) {
+      return false;
+    }
+
+    const isDuplicate = existingFolders.some(
+      (folder) => folder.name === mailbox.path,
+    );
+
+    return !isDuplicate;
   }
 
   private async isInboxFolder(mailbox: ListResponse): Promise<boolean> {
