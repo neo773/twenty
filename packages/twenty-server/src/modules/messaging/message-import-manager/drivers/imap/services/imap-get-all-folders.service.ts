@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { type ListResponse } from 'imapflow';
+import { isDefined } from 'class-validator';
+import { ImapFlow, type ListResponse } from 'imapflow';
 
 import { type FolderInfo } from 'src/engine/core-modules/auth/services/create-message-folder.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
@@ -29,7 +30,7 @@ export class ImapGetAllFoldersService {
 
       const mailboxList = await client.list();
 
-      const folders = await this.filterAndMapFolders(mailboxList);
+      const folders = await this.filterAndMapFolders(client, mailboxList);
 
       console.log('------folders------');
       console.dir(folders, { depth: null });
@@ -44,22 +45,12 @@ export class ImapGetAllFoldersService {
         error,
       );
 
-      return [
-        {
-          name: MessageFolderName.INBOX,
-          isSynced: true,
-          isSentFolder: false,
-        },
-        {
-          name: MessageFolderName.SENT_ITEMS,
-          isSynced: true,
-          isSentFolder: true,
-        },
-      ];
+      throw error;
     }
   }
 
   private async filterAndMapFolders(
+    client: ImapFlow,
     mailboxList: ListResponse[],
   ): Promise<FolderInfo[]> {
     const folders: FolderInfo[] = [];
@@ -68,15 +59,32 @@ export class ImapGetAllFoldersService {
       if (this.shouldExcludeFolder(mailbox)) {
         continue;
       }
-      // TODO: mark primary inbox and sent folder as synced
+
+      const sentFolder =
+        await this.imapFindSentFolderService.findSentFolder(client);
+
+      const isSentFolder = isDefined(sentFolder);
+      const isInboxFolder = await this.isInboxFolder(mailbox);
+
       folders.push({
         name: mailbox.path,
-        isSynced: false,
-        isSentFolder: false,
+        isSynced: isInboxFolder || isSentFolder,
+        isSentFolder: isSentFolder,
       });
     }
 
     return folders;
+  }
+
+  private async isInboxFolder(mailbox: ListResponse): Promise<boolean> {
+    if (
+      mailbox.path.toLowerCase() === MessageFolderName.INBOX ||
+      mailbox.specialUse === '\\Inbox'
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   private shouldExcludeFolder(mailbox: ListResponse): boolean {
