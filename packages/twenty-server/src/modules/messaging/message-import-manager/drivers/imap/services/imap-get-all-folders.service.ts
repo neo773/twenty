@@ -19,7 +19,7 @@ export class ImapGetAllFoldersService {
     private readonly imapFindSentFolderService: ImapFindSentFolderService,
   ) {}
 
-  async getAllFolders(
+  public async getAllFolders(
     connectedAccount: Pick<
       ConnectedAccountWorkspaceEntity,
       'id' | 'provider' | 'connectionParameters' | 'handle'
