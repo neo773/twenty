@@ -4,7 +4,6 @@ import { type ImapFlow } from 'imapflow';
 
 import { type MessageFolderWorkspaceEntity } from 'src/modules/messaging/common/standard-objects/message-folder.workspace-entity';
 import { ImapClientProvider } from 'src/modules/messaging/message-import-manager/drivers/imap/providers/imap-client.provider';
-import { ImapFindSentFolderService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-find-sent-folder.service';
 import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
 import { ImapIncrementalSyncService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-incremental-sync.service';
 import { createSyncCursor } from 'src/modules/messaging/message-import-manager/drivers/imap/utils/create-sync-cursor.util';
@@ -25,7 +24,6 @@ export class ImapGetMessageListService {
 
   constructor(
     private readonly imapClientProvider: ImapClientProvider,
-    private readonly imapFindSentFolderService: ImapFindSentFolderService,
     private readonly imapIncrementalSyncService: ImapIncrementalSyncService,
     private readonly imapHandleErrorService: ImapHandleErrorService,
   ) {}
