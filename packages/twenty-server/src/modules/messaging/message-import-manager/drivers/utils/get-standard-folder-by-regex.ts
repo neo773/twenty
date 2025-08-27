@@ -161,86 +161,45 @@ const FOLDER_REGEX_PATTERNS: Record<StandardFolder, string[]> = {
     // GMAIL
     '\\[gmail\\][\\/]+trash',
   ],
-  [StandardFolder.SPAM]: [
-    // EN
-    'spam',
-    'junk[\\s_-]?(mail|messages|email)?',
-    'bulk[\\s_-]?(mail|messages)?',
-    // FR
-    'indésirables',
-    'courrier[\\s_-]?indésirable',
-    'spam',
-    // DE
-    'spam',
-    'junk[\\s_-]?mail',
-    'unerwünscht',
-    // ES
-    'spam',
-    'correo[\\s_-]?basura',
-    'no[\\s_-]?deseado',
-    // PT
-    'spam',
-    'lixo[\\s_-]?eletrônico',
-    'indesejados',
-    // IT
-    'spam',
-    'posta[\\s_-]?indesiderata',
-    'indesiderata',
-    // KO
-    '스팸',
-    '정크메일',
-    // JA
-    'スパム',
-    '迷惑メール',
-    // PL
-    'spam',
-    'niechciane',
-    'śmieci',
-    // RU
-    'спам',
-    'нежелательные',
-    'мусор',
-    // GMAIL
-    '\\[gmail\\][\\/]+spam',
-  ],
   [StandardFolder.JUNK]: [
     // EN
+    'spam',
     'junk[\\s_-]?(mail|messages|email)?',
     'bulk[\\s_-]?(mail|messages)?',
-    'spam',
     // FR
     'indésirables',
     'courrier[\\s_-]?indésirable',
+    'spam',
     // DE
+    'spam',
     'junk[\\s_-]?mail',
     'unerwünscht',
-    'spam',
     // ES
+    'spam',
     'correo[\\s_-]?basura',
     'no[\\s_-]?deseado',
-    'spam',
     // PT
+    'spam',
     'lixo[\\s_-]?eletrônico',
     'indesejados',
-    'spam',
     // IT
+    'spam',
     'posta[\\s_-]?indesiderata',
     'indesiderata',
-    'spam',
     // KO
-    '정크메일',
     '스팸',
+    '정크메일',
     // JA
-    '迷惑メール',
     'スパム',
+    '迷惑メール',
     // PL
+    'spam',
     'niechciane',
     'śmieci',
-    'spam',
     // RU
+    'спам',
     'нежелательные',
     'мусор',
-    'спам',
     // GMAIL
     '\\[gmail\\][\\/]+spam',
   ],

@@ -3,6 +3,5 @@ export enum StandardFolder {
   DRAFTS = 'drafts',
   SENT = 'sent',
   TRASH = 'trash',
-  SPAM = 'spam',
   JUNK = 'junk',
 }

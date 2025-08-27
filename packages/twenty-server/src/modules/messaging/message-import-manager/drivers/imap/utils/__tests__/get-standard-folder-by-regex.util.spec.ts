@@ -384,67 +384,67 @@ describe('getStandardFolderByRegex', () => {
         'Bulk Messages',
       ];
 
-      testFolderMatches(englishVariants, StandardFolder.SPAM);
+      testFolderMatches(englishVariants, StandardFolder.JUNK);
     });
 
     it('matches French variants', () => {
       const frenchVariants = ['Indésirables', 'Courrier indésirable', 'Spam'];
 
-      testFolderMatches(frenchVariants, StandardFolder.SPAM);
+      testFolderMatches(frenchVariants, StandardFolder.JUNK);
     });
 
     it('matches German variants', () => {
       const germanVariants = ['Spam', 'Junk Mail', 'Unerwünscht'];
 
-      testFolderMatches(germanVariants, StandardFolder.SPAM);
+      testFolderMatches(germanVariants, StandardFolder.JUNK);
     });
 
     it('matches Spanish variants', () => {
       const spanishVariants = ['Spam', 'Correo basura', 'No deseado'];
 
-      testFolderMatches(spanishVariants, StandardFolder.SPAM);
+      testFolderMatches(spanishVariants, StandardFolder.JUNK);
     });
 
     it('matches Portuguese variants', () => {
       const portugueseVariants = ['Spam', 'Lixo eletrônico', 'Indesejados'];
 
-      testFolderMatches(portugueseVariants, StandardFolder.SPAM);
+      testFolderMatches(portugueseVariants, StandardFolder.JUNK);
     });
 
     it('matches Italian variants', () => {
       const italianVariants = ['Spam', 'Posta indesiderata', 'Indesiderata'];
 
-      testFolderMatches(italianVariants, StandardFolder.SPAM);
+      testFolderMatches(italianVariants, StandardFolder.JUNK);
     });
 
     it('matches Korean variants', () => {
       const koreanVariants = ['스팸', '정크메일'];
 
-      testFolderMatches(koreanVariants, StandardFolder.SPAM);
+      testFolderMatches(koreanVariants, StandardFolder.JUNK);
     });
 
     it('matches Japanese variants', () => {
       const japaneseVariants = ['スパム', '迷惑メール'];
 
-      testFolderMatches(japaneseVariants, StandardFolder.SPAM);
+      testFolderMatches(japaneseVariants, StandardFolder.JUNK);
     });
 
     it('matches Polish variants', () => {
       const polishVariants = ['Spam', 'Niechciane', 'Śmieci'];
 
-      testFolderMatches(polishVariants, StandardFolder.SPAM);
+      testFolderMatches(polishVariants, StandardFolder.JUNK);
     });
 
     it('matches Russian variants', () => {
       const russianVariants = ['Спам', 'Нежелательные', 'Мусор'];
 
-      testFolderMatches(russianVariants, StandardFolder.SPAM);
+      testFolderMatches(russianVariants, StandardFolder.JUNK);
     });
 
     it('matches Gmail special folder', () => {
       const gmailVariants = ['[Gmail]/Spam', '[Gmail]\\Spam'];
 
-      testFolderMatches(gmailVariants, StandardFolder.SPAM);
+      testFolderMatches(gmailVariants, StandardFolder.JUNK);
     });
   });
 
