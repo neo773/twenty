@@ -55,6 +55,7 @@ export class MicrosoftGetAllFoldersService {
         }
 
         folderInfos.push({
+          externalId: folder.id,
           name: folder.displayName,
           isSynced: folder.displayName === MessageFolderName.INBOX,
           isSentFolder: false,

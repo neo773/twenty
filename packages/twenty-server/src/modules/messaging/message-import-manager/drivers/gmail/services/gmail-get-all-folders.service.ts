@@ -82,6 +82,7 @@ export class GmailGetAllFoldersService {
         const isSyncedByDefault = label.id === 'INBOX' || label.id === 'SENT';
 
         folders.push({
+          externalId: label.id,
           name: label.name,
           isSynced: isSyncedByDefault,
           isSentFolder,

@@ -24,6 +24,7 @@ export type FolderInfo = {
   name: string;
   isSynced: boolean;
   isSentFolder: boolean;
+  externalId: string;
 };
 
 @Injectable()
@@ -127,6 +128,7 @@ export class CreateMessageFolderService {
           syncCursor: '',
           isSynced: folder.isSynced,
           isSentFolder: folder.isSentFolder,
+          externalId: folder.externalId,
         },
         {},
         manager,

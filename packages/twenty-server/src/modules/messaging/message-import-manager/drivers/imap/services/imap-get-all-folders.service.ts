@@ -58,7 +58,15 @@ export class ImapGetAllFoldersService {
       await this.imapFindSentFolderService.findSentFolder(client);
 
     if (isDefined(sentFolderPath)) {
+      const sentMailbox = mailboxList.find((m) => m.path === sentFolderPath);
+      const uidValidity = sentMailbox
+        ? await this.getUidValidity(client, sentMailbox)
+        : null;
+
       folders.push({
+        externalId: uidValidity
+          ? `${sentFolderPath}:${uidValidity.toString()}`
+          : sentFolderPath,
         name: sentFolderPath,
         isSynced: true,
         isSentFolder: true,
@@ -71,8 +79,12 @@ export class ImapGetAllFoldersService {
 
     for (const mailbox of validMailboxes) {
       const isInbox = await this.isInboxFolder(mailbox);
+      const uidValidity = await this.getUidValidity(client, mailbox);
 
       folders.push({
+        externalId: uidValidity
+          ? `${mailbox.path}:${uidValidity}`
+          : mailbox.path,
         name: mailbox.path,
         isSynced: isInbox,
         isSentFolder: false,
@@ -117,5 +129,29 @@ export class ImapGetAllFoldersService {
     }
 
     return false;
+  }
+
+  private async getUidValidity(
+    client: ImapFlow,
+    mailbox: ListResponse,
+  ): Promise<bigint | null> {
+    if (mailbox.status?.uidValidity) {
+      return mailbox.status.uidValidity;
+    }
+
+    try {
+      const status = await client.status(mailbox.path, {
+        uidValidity: true,
+      });
+
+      return status.uidValidity ?? null;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to get uidValidity for folder ${mailbox.path}:`,
+        error,
+      );
+
+      return null;
+    }
   }
 }

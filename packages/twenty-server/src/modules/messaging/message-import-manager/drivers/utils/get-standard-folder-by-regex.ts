@@ -246,14 +246,17 @@ const FOLDER_REGEX_PATTERNS: Record<StandardFolder, string[]> = {
   ],
 };
 
+const CACHED_REGEX_PATTERNS = Object.fromEntries(
+  Object.entries(FOLDER_REGEX_PATTERNS).map(([standardFolder, patterns]) => [
+    standardFolder,
+    new RegExp(patterns.map((s) => `(${s})`).join('|'), 'i'),
+  ]),
+);
+
 export function getStandardFolderByRegex(
   folderName: string,
 ): StandardFolder | null {
-  for (const [standardFolder, patterns] of Object.entries(
-    FOLDER_REGEX_PATTERNS,
-  )) {
-    const regex = new RegExp(patterns.map((s) => `(${s})`).join('|'), 'i');
-
+  for (const [standardFolder, regex] of Object.entries(CACHED_REGEX_PATTERNS)) {
     if (regex.test(folderName)) {
       return standardFolder as StandardFolder;
     }
