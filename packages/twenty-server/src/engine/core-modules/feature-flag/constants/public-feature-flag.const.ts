@@ -34,8 +34,7 @@ export const PUBLIC_FEATURE_FLAGS: PublicFeatureFlag[] = [
     key: FeatureFlagKey.IS_MESSAGE_FOLDER_CONTROL_ENABLED,
     metadata: {
       label: 'Message Folder Control',
-      description:
-        'Control which folders are synced and which are used for sent messages',
+      description: 'Control which folders are synced',
       imagePath:
         'https://twenty.com/images/lab/is-message-folder-control-enabled.png',
     },

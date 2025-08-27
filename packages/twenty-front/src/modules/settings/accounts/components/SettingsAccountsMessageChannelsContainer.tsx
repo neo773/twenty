@@ -60,12 +60,10 @@ export const SettingsAccountsMessageChannelsContainer = () => {
     skip: !accounts.length,
   });
 
-  const tabs = [
-    ...messageChannels.map((messageChannel) => ({
-      id: messageChannel.id,
-      title: messageChannel.handle,
-    })),
-  ];
+  const tabs = messageChannels.map((messageChannel) => ({
+    id: messageChannel.id,
+    title: messageChannel.handle,
+  }));
 
   if (!messageChannels.length) {
     return <SettingsNewAccountSection />;

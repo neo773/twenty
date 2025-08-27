@@ -93,7 +93,7 @@ export const SettingsAccountsMessageChannelDetails = ({
         <Section>
           <H2Title
             title={t`Folder Management`}
-            description={t`Control which folders are synced and which are used for sent messages`}
+            description={t`Control which folders are synced`}
           />
           <SettingsAccountsMessageFoldersCard
             messageChannelId={messageChannel.id}
