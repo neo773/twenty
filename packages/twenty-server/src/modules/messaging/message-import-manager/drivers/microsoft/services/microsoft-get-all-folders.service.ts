@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { type FolderInfo } from 'src/engine/core-modules/auth/services/create-message-folder.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
+import { MessageFolderWorkspaceEntity } from 'src/modules/messaging/common/standard-objects/message-folder.workspace-entity';
 import { MicrosoftClientProvider } from 'src/modules/messaging/message-import-manager/drivers/microsoft/providers/microsoft-client.provider';
 import { MicrosoftHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/microsoft/services/microsoft-handle-error.service';
 import { MessageFolderName } from 'src/modules/messaging/message-import-manager/drivers/microsoft/types/folders';
@@ -10,6 +10,11 @@ type MicrosoftGraphFolder = {
   id: string;
   displayName: string;
 };
+
+type MessageFolder = Pick<
+  MessageFolderWorkspaceEntity,
+  'name' | 'isSynced' | 'isSentFolder' | 'externalId'
+>;
 
 @Injectable()
 export class MicrosoftGetAllFoldersService {
@@ -25,7 +30,7 @@ export class MicrosoftGetAllFoldersService {
       ConnectedAccountWorkspaceEntity,
       'refreshToken' | 'id' | 'handle'
     >,
-  ): Promise<FolderInfo[]> {
+  ): Promise<MessageFolder[]> {
     try {
       const microsoftClient =
         await this.microsoftClientProvider.getMicrosoftClient(connectedAccount);
@@ -43,7 +48,7 @@ export class MicrosoftGetAllFoldersService {
 
       console.dir(response, { depth: null });
       const folders = (response.value as MicrosoftGraphFolder[]) || [];
-      const folderInfos: FolderInfo[] = [];
+      const folderInfos: MessageFolder[] = [];
 
       for (const folder of folders) {
         if (!folder.displayName) {

@@ -3,12 +3,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { gmail_v1 } from 'googleapis';
 import { isDefined } from 'twenty-shared/utils';
 
-import { type FolderInfo } from 'src/engine/core-modules/auth/services/create-message-folder.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
+import { MessageFolderWorkspaceEntity } from 'src/modules/messaging/common/standard-objects/message-folder.workspace-entity';
 import { MESSAGING_GMAIL_EXCLUDED_CATEGORIES } from 'src/modules/messaging/message-import-manager/drivers/gmail/constants/messaging-gmail-excluded-categories';
 import { GmailClientProvider } from 'src/modules/messaging/message-import-manager/drivers/gmail/providers/gmail-client.provider';
 import { GmailHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/gmail/services/gmail-handle-error.service';
 import { computeGmailCategoryLabelId } from 'src/modules/messaging/message-import-manager/drivers/gmail/utils/compute-gmail-category-label-id.util';
+
+type MessageFolder = Pick<
+  MessageFolderWorkspaceEntity,
+  'name' | 'isSynced' | 'isSentFolder' | 'externalId'
+>;
 
 @Injectable()
 export class GmailGetAllFoldersService {
@@ -44,7 +49,7 @@ export class GmailGetAllFoldersService {
       ConnectedAccountWorkspaceEntity,
       'provider' | 'refreshToken' | 'id' | 'handle'
     >,
-  ): Promise<FolderInfo[]> {
+  ): Promise<MessageFolder[]> {
     try {
       const gmailClient =
         await this.gmailClientProvider.getGmailClient(connectedAccount);
@@ -63,7 +68,7 @@ export class GmailGetAllFoldersService {
 
       const labels = response.data.labels || [];
 
-      const folders: FolderInfo[] = [];
+      const folders: MessageFolder[] = [];
 
       for (const label of labels) {
         if (!label.name || !label.id) {
