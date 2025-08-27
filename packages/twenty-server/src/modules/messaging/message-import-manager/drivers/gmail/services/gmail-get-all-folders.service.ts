@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { gmail_v1 } from 'googleapis';
+import { isDefined } from 'twenty-shared/utils';
+
 import { type FolderInfo } from 'src/engine/core-modules/auth/services/create-message-folder.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 import { MESSAGING_GMAIL_EXCLUDED_CATEGORIES } from 'src/modules/messaging/message-import-manager/drivers/gmail/constants/messaging-gmail-excluded-categories';
@@ -15,6 +18,26 @@ export class GmailGetAllFoldersService {
     private readonly gmailClientProvider: GmailClientProvider,
     private readonly gmailHandleErrorService: GmailHandleErrorService,
   ) {}
+
+  private isExcludedCategoryFolder(labelId: string): boolean {
+    const excludedCategoryIds = MESSAGING_GMAIL_EXCLUDED_CATEGORIES.map(
+      (category) => computeGmailCategoryLabelId(category),
+    );
+
+    return excludedCategoryIds.includes(labelId);
+  }
+
+  private isIncludedFolder(label: gmail_v1.Schema$Label): boolean {
+    if (!isDefined(label.id)) {
+      return false;
+    }
+
+    const isTargetSystemFolder =
+      label.type === 'system' && (label.id === 'INBOX' || label.id === 'SENT');
+    const isUserFolder = label.type === 'user';
+
+    return isTargetSystemFolder || isUserFolder;
+  }
 
   async getAllFolders(
     connectedAccount: Pick<
@@ -40,10 +63,6 @@ export class GmailGetAllFoldersService {
 
       const labels = response.data.labels || [];
 
-      const excludedCategoryLabelIds = new Set(
-        MESSAGING_GMAIL_EXCLUDED_CATEGORIES.map(computeGmailCategoryLabelId),
-      );
-
       const folders: FolderInfo[] = [];
 
       for (const label of labels) {
@@ -51,14 +70,21 @@ export class GmailGetAllFoldersService {
           continue;
         }
 
-        if (excludedCategoryLabelIds.has(label.id)) {
+        if (this.isExcludedCategoryFolder(label.id)) {
           continue;
         }
 
+        if (!this.isIncludedFolder(label)) {
+          continue;
+        }
+
+        const isSentFolder = label.id === 'SENT';
+        const isSyncedByDefault = label.id === 'INBOX' || label.id === 'SENT';
+
         folders.push({
           name: label.name,
-          isSynced: label.id === 'INBOX' || label.id === 'SENT',
-          isSentFolder: label.id === 'SENT',
+          isSynced: isSyncedByDefault,
+          isSentFolder,
         });
       }
 
