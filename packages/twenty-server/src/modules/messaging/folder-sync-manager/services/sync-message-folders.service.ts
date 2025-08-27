@@ -13,17 +13,10 @@ import { GmailGetAllFoldersService } from 'src/modules/messaging/message-import-
 import { ImapGetAllFoldersService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-get-all-folders.service';
 import { MicrosoftGetAllFoldersService } from 'src/modules/messaging/message-import-manager/drivers/microsoft/services/microsoft-get-all-folders.service';
 
-export type SyncMessageFoldersInput = {
+type SyncMessageFoldersInput = {
   workspaceId: string;
   messageChannelId: string;
   manager: WorkspaceEntityManager;
-};
-
-export type FolderInfo = {
-  name: string;
-  isSynced: boolean;
-  isSentFolder: boolean;
-  externalId: string;
 };
 
 type MessageFolder = Pick<
