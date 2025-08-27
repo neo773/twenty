@@ -7,7 +7,6 @@ import { ImapClientProvider } from 'src/modules/messaging/message-import-manager
 import { ImapFindSentFolderService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-find-sent-folder.service';
 import { ImapHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-handle-error.service';
 import { ImapIncrementalSyncService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-incremental-sync.service';
-import { MessageFolderName } from 'src/modules/messaging/message-import-manager/drivers/imap/types/folders';
 import { createSyncCursor } from 'src/modules/messaging/message-import-manager/drivers/imap/utils/create-sync-cursor.util';
 import { extractMailboxState } from 'src/modules/messaging/message-import-manager/drivers/imap/utils/extract-mailbox-state.util';
 import {
@@ -43,19 +42,11 @@ export class ImapGetMessageListService {
 
       for (const folder of messageFolders) {
         this.logger.log(`Processing folder: ${folder.name}`);
-        const folderName = await this.getFolderName(client, folder.name);
-
-        if (!folderName) {
-          this.logger.warn(
-            `No IMAP folder found for message folder: ${folder.name}`,
-          );
-          continue;
-        }
 
         try {
           const response = await this.getMessageList(
             client,
-            folderName,
+            folder.name,
             folder,
           );
 
@@ -65,7 +56,7 @@ export class ImapGetMessageListService {
           });
         } catch (error) {
           this.logger.warn(
-            `Error fetching from folder ${folder.name} (${folderName}): ${error.message}. Continuing with other folders.`,
+            `Error fetching from folder ${folder.name}: ${error.message}. Continuing with other folders.`,
           );
 
           result.push({
@@ -128,30 +119,6 @@ export class ImapGetMessageListService {
       ),
       folderId: undefined,
     };
-  }
-
-  private async getFolderName(
-    client: ImapFlow,
-    folderName: string,
-  ): Promise<string | null> {
-    if (folderName === MessageFolderName.INBOX) {
-      return 'INBOX';
-    }
-
-    if (folderName === MessageFolderName.SENT_ITEMS) {
-      const sentFolder =
-        await this.imapFindSentFolderService.findSentFolder(client);
-
-      if (!sentFolder) {
-        this.logger.warn('SENT folder not found, skipping');
-
-        return null;
-      }
-
-      return sentFolder;
-    }
-
-    return folderName;
   }
 
   private async getMessagesFromFolder(
