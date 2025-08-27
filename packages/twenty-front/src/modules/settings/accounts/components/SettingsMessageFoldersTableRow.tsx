@@ -5,7 +5,7 @@ import { TableCell } from '@/ui/layout/table/components/TableCell';
 import { TableRow } from '@/ui/layout/table/components/TableRow';
 import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
-import { IconFolder } from 'twenty-ui/display';
+import { IconFolder, IconSend } from 'twenty-ui/display';
 import { Toggle } from 'twenty-ui/input';
 
 const StyledFolderNameCell = styled.div`
@@ -41,15 +41,6 @@ export const SettingsMessageFoldersTableRow = ({
     });
   };
 
-  const handleSentFolderToggle = (value: boolean) => {
-    updateOneRecord({
-      idToUpdate: folder.id,
-      updateOneRecordInput: {
-        isSentFolder: value,
-      },
-    });
-  };
-
   const formatName = (name: string) => {
     return name
       .split(' ')
@@ -61,16 +52,16 @@ export const SettingsMessageFoldersTableRow = ({
     <StyledTableRow gridAutoColumns="1fr 120px 70px">
       <TableCell>
         <StyledFolderNameCell>
-          <IconFolder size={theme.icon.size.md} stroke={theme.icon.stroke.sm} />
+          {folder.isSentFolder ? (
+            <IconSend size={theme.icon.size.md} stroke={theme.icon.stroke.sm} />
+          ) : (
+            <IconFolder
+              size={theme.icon.size.md}
+              stroke={theme.icon.stroke.sm}
+            />
+          )}
           {formatName(folder.name)}
         </StyledFolderNameCell>
-      </TableCell>
-      <TableCell align="center">
-        <Toggle
-          value={folder.isSentFolder}
-          onChange={handleSentFolderToggle}
-          toggleSize="small"
-        />
       </TableCell>
       <TableCell align="center">
         <Toggle
