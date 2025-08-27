@@ -11,7 +11,7 @@ export const SettingsMessageFoldersTableHeader = () => {
           <Trans>Folder</Trans>
         </TableHeader>
         <TableHeader align="center">
-          <Trans>Synced</Trans>
+          <Trans>Sync</Trans>
         </TableHeader>
       </TableRow>
     </Table>
