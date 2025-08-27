@@ -4,7 +4,7 @@ const FOLDER_REGEX_PATTERNS: Record<StandardFolder, string[]> = {
   [StandardFolder.INBOX]: [
     // EN
     'inbox',
-    'mail',
+    '^mail$',
     'messages?',
     'received',
     // FR

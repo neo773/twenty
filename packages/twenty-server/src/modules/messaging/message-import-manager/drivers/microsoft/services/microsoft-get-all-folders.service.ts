@@ -67,7 +67,7 @@ export class MicrosoftGetAllFoldersService {
         folderInfos.push({
           externalId: folder.id,
           name: folder.displayName,
-          isSynced: isInbox,
+          isSynced: isInbox || isSentFolder,
           isSentFolder,
         });
       }
