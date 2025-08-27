@@ -27,6 +27,6 @@ import { MessagingMicrosoftDriverModule } from 'src/modules/messaging/message-im
     MessagingFolderSyncCronJob,
     MessagingFolderSyncCronCommand,
   ],
-  exports: [SyncMessageFoldersService],
+  exports: [SyncMessageFoldersService, MessagingFolderSyncCronCommand],
 })
 export class MessagingFolderSyncManagerModule {}
