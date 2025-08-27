@@ -8,6 +8,8 @@ import { MessageFolderWorkspaceEntity } from 'src/modules/messaging/common/stand
 import { ImapClientProvider } from 'src/modules/messaging/message-import-manager/drivers/imap/providers/imap-client.provider';
 import { ImapFindSentFolderService } from 'src/modules/messaging/message-import-manager/drivers/imap/services/imap-find-sent-folder.service';
 import { MessageFolderName } from 'src/modules/messaging/message-import-manager/drivers/imap/types/folders';
+import { StandardFolder } from 'src/modules/messaging/message-import-manager/drivers/types/standard-folder';
+import { getStandardFolderByRegex } from 'src/modules/messaging/message-import-manager/drivers/utils/get-standard-folder-by-regex';
 
 type MessageFolder = Pick<
   MessageFolderWorkspaceEntity,
@@ -17,7 +19,6 @@ type MessageFolder = Pick<
 @Injectable()
 export class ImapGetAllFoldersService {
   private readonly logger = new Logger(ImapGetAllFoldersService.name);
-  private readonly excludedFlags = new Set(['\\Drafts', '\\Trash', '\\Junk']);
 
   constructor(
     private readonly imapClientProvider: ImapClientProvider,
@@ -126,14 +127,27 @@ export class ImapGetAllFoldersService {
   }
 
   private shouldExcludeFolder(mailbox: ListResponse): boolean {
-    if (
-      this.excludedFlags.has(mailbox.specialUse) ||
-      mailbox.flags?.has('\\Noselect')
-    ) {
+    if (mailbox.flags?.has('\\Noselect')) {
       return true;
     }
 
-    return false;
+    if (
+      mailbox.specialUse === '\\Drafts' ||
+      mailbox.specialUse === '\\Trash' ||
+      mailbox.specialUse === '\\Junk'
+    ) {
+      return true;
+    }
+    const standardFolder = getStandardFolderByRegex(mailbox.path);
+
+    if (!standardFolder) {
+      return false;
+    }
+
+    return (
+      standardFolder !== StandardFolder.SENT &&
+      standardFolder !== StandardFolder.INBOX
+    );
   }
 
   private async getUidValidity(

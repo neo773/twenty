@@ -4,7 +4,8 @@ import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-acco
 import { MessageFolderWorkspaceEntity } from 'src/modules/messaging/common/standard-objects/message-folder.workspace-entity';
 import { MicrosoftClientProvider } from 'src/modules/messaging/message-import-manager/drivers/microsoft/providers/microsoft-client.provider';
 import { MicrosoftHandleErrorService } from 'src/modules/messaging/message-import-manager/drivers/microsoft/services/microsoft-handle-error.service';
-import { MessageFolderName } from 'src/modules/messaging/message-import-manager/drivers/microsoft/types/folders';
+import { StandardFolder } from 'src/modules/messaging/message-import-manager/drivers/types/standard-folder';
+import { getStandardFolderByRegex } from 'src/modules/messaging/message-import-manager/drivers/utils/get-standard-folder-by-regex';
 
 type MicrosoftGraphFolder = {
   id: string;
@@ -46,7 +47,6 @@ export class MicrosoftGetAllFoldersService {
           return { value: [] };
         });
 
-      console.dir(response, { depth: null });
       const folders = (response.value as MicrosoftGraphFolder[]) || [];
       const folderInfos: MessageFolder[] = [];
 
@@ -55,15 +55,20 @@ export class MicrosoftGetAllFoldersService {
           continue;
         }
 
-        if (this.shouldExcludeFolder(folder.displayName)) {
+        const standardFolder = getStandardFolderByRegex(folder.displayName);
+
+        if (this.shouldExcludeFolder(standardFolder)) {
           continue;
         }
+
+        const isInbox = this.isInboxFolder(standardFolder);
+        const isSentFolder = this.isSentFolder(standardFolder);
 
         folderInfos.push({
           externalId: folder.id,
           name: folder.displayName,
-          isSynced: folder.displayName === MessageFolderName.INBOX,
-          isSentFolder: false,
+          isSynced: isInbox,
+          isSentFolder,
         });
       }
 
@@ -82,10 +87,19 @@ export class MicrosoftGetAllFoldersService {
     }
   }
 
-  private shouldExcludeFolder(displayName: string): boolean {
-    const lowerName = displayName.toLowerCase();
-    const excludedFolders = ['drafts', 'junk email', 'deleted items', 'trash'];
+  private isInboxFolder(standardFolder: StandardFolder | null): boolean {
+    return standardFolder === StandardFolder.INBOX;
+  }
 
-    return excludedFolders.some((excluded) => lowerName.includes(excluded));
+  private isSentFolder(standardFolder: StandardFolder | null): boolean {
+    return standardFolder === StandardFolder.SENT;
+  }
+
+  private shouldExcludeFolder(standardFolder: StandardFolder | null): boolean {
+    return (
+      standardFolder !== null &&
+      standardFolder !== StandardFolder.SENT &&
+      standardFolder !== StandardFolder.INBOX
+    );
   }
 }

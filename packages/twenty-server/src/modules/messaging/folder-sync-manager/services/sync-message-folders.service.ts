@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { ConnectedAccountProvider } from 'twenty-shared/types';
+import { IsNull } from 'typeorm';
 import { v4 } from 'uuid';
 
 import { FeatureFlagKey } from 'src/engine/core-modules/feature-flag/enums/feature-flag-key.enum';
@@ -92,25 +93,43 @@ export class SyncMessageFoldersService {
         'messageFolder',
       );
 
-    const foldersToUpsert = folders.map((folder) => ({
-      id: v4(),
-      messageChannelId,
-      name: folder.name,
-      syncCursor: '',
-      isSynced: folder.isSynced,
-      isSentFolder: folder.isSentFolder,
-      externalId: folder.externalId,
-    }));
-
-    if (foldersToUpsert.length > 0) {
-      await messageFolderRepository.upsert(
-        foldersToUpsert,
+    for (const folder of folders) {
+      const existingFolder = await messageFolderRepository.findOne(
         {
-          conflictPaths: ['externalId', 'messageChannelId'],
-          skipUpdateIfNoValuesChanged: false,
+          where: {
+            messageChannelId,
+            externalId:
+              folder.externalId === null ? IsNull() : folder.externalId,
+          },
         },
         manager,
       );
+
+      if (existingFolder) {
+        await messageFolderRepository.update(
+          existingFolder.id,
+          {
+            name: folder.name,
+            isSynced: folder.isSynced,
+            isSentFolder: folder.isSentFolder,
+          },
+          manager,
+        );
+      } else {
+        await messageFolderRepository.save(
+          {
+            id: v4(),
+            messageChannelId,
+            name: folder.name,
+            syncCursor: '',
+            isSynced: folder.isSynced,
+            isSentFolder: folder.isSentFolder,
+            externalId: folder.externalId,
+          },
+          {},
+          manager,
+        );
+      }
     }
   }
 
