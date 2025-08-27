@@ -76,6 +76,15 @@ export class MessageFolderWorkspaceEntity extends BaseWorkspaceEntity {
   })
   isSynced: boolean;
 
+  @WorkspaceField({
+    standardId: MESSAGE_FOLDER_STANDARD_FIELD_IDS.externalId,
+    type: FieldMetadataType.TEXT,
+    label: msg`External ID`,
+    description: msg`External ID`,
+    icon: 'IconCheck',
+  })
+  externalId: string;
+
   @WorkspaceJoinColumn('messageChannel')
   messageChannelId: string;
 }
