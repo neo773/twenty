@@ -1,4 +1,4 @@
-import { StandardFolder } from 'src/modules/messaging/message-import-manager/drivers/types/standard-folder.types';
+import { StandardFolder } from 'src/modules/messaging/message-import-manager/drivers/types/standard-folder';
 
 const FOLDER_REGEX_PATTERNS: Record<StandardFolder, string[]> = {
   [StandardFolder.INBOX]: [
