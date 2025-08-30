@@ -25,8 +25,18 @@ import {
 } from 'src/engine/api/graphql/graphql-query-runner/errors/graphql-query-runner.exception';
 import { ObjectRecordsToGraphqlConnectionHelper } from 'src/engine/api/graphql/graphql-query-runner/helpers/object-records-to-graphql-connection.helper';
 import { buildColumnsToReturn } from 'src/engine/api/graphql/graphql-query-runner/utils/build-columns-to-return';
+import { buildColumnsToSelect } from 'src/engine/api/graphql/graphql-query-runner/utils/build-columns-to-select';
 import { hasRecordFieldValue } from 'src/engine/api/graphql/graphql-query-runner/utils/has-record-field-value.util';
+import { mergeArrayFieldValues } from 'src/engine/api/graphql/graphql-query-runner/utils/merge-array-field-values.util';
+import { mergeEmailsFieldValues } from 'src/engine/api/graphql/graphql-query-runner/utils/merge-emails-field-values.util';
+import { mergeLinksFieldValues } from 'src/engine/api/graphql/graphql-query-runner/utils/merge-links-field-values.util';
+import { mergePhonesFieldValues } from 'src/engine/api/graphql/graphql-query-runner/utils/merge-phones-field-values.util';
+import { selectPriorityFieldValue } from 'src/engine/api/graphql/graphql-query-runner/utils/select-priority-field-value.util';
 import { type AuthContext } from 'src/engine/core-modules/auth/types/auth-context.type';
+import { type EmailsMetadata } from 'src/engine/metadata-modules/field-metadata/composite-types/emails.composite-type';
+import { type LinksMetadata } from 'src/engine/metadata-modules/field-metadata/composite-types/links.composite-type';
+import { type PhonesMetadata } from 'src/engine/metadata-modules/field-metadata/composite-types/phones.composite-type';
+import { isCompositeFieldMetadataType } from 'src/engine/metadata-modules/field-metadata/utils/is-composite-field-metadata-type.util';
 import { assertMutationNotOnRemoteObject } from 'src/engine/metadata-modules/object-metadata/utils/assert-mutation-not-on-remote-object.util';
 import { type ObjectMetadataItemWithFieldMaps } from 'src/engine/metadata-modules/types/object-metadata-item-with-field-maps';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
@@ -116,8 +126,19 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
     executionArgs: GraphqlQueryResolverExecutionArgs<MergeManyResolverArgs>,
     ids: string[],
   ): Promise<ObjectRecord[]> {
+    const { objectMetadataItemWithFieldMaps, objectMetadataMaps } =
+      executionArgs.options;
+
+    const columnsToSelect = buildColumnsToSelect({
+      select: executionArgs.graphqlQuerySelectedFieldsResult.select,
+      relations: executionArgs.graphqlQuerySelectedFieldsResult.relations,
+      objectMetadataItemWithFieldMaps,
+      objectMetadataMaps,
+    });
+
     const recordsToMerge = await executionArgs.repository.find({
       where: { id: In(ids) },
+      select: columnsToSelect,
     });
 
     if (recordsToMerge.length !== ids.length) {
@@ -188,14 +209,83 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
       } else if (recordsWithValues.length === 1) {
         mergedResult[fieldName] = recordsWithValues[0].value;
       } else {
-        const priorityValue = recordsWithValues.find(
-          (item) => item.recordId === priorityRecordId,
+        const fieldMetadata = Object.values(
+          objectMetadataItemWithFieldMaps.fieldsById,
+        ).find((field) => field?.name === fieldName);
+
+        if (!fieldMetadata) {
+          return;
+        }
+
+        const isCompositeField = isCompositeFieldMetadataType(
+          fieldMetadata.type,
         );
 
-        if (priorityValue) {
-          mergedResult[fieldName] = priorityValue.value;
-        } else {
-          mergedResult[fieldName] = recordsWithValues[0].value;
+        switch (fieldMetadata.type) {
+          case FieldMetadataType.ARRAY:
+          case FieldMetadataType.MULTI_SELECT:
+            mergedResult[fieldName] = mergeArrayFieldValues(
+              recordsWithValues as { value: unknown[]; recordId: string }[],
+            );
+            break;
+
+          case FieldMetadataType.EMAILS:
+            if (isCompositeField) {
+              mergedResult[fieldName] = mergeEmailsFieldValues(
+                recordsWithValues as {
+                  value: EmailsMetadata;
+                  recordId: string;
+                }[],
+                priorityRecordId,
+              );
+            } else {
+              mergedResult[fieldName] = selectPriorityFieldValue(
+                recordsWithValues,
+                priorityRecordId,
+              );
+            }
+            break;
+
+          case FieldMetadataType.PHONES:
+            if (isCompositeField) {
+              mergedResult[fieldName] = mergePhonesFieldValues(
+                recordsWithValues as {
+                  value: PhonesMetadata;
+                  recordId: string;
+                }[],
+                priorityRecordId,
+              );
+            } else {
+              mergedResult[fieldName] = selectPriorityFieldValue(
+                recordsWithValues,
+                priorityRecordId,
+              );
+            }
+            break;
+
+          case FieldMetadataType.LINKS:
+            if (isCompositeField) {
+              mergedResult[fieldName] = mergeLinksFieldValues(
+                recordsWithValues as {
+                  value: LinksMetadata;
+                  recordId: string;
+                }[],
+                priorityRecordId,
+              );
+            } else {
+              mergedResult[fieldName] = selectPriorityFieldValue(
+                recordsWithValues,
+                priorityRecordId,
+              );
+            }
+            break;
+
+          default:
+            mergedResult[fieldName] = selectPriorityFieldValue(
+              recordsWithValues,
+              priorityRecordId,
+            );
+            break;
         }
       }
     });
@@ -211,11 +301,7 @@ export class GraphqlQueryMergeManyResolverService extends GraphqlQueryBaseResolv
       objectMetadataItemWithFieldMaps.fieldsById,
     ).find((field) => field?.name === fieldName);
 
-    if (fieldMetadata?.isSystem) {
-      return true;
-    }
-
-    return false;
+    return fieldMetadata?.isSystem ?? false;
   }
 
   private createDryRunResponse(
