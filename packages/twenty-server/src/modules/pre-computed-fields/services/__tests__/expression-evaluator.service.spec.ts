@@ -1,0 +1,480 @@
+import { Test } from '@nestjs/testing';
+
+import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
+import { COMPANY_STANDARD_FIELD_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-field-ids';
+import { Operator } from 'src/modules/computed-fields/types/Operator';
+import { type ConditionalField } from 'src/modules/computed-fields/types/VirtualField';
+import { ExpressionEvaluatorService } from 'src/modules/pre-computed-fields/services/expression-evaluator.service';
+
+describe('ExpressionEvaluatorService', () => {
+  let service: ExpressionEvaluatorService;
+  let objectMetadataMaps: ObjectMetadataMaps;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [ExpressionEvaluatorService],
+    }).compile();
+
+    service = module.get<ExpressionEvaluatorService>(
+      ExpressionEvaluatorService,
+    );
+
+    objectMetadataMaps = {
+      byId: {
+        'company-object-id': {
+          id: 'company-object-id',
+          nameSingular: 'company',
+          namePlural: 'companies',
+          isCustom: false,
+          isRemote: false,
+          isActive: true,
+          isSystem: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          labelSingular: 'Company',
+          labelPlural: 'Companies',
+          description: 'A company',
+          icon: 'IconBuildingSkyscraper',
+          labelIdentifierFieldMetadataId: 'name-field-id',
+          imageIdentifierFieldMetadataId: null,
+          indexMetadatas: [],
+          fields: [],
+          fieldsById: {
+            [COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue]: {
+              id: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+              type: 'CURRENCY',
+              name: 'annualRecurringRevenue',
+              label: 'ARR',
+              description: 'Annual Recurring Revenue',
+              icon: 'IconMoney',
+              isCustom: false,
+              isActive: true,
+              isSystem: false,
+              isNullable: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              fromRelationMetadata: null,
+              toRelationMetadata: null,
+              defaultValue: null,
+              options: null,
+              relationDefinition: null,
+              objectMetadataId: 'company-object-id',
+              standardId: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+            },
+            [COMPANY_STANDARD_FIELD_IDS.connectionStrength]: {
+              id: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+              type: 'NUMBER',
+              name: 'connectionStrength',
+              label: 'Connection Strength',
+              description: 'Connection Strength',
+              icon: 'IconNetwork',
+              isCustom: false,
+              isActive: true,
+              isSystem: false,
+              isNullable: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              fromRelationMetadata: null,
+              toRelationMetadata: null,
+              defaultValue: null,
+              options: null,
+              relationDefinition: null,
+              objectMetadataId: 'company-object-id',
+              standardId: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+            },
+          },
+          fieldIdByJoinColumnName: {},
+          fieldIdByName: {
+            annualRecurringRevenue:
+              COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+            connectionStrength: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+          },
+        },
+      },
+      idByNameSingular: {
+        company: 'company-object-id',
+      },
+    } as unknown as ObjectMetadataMaps;
+  });
+
+  describe('evaluateConditionalField', () => {
+    it('should evaluate customer tier - ENTERPRISE case', () => {
+      const conditionalField: ConditionalField = {
+        when: [
+          {
+            condition: {
+              and: [
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+                  operator: Operator.GTE,
+                  value: 100_000_000_000,
+                },
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+                  operator: Operator.GTE,
+                  value: 50,
+                },
+              ],
+            },
+            value: 'ENTERPRISE',
+          },
+          {
+            condition: {
+              or: [
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+                  operator: Operator.GTE,
+                  value: 50_000_000_000,
+                },
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+                  operator: Operator.GTE,
+                  value: 25,
+                },
+              ],
+            },
+            value: 'BUSINESS',
+          },
+        ],
+        default: 'BASIC',
+      };
+
+      const recordData = {
+        annualRecurringRevenue: 150_000_000_000,
+        connectionStrength: 75,
+      };
+
+      const result = service.evaluateConditionalField(
+        conditionalField,
+        recordData,
+        objectMetadataMaps,
+      );
+
+      expect(result).toBe('ENTERPRISE');
+    });
+
+    it('should evaluate customer tier - BUSINESS case', () => {
+      const conditionalField: ConditionalField = {
+        when: [
+          {
+            condition: {
+              and: [
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+                  operator: Operator.GTE,
+                  value: 100_000_000_000,
+                },
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+                  operator: Operator.GTE,
+                  value: 50,
+                },
+              ],
+            },
+            value: 'ENTERPRISE',
+          },
+          {
+            condition: {
+              or: [
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+                  operator: Operator.GTE,
+                  value: 50_000_000_000,
+                },
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+                  operator: Operator.GTE,
+                  value: 25,
+                },
+              ],
+            },
+            value: 'BUSINESS',
+          },
+        ],
+        default: 'BASIC',
+      };
+
+      const recordData = {
+        annualRecurringRevenue: 75_000_000_000,
+        connectionStrength: 20,
+      };
+
+      const result = service.evaluateConditionalField(
+        conditionalField,
+        recordData,
+        objectMetadataMaps,
+      );
+
+      expect(result).toBe('BUSINESS');
+    });
+
+    it('should evaluate customer tier - BASIC (default) case', () => {
+      const conditionalField: ConditionalField = {
+        when: [
+          {
+            condition: {
+              and: [
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+                  operator: Operator.GTE,
+                  value: 100_000_000_000,
+                },
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+                  operator: Operator.GTE,
+                  value: 50,
+                },
+              ],
+            },
+            value: 'ENTERPRISE',
+          },
+          {
+            condition: {
+              or: [
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+                  operator: Operator.GTE,
+                  value: 50_000_000_000,
+                },
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+                  operator: Operator.GTE,
+                  value: 25,
+                },
+              ],
+            },
+            value: 'BUSINESS',
+          },
+        ],
+        default: 'BASIC',
+      };
+
+      const recordData = {
+        annualRecurringRevenue: 10_000_000,
+        connectionStrength: 5,
+      };
+
+      const result = service.evaluateConditionalField(
+        conditionalField,
+        recordData,
+        objectMetadataMaps,
+      );
+
+      expect(result).toBe('BASIC');
+    });
+
+    it('should handle edge case with missing field data', () => {
+      const conditionalField: ConditionalField = {
+        when: [
+          {
+            condition: {
+              field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+              operator: Operator.GTE,
+              value: 100_000_000_000,
+            },
+            value: 'ENTERPRISE',
+          },
+        ],
+        default: 'BASIC',
+      };
+
+      const recordData = {
+        connectionStrength: 75,
+      };
+
+      const result = service.evaluateConditionalField(
+        conditionalField,
+        recordData,
+        objectMetadataMaps,
+      );
+
+      expect(result).toBe('BASIC');
+    });
+  });
+
+  describe('generateConditionalSQL', () => {
+    it('should generate SQL for customer tier conditional logic', () => {
+      const conditionalField: ConditionalField = {
+        when: [
+          {
+            condition: {
+              field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+              operator: Operator.GTE,
+              value: 100_000_000_000,
+            },
+            value: 'ENTERPRISE',
+          },
+        ],
+        default: 'BASIC',
+      };
+
+      const result = service.generateConditionalSQL(
+        conditionalField,
+        objectMetadataMaps,
+        'company',
+      );
+
+      expect(result).toBe(
+        "CASE WHEN company.annualRecurringRevenue >= 100000000000 THEN 'ENTERPRISE' ELSE 'BASIC' END",
+      );
+    });
+
+    it('should generate SQL for complex conditional logic with AND/OR', () => {
+      const conditionalField: ConditionalField = {
+        when: [
+          {
+            condition: {
+              and: [
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+                  operator: Operator.GTE,
+                  value: 100_000_000_000,
+                },
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+                  operator: Operator.GTE,
+                  value: 50,
+                },
+              ],
+            },
+            value: 'ENTERPRISE',
+          },
+          {
+            condition: {
+              or: [
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+                  operator: Operator.GTE,
+                  value: 50_000_000_000,
+                },
+                {
+                  field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+                  operator: Operator.GTE,
+                  value: 25,
+                },
+              ],
+            },
+            value: 'BUSINESS',
+          },
+        ],
+        default: 'BASIC',
+      };
+
+      const result = service.generateConditionalSQL(
+        conditionalField,
+        objectMetadataMaps,
+        'company',
+      );
+
+      expect(result).toBe(
+        "CASE WHEN (company.annualRecurringRevenue >= 100000000000 AND company.connectionStrength >= 50) THEN 'ENTERPRISE' WHEN (company.annualRecurringRevenue >= 50000000000 OR company.connectionStrength >= 25) THEN 'BUSINESS' ELSE 'BASIC' END",
+      );
+    });
+  });
+
+  describe('field condition evaluation', () => {
+    it('should correctly evaluate EQ operator', () => {
+      const condition = {
+        field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+        operator: Operator.EQ,
+        value: 50,
+      };
+
+      const recordData = { connectionStrength: 50 };
+
+      const result = service.evaluateFieldCondition(
+        condition,
+        recordData,
+        objectMetadataMaps,
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('should correctly evaluate NE operator', () => {
+      const condition = {
+        field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+        operator: Operator.NE,
+        value: 50,
+      };
+
+      const recordData = { connectionStrength: 25 };
+
+      const result = service.evaluateFieldCondition(
+        condition,
+        recordData,
+        objectMetadataMaps,
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('should correctly evaluate GT operator', () => {
+      const condition = {
+        field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+        operator: Operator.GT,
+        value: 50,
+      };
+
+      const recordData = { connectionStrength: 75 };
+
+      const result = service.evaluateFieldCondition(
+        condition,
+        recordData,
+        objectMetadataMaps,
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('should correctly evaluate LT operator', () => {
+      const condition = {
+        field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+        operator: Operator.LT,
+        value: 50,
+      };
+
+      const recordData = { connectionStrength: 25 };
+
+      const result = service.evaluateFieldCondition(
+        condition,
+        recordData,
+        objectMetadataMaps,
+      );
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('formatSQLValue', () => {
+    it('should format string values with escaped quotes', () => {
+      const result = service.formatSQLValue("Test's Company");
+
+      expect(result).toBe("'Test''s Company'");
+    });
+
+    it('should format number values', () => {
+      const result = service.formatSQLValue(42);
+
+      expect(result).toBe('42');
+    });
+
+    it('should format boolean values', () => {
+      expect(service.formatSQLValue(true)).toBe('true');
+      expect(service.formatSQLValue(false)).toBe('false');
+    });
+
+    it('should format null values', () => {
+      const result = service.formatSQLValue(null);
+
+      expect(result).toBe('NULL');
+    });
+
+    it('should format date values', () => {
+      const date = new Date('2024-01-01T00:00:00.000Z');
+      const result = service.formatSQLValue(date);
+
+      expect(result).toBe("'2024-01-01T00:00:00.000Z'");
+    });
+  });
+});

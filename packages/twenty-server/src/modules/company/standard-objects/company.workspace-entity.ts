@@ -5,6 +5,7 @@ import { RelationOnDeleteAction } from 'src/engine/metadata-modules/field-metada
 import { RelationType } from 'src/engine/metadata-modules/field-metadata/interfaces/relation-type.interface';
 import { Relation } from 'src/engine/workspace-manager/workspace-sync-metadata/interfaces/relation.interface';
 
+import { AggregateOperations } from 'src/engine/api/graphql/graphql-query-runner/constants/aggregate-operations.constant';
 import { SEARCH_VECTOR_FIELD } from 'src/engine/metadata-modules/constants/search-vector-field.constants';
 import { ActorMetadata } from 'src/engine/metadata-modules/field-metadata/composite-types/actor.composite-type';
 import { AddressMetadata } from 'src/engine/metadata-modules/field-metadata/composite-types/address.composite-type';
@@ -24,7 +25,11 @@ import { WorkspaceIsSystem } from 'src/engine/twenty-orm/decorators/workspace-is
 import { WorkspaceIsUnique } from 'src/engine/twenty-orm/decorators/workspace-is-unique.decorator';
 import { WorkspaceJoinColumn } from 'src/engine/twenty-orm/decorators/workspace-join-column.decorator';
 import { WorkspaceRelation } from 'src/engine/twenty-orm/decorators/workspace-relation.decorator';
-import { COMPANY_STANDARD_FIELD_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-field-ids';
+import { PreComputedFieldDependencies } from 'src/engine/twenty-orm/types/pre-computed-field-dependencies.enum';
+import {
+  COMPANY_STANDARD_FIELD_IDS,
+  STANDARD_OBJECT_FIELD_IDS,
+} from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-field-ids';
 import { STANDARD_OBJECT_ICONS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-icons';
 import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-ids';
 import {
@@ -32,6 +37,10 @@ import {
   getTsVectorColumnExpressionFromFields,
 } from 'src/engine/workspace-manager/workspace-sync-metadata/utils/get-ts-vector-column-expression.util';
 import { AttachmentWorkspaceEntity } from 'src/modules/attachment/standard-objects/attachment.workspace-entity';
+import { CalendarEventParticipantResponseStatus } from 'src/modules/calendar/common/standard-objects/calendar-event-participant.workspace-entity';
+import { Direction } from 'src/modules/computed-fields/types/Direction';
+import { Operator } from 'src/modules/computed-fields/types/Operator';
+import { VirtualField } from 'src/modules/computed-fields/types/VirtualField';
 import { FavoriteWorkspaceEntity } from 'src/modules/favorite/standard-objects/favorite.workspace-entity';
 import { NoteTargetWorkspaceEntity } from 'src/modules/note/standard-objects/note-target.workspace-entity';
 import { OpportunityWorkspaceEntity } from 'src/modules/opportunity/standard-objects/opportunity.workspace-entity';
@@ -47,6 +56,95 @@ export const SEARCH_FIELDS_FOR_COMPANY: FieldTypeAndNameMetadata[] = [
   { name: NAME_FIELD_NAME, type: FieldMetadataType.TEXT },
   { name: DOMAIN_NAME_FIELD_NAME, type: FieldMetadataType.LINKS },
 ];
+
+const customerTier: VirtualField = {
+  objectMetadataId: STANDARD_OBJECT_IDS.company,
+  fieldMetadataId: COMPANY_STANDARD_FIELD_IDS.customerTier,
+  when: [
+    {
+      condition: {
+        and: [
+          {
+            field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+            operator: Operator.GTE,
+            value: 100_000_000_000,
+          },
+          {
+            field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+            operator: Operator.GTE,
+            value: 50,
+          },
+        ],
+      },
+      value: 'ENTERPRISE',
+    },
+    {
+      condition: {
+        or: [
+          {
+            field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
+            operator: Operator.GTE,
+            value: 50_000_000_000,
+          },
+          {
+            field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+            operator: Operator.GTE,
+            value: 25,
+          },
+        ],
+      },
+      value: 'BUSINESS',
+    },
+  ],
+  default: 'BASIC',
+};
+
+const strongestConnection: VirtualField = {
+  objectMetadataId: STANDARD_OBJECT_IDS.company,
+  fieldMetadataId: COMPANY_STANDARD_FIELD_IDS.strongestConnection,
+  path: [STANDARD_OBJECT_FIELD_IDS.company.people],
+  calculation: AggregateOperations.COUNT,
+  where: {
+    or: [
+      {
+        field: STANDARD_OBJECT_FIELD_IDS.person.calendarEventParticipants,
+        operator: Operator.GT,
+        value: 0,
+      },
+      {
+        field: STANDARD_OBJECT_FIELD_IDS.person.messageParticipants,
+        operator: Operator.GT,
+        value: 0,
+      },
+    ],
+  },
+  rankBy: {
+    direction: Direction.DESC,
+    limit: 1,
+  },
+  dependencies: [
+    PreComputedFieldDependencies.CalendarEvent,
+    PreComputedFieldDependencies.Message,
+  ],
+};
+
+const lastCalendarEventDate: VirtualField = {
+  objectMetadataId: STANDARD_OBJECT_IDS.company,
+  fieldMetadataId: COMPANY_STANDARD_FIELD_IDS.lastCalendarEventDate,
+  path: [
+    STANDARD_OBJECT_FIELD_IDS.company.people,
+    STANDARD_OBJECT_FIELD_IDS.person.calendarEventParticipants,
+    STANDARD_OBJECT_FIELD_IDS.calendarEventParticipant.calendarEvent,
+    STANDARD_OBJECT_FIELD_IDS.calendarEvent.startsAt,
+  ],
+  calculation: AggregateOperations.MAX,
+  where: {
+    field: STANDARD_OBJECT_FIELD_IDS.calendarEventParticipant.responseStatus,
+    operator: Operator.EQ,
+    value: CalendarEventParticipantResponseStatus.ACCEPTED,
+  },
+  dependencies: [PreComputedFieldDependencies.CalendarEvent],
+};
 
 @WorkspaceEntity({
   standardId: STANDARD_OBJECT_IDS.company,
@@ -161,7 +259,42 @@ export class CompanyWorkspaceEntity extends BaseWorkspaceEntity {
   @WorkspaceIsFieldUIReadOnly()
   createdBy: ActorMetadata;
 
-  // Relations
+  @WorkspaceField({
+    standardId: COMPANY_STANDARD_FIELD_IDS.customerTier,
+    type: FieldMetadataType.TEXT,
+    label: msg`Customer Tier`,
+    description: msg`Customer tier based on revenue and connection strength`,
+    icon: 'IconTrendingUp',
+    virtualField: customerTier,
+  })
+  @WorkspaceIsNullable()
+  @WorkspaceIsFieldUIReadOnly()
+  customerTier: string;
+
+  @WorkspaceField({
+    standardId: COMPANY_STANDARD_FIELD_IDS.strongestConnection,
+    type: FieldMetadataType.RELATION,
+    label: msg`Strongest Connection`,
+    description: msg`Person with the strongest connection to this company`,
+    icon: 'IconUsers',
+    virtualField: strongestConnection,
+  })
+  @WorkspaceIsNullable()
+  @WorkspaceIsFieldUIReadOnly()
+  strongestConnection: Relation<PersonWorkspaceEntity>;
+
+  @WorkspaceField({
+    standardId: COMPANY_STANDARD_FIELD_IDS.lastCalendarEventDate,
+    type: FieldMetadataType.DATE_TIME,
+    label: msg`Last Calendar Event Date`,
+    description: msg`Last Calendar Event Date`,
+    icon: 'IconCalendar',
+    virtualField: lastCalendarEventDate,
+  })
+  @WorkspaceIsNullable()
+  @WorkspaceIsFieldUIReadOnly()
+  lastCalendarEventDate: Date | null;
+
   @WorkspaceRelation({
     standardId: COMPANY_STANDARD_FIELD_IDS.people,
     type: RelationType.ONE_TO_MANY,
