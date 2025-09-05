@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { FieldMetadataType } from 'twenty-shared/types';
+
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
-import { AllStandardFieldIds } from 'src/modules/computed-fields/types/AllStandardFieldIds';
 import { Operator } from 'src/modules/computed-fields/types/Operator';
 import { type PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue';
 import {
@@ -10,8 +11,10 @@ import {
   type FieldCondition,
   type LogicalCondition,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { resolveFieldId } from 'src/modules/pre-computed-fields/utils/resolve-field-id.util';
-import { resolveStandardFieldId } from 'src/modules/pre-computed-fields/utils/resolve-standard-field-id.util';
+import { getFieldMetadata } from 'src/modules/pre-computed-fields/utils/getFieldMetadata';
+import { isFieldCondition } from 'src/modules/pre-computed-fields/utils/isFieldCondition';
+import { isLogicalCondition } from 'src/modules/pre-computed-fields/utils/isLogicalCondition';
+import { resolveFieldForCondition } from 'src/modules/pre-computed-fields/utils/resolveFieldForCondition';
 
 type RecordData = Record<string, PrimitiveValue | PrimitiveValue[]>;
 
@@ -48,46 +51,13 @@ export class ExpressionEvaluatorService {
     }
   }
 
-  generateConditionalSQL(
-    conditionalField: ConditionalField,
-    objectMetadataMaps: ObjectMetadataMaps,
-    tableAlias: string,
-  ): string {
-    try {
-      const sqlCases: string[] = [];
-
-      for (const whenClause of conditionalField.when) {
-        const conditionSQL = this.buildConditionSQL(
-          whenClause.condition,
-          objectMetadataMaps,
-          tableAlias,
-        );
-        const valueSQL = this.formatSQLValue(whenClause.value);
-
-        sqlCases.push(`WHEN ${conditionSQL} THEN ${valueSQL}`);
-      }
-
-      const defaultSQL = this.formatSQLValue(conditionalField.default);
-
-      return `CASE ${sqlCases.join(' ')} ELSE ${defaultSQL} END`;
-    } catch (error) {
-      this.logger.error(
-        `Failed to generate conditional SQL: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : undefined,
-      );
-      throw new Error(
-        `SQL generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-    }
-  }
-
   private evaluateCondition(
     condition: Condition,
     recordData: RecordData,
     objectMetadataMaps: ObjectMetadataMaps,
   ): boolean {
     try {
-      if (this.isFieldCondition(condition)) {
+      if (isFieldCondition(condition)) {
         return this.evaluateFieldCondition(
           condition,
           recordData,
@@ -95,7 +65,7 @@ export class ExpressionEvaluatorService {
         );
       }
 
-      if (this.isLogicalCondition(condition)) {
+      if (isLogicalCondition(condition)) {
         return this.evaluateLogicalCondition(
           condition,
           recordData,
@@ -118,12 +88,37 @@ export class ExpressionEvaluatorService {
     recordData: RecordData,
     objectMetadataMaps: ObjectMetadataMaps,
   ): boolean {
-    const resolvedField = this.resolveField(
+    const resolvedField = resolveFieldForCondition(
       condition.field,
       objectMetadataMaps,
-    );
+      { shouldThrowOnError: true },
+    )!;
     const rawFieldValue = recordData[resolvedField.fieldName];
-    const fieldValue = this.extractComparableValue(rawFieldValue);
+
+    // Handle composite fields like currency for in-memory evaluation
+    let fieldValue = this.extractComparableValue(rawFieldValue);
+
+    // For currency fields, extract amountMicros for numeric comparisons
+    const fieldMetadata = getFieldMetadata(condition.field, objectMetadataMaps);
+
+    if (fieldMetadata && fieldMetadata.type === FieldMetadataType.CURRENCY) {
+      // Handle both currency objects and plain numbers (for testing/backward compatibility)
+      if (typeof rawFieldValue === 'number') {
+        // If it's already a plain number, use it directly
+        fieldValue = rawFieldValue;
+      } else if (rawFieldValue && typeof rawFieldValue === 'object') {
+        const amountMicros = (
+          rawFieldValue as unknown as { amountMicros: string | number }
+        ).amountMicros;
+
+        // Convert to number since amountMicros might be stored as string (bigint)
+        fieldValue =
+          typeof amountMicros === 'string'
+            ? Number(amountMicros) / 1000000
+            : amountMicros;
+      }
+    }
+
     const conditionValue = condition.value;
 
     switch (condition.operator) {
@@ -201,109 +196,6 @@ export class ExpressionEvaluatorService {
     }
   }
 
-  private buildConditionSQL(
-    condition: Condition,
-    objectMetadataMaps: ObjectMetadataMaps,
-    tableAlias: string,
-  ): string {
-    if (this.isFieldCondition(condition)) {
-      return this.buildFieldConditionSQL(
-        condition,
-        objectMetadataMaps,
-        tableAlias,
-      );
-    }
-
-    if (this.isLogicalCondition(condition)) {
-      return this.buildLogicalConditionSQL(
-        condition,
-        objectMetadataMaps,
-        tableAlias,
-      );
-    }
-
-    throw new Error(`Unknown condition type: ${JSON.stringify(condition)}`);
-  }
-
-  private buildFieldConditionSQL(
-    condition: FieldCondition,
-    objectMetadataMaps: ObjectMetadataMaps,
-    tableAlias: string,
-  ): string {
-    const resolvedField = this.resolveField(
-      condition.field,
-      objectMetadataMaps,
-    );
-    const fieldReference = `${tableAlias}.${resolvedField.fieldName}`;
-    const formattedValue = this.formatSQLValue(condition.value);
-
-    switch (condition.operator) {
-      case Operator.EQ:
-        return `${fieldReference} = ${formattedValue}`;
-      case Operator.NE:
-        return `${fieldReference} != ${formattedValue}`;
-      case Operator.GT:
-        return `${fieldReference} > ${formattedValue}`;
-      case Operator.GTE:
-        return `${fieldReference} >= ${formattedValue}`;
-      case Operator.LT:
-        return `${fieldReference} < ${formattedValue}`;
-      case Operator.LTE:
-        return `${fieldReference} <= ${formattedValue}`;
-      default:
-        throw new Error(`Unsupported operator: ${condition.operator}`);
-    }
-  }
-
-  private buildLogicalConditionSQL(
-    condition: LogicalCondition,
-    objectMetadataMaps: ObjectMetadataMaps,
-    tableAlias: string,
-  ): string {
-    if (condition.and) {
-      const conditionSQLs = condition.and.map((subCondition) =>
-        this.buildConditionSQL(subCondition, objectMetadataMaps, tableAlias),
-      );
-
-      return `(${conditionSQLs.join(' AND ')})`;
-    }
-
-    if (condition.or) {
-      const conditionSQLs = condition.or.map((subCondition) =>
-        this.buildConditionSQL(subCondition, objectMetadataMaps, tableAlias),
-      );
-
-      return `(${conditionSQLs.join(' OR ')})`;
-    }
-
-    if (condition.not) {
-      const conditionSQL = this.buildConditionSQL(
-        condition.not,
-        objectMetadataMaps,
-        tableAlias,
-      );
-
-      return `NOT (${conditionSQL})`;
-    }
-
-    throw new Error('Logical condition must have and, or, or not property');
-  }
-
-  private resolveField(
-    fieldId: AllStandardFieldIds,
-    objectMetadataMaps: ObjectMetadataMaps,
-  ) {
-    const fieldResolution =
-      resolveStandardFieldId(fieldId, objectMetadataMaps) ||
-      resolveFieldId(fieldId, objectMetadataMaps);
-
-    if (!fieldResolution) {
-      throw new Error(`Could not resolve field ID: ${fieldId}`);
-    }
-
-    return fieldResolution;
-  }
-
   public formatSQLValue(value: PrimitiveValue): string {
     if (value === null) {
       return 'NULL';
@@ -324,16 +216,6 @@ export class ExpressionEvaluatorService {
     throw new Error(
       `Unsupported value type: ${typeof value} (${String(value)})`,
     );
-  }
-
-  private isFieldCondition(condition: Condition): condition is FieldCondition {
-    return 'field' in condition;
-  }
-
-  private isLogicalCondition(
-    condition: Condition,
-  ): condition is LogicalCondition {
-    return 'and' in condition || 'or' in condition || 'not' in condition;
   }
 
   private areComparableValues(

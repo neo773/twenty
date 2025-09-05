@@ -6,7 +6,6 @@ import { TestComputedFieldsCommand } from 'src/modules/pre-computed-fields/comma
 import { ExpressionEvaluatorService } from 'src/modules/pre-computed-fields/services/expression-evaluator.service';
 import { PathEvaluatorService } from 'src/modules/pre-computed-fields/services/path-evaluator.service';
 import { PreComputedFieldsService } from 'src/modules/pre-computed-fields/services/pre-computed-fields.service';
-import { RankingService } from 'src/modules/pre-computed-fields/services/ranking.service';
 
 @Module({
   imports: [TwentyORMModule, WorkspaceCacheStorageModule],
@@ -15,7 +14,6 @@ import { RankingService } from 'src/modules/pre-computed-fields/services/ranking
     PreComputedFieldsService,
     ExpressionEvaluatorService,
     PathEvaluatorService,
-    RankingService,
   ],
 })
 export class PreComputedFieldsCommandsModule {}

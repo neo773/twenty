@@ -19,7 +19,6 @@ import {
   PathEvaluatorService,
   type PathEvaluatorResult,
 } from 'src/modules/pre-computed-fields/services/path-evaluator.service';
-import { RankingService } from 'src/modules/pre-computed-fields/services/ranking.service';
 import { resolveObjectId } from 'src/modules/pre-computed-fields/utils/resolve-object-id.util';
 
 export type ProcessEventsParams = {
@@ -58,7 +57,6 @@ export class PreComputedFieldsService {
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
     private readonly expressionEvaluatorService: ExpressionEvaluatorService,
     private readonly pathEvaluatorService: PathEvaluatorService,
-    private readonly rankingService: RankingService,
   ) {}
 
   async processEventsForComputedFields(

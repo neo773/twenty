@@ -7,7 +7,6 @@ import { ProcessPreComputedFieldsJob } from './jobs/process-pre-computed-fields.
 import { ExpressionEvaluatorService } from './services/expression-evaluator.service';
 import { PathEvaluatorService } from './services/path-evaluator.service';
 import { PreComputedFieldsService } from './services/pre-computed-fields.service';
-import { RankingService } from './services/ranking.service';
 
 @Module({
   imports: [TwentyORMModule, WorkspaceCacheStorageModule],
@@ -15,14 +14,13 @@ import { RankingService } from './services/ranking.service';
     PreComputedFieldsService,
     ExpressionEvaluatorService,
     PathEvaluatorService,
-    RankingService,
+
     ProcessPreComputedFieldsJob,
   ],
   exports: [
     PreComputedFieldsService,
     ExpressionEvaluatorService,
     PathEvaluatorService,
-    RankingService,
   ],
 })
 export class PreComputedFieldsModule {}

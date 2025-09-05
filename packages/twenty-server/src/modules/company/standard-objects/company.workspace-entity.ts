@@ -57,6 +57,19 @@ export const SEARCH_FIELDS_FOR_COMPANY: FieldTypeAndNameMetadata[] = [
   { name: DOMAIN_NAME_FIELD_NAME, type: FieldMetadataType.LINKS },
 ];
 
+const connectionStrength: VirtualField = {
+  objectMetadataId: STANDARD_OBJECT_IDS.company,
+  fieldMetadataId: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+  path: [
+    COMPANY_STANDARD_FIELD_IDS.people,
+    STANDARD_OBJECT_FIELD_IDS.person.calendarEventParticipants,
+    STANDARD_OBJECT_FIELD_IDS.calendarEventParticipant.calendarEvent,
+    STANDARD_OBJECT_FIELD_IDS.calendarEvent.title,
+  ],
+  calculation: AggregateOperations.COUNT,
+  dependencies: [PreComputedFieldDependencies.CalendarEvent],
+};
+
 const customerTier: VirtualField = {
   objectMetadataId: STANDARD_OBJECT_IDS.company,
   fieldMetadataId: COMPANY_STANDARD_FIELD_IDS.customerTier,
@@ -67,12 +80,7 @@ const customerTier: VirtualField = {
           {
             field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
             operator: Operator.GTE,
-            value: 100_000_000_000,
-          },
-          {
-            field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
-            operator: Operator.GTE,
-            value: 50,
+            value: 100_000,
           },
         ],
       },
@@ -84,12 +92,7 @@ const customerTier: VirtualField = {
           {
             field: COMPANY_STANDARD_FIELD_IDS.annualRecurringRevenue,
             operator: Operator.GTE,
-            value: 50_000_000_000,
-          },
-          {
-            field: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
-            operator: Operator.GTE,
-            value: 25,
+            value: 50_000,
           },
         ],
       },
@@ -273,7 +276,7 @@ export class CompanyWorkspaceEntity extends BaseWorkspaceEntity {
 
   @WorkspaceField({
     standardId: COMPANY_STANDARD_FIELD_IDS.strongestConnection,
-    type: FieldMetadataType.RELATION,
+    type: FieldMetadataType.ACTOR,
     label: msg`Strongest Connection`,
     description: msg`Person with the strongest connection to this company`,
     icon: 'IconUsers',
@@ -281,7 +284,19 @@ export class CompanyWorkspaceEntity extends BaseWorkspaceEntity {
   })
   @WorkspaceIsNullable()
   @WorkspaceIsFieldUIReadOnly()
-  strongestConnection: Relation<PersonWorkspaceEntity>;
+  strongestConnection: PersonWorkspaceEntity | null;
+
+  @WorkspaceField({
+    standardId: COMPANY_STANDARD_FIELD_IDS.connectionStrength,
+    type: FieldMetadataType.NUMBER,
+    label: msg`Connection Strength`,
+    description: msg`Connection strength based on calendar events and messages`,
+    icon: 'IconUsers',
+    virtualField: connectionStrength,
+  })
+  @WorkspaceIsNullable()
+  @WorkspaceIsFieldUIReadOnly()
+  connectionStrength: number | null;
 
   @WorkspaceField({
     standardId: COMPANY_STANDARD_FIELD_IDS.lastCalendarEventDate,
