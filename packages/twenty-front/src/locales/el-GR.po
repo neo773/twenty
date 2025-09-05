@@ -33,6 +33,11 @@ msgstr ": Κενό"
 msgid ": Future"
 msgstr ": Μέλλον"
 
+#. js-lingui-id: uhan84
+#: src/modules/views/hooks/useComputeRecordRelationFilterLabelValue.tsx
+msgid ": Loading..."
+msgstr ": Φόρτωση..."
+
 #. js-lingui-id: Nk/d+Z
 #: src/modules/object-record/object-filter-dropdown/utils/getOperandLabel.ts
 msgid ": Not"
@@ -72,6 +77,22 @@ msgstr "· {objectFilterDropdownSearchInput}"
 msgid "[empty string]"
 msgstr "[κενή χορδή]"
 
+#. js-lingui-id: m6BGdm
+#. placeholder {0}: Math.abs(days)
+#. placeholder {1}: import { isDate, isNumber, isString } from '@sniptt/guards'; import { differenceInCalendarDays, formatDistance, formatDistanceToNow, type Locale, } from 'date-fns'; import { DateTime } from 'luxon'; import { DateFormat } from '@/localization/constants/DateFormat'; import { SOURCE_LOCALE } from 'twenty-shared/translations'; import { isDefined } from 'twenty-shared/utils'; import { CustomError } from '@/error-handler/CustomError'; import { i18n } from '@lingui/core'; import { plural, t } from '@lingui/core/macro'; import { logError } from './logError'; const getLuxonLocale = () => { return SOURCE_LOCALE === 'en' ? 'en-US' : SOURCE_LOCALE; }; export const parseDate = (dateToParse: Date | string | number) => { if (dateToParse === 'now') return DateTime.fromJSDate(new Date()); let formattedDate: DateTime | null = null; if (!dateToParse) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } else if (isString(dateToParse)) { formattedDate = DateTime.fromISO(dateToParse); } else if (isDate(dateToParse)) { formattedDate = DateTime.fromJSDate(dateToParse); } else if (isNumber(dateToParse)) { formattedDate = DateTime.fromMillis(dateToParse); } if (!formattedDate) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } if (!formattedDate.isValid) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } return formattedDate.setLocale(getLuxonLocale()); }; const isSameDay = (a: DateTime, b: DateTime): boolean => a.hasSame(b, 'day') && a.hasSame(b, 'month') && a.hasSame(b, 'year'); export const formatDate = ( dateToFormat: Date | string | number, format: string, ) => { try { const parsedDate = parseDate(dateToFormat); return parsedDate.toFormat(format); } catch (error) { logError(error); return ''; } }; export const beautifyExactDateTime = ( dateToBeautify: Date | string | number, ) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); const dateFormat = isToday ? 'T' : 'DD · T'; return formatDate(dateToBeautify, dateFormat); }; export const beautifyExactDate = (dateToBeautify: Date | string | number) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); if (isToday) { return t`Today`; } return formatDate(dateToBeautify, 'DD'); }; export const beautifyPastDateRelativeToNow = ( pastDate: Date | string | number, locale?: Locale, ) => { try { const parsedDate = parseDate(pastDate); const now = new Date(); const diffInSeconds = Math.abs( (now.getTime() - parsedDate.toJSDate().getTime()) / 1000, ); // For very recent times (less than 30 seconds), show "now" if (diffInSeconds < 30) { return t`now`; } return formatDistanceToNow(parsedDate.toJSDate(), { addSuffix: true, locale, includeSeconds: true, }); } catch (error) { logError(error); return ''; } }; export const hasDatePassed = (date: Date | string | number) => { try { const parsedDate = parseDate(date); return ( differenceInCalendarDays( DateTime.local().toJSDate(), parsedDate.toJSDate(), ) >= 1 ); } catch (error) { logError(error); return false; } }; export const beautifyDateDiff = ( date: string, dateToCompareWith?: string, short = false, locale?: Locale, ) => { // For simple cases, use date-fns which has excellent locale support if (!short && isDefined(locale)) { const fromDate = new Date(date); const toDate = dateToCompareWith ? new Date(dateToCompareWith) : new Date(); return formatDistance(fromDate, toDate, { locale }); } // Manual implementation for complex cases or when locale is not available const dateDiff = DateTime.fromISO(date).diff( dateToCompareWith ? DateTime.fromISO(dateToCompareWith) : DateTime.now(), ['years', 'days'], ); const years = Math.floor(dateDiff.years); const days = Math.floor(dateDiff.days); let result = ''; if (years !== 0) { result = plural(Math.abs(years), { one: `${years} ${t`year`}`, other: `${years} ${t`years`}`, }); if (short) return result; } if (years !== 0 && days !== 0) { result += ` ${t`and`} `; } if (days !== 0) { const daysPart = plural(Math.abs(days), { one: `${days} ${t`day`}`, other: `${days} ${t`days`}`, }); result += daysPart; } return result; }; export const formatToHumanReadableDate = (date: Date | string) => { const parsedJSDate = parseDate(date).toJSDate(); return i18n.date(parsedJSDate, { dateStyle: 'medium' }); }; export const getDateFormatString = ( dateFormat: DateFormat, isDateTimeInput: boolean, ): string => { const timePart = isDateTimeInput ? ' HH:mm' : ''; switch (dateFormat) { case DateFormat.DAY_FIRST: return `dd/MM/yyyy${timePart}`; case DateFormat.YEAR_FIRST: return `yyyy-MM-dd${timePart}`; case DateFormat.MONTH_FIRST: default: return `MM/dd/yyyy${timePart}`; } }; 
+#. placeholder {2}: import { isDate, isNumber, isString } from '@sniptt/guards'; import { differenceInCalendarDays, formatDistance, formatDistanceToNow, type Locale, } from 'date-fns'; import { DateTime } from 'luxon'; import { DateFormat } from '@/localization/constants/DateFormat'; import { SOURCE_LOCALE } from 'twenty-shared/translations'; import { isDefined } from 'twenty-shared/utils'; import { CustomError } from '@/error-handler/CustomError'; import { i18n } from '@lingui/core'; import { plural, t } from '@lingui/core/macro'; import { logError } from './logError'; const getLuxonLocale = () => { return SOURCE_LOCALE === 'en' ? 'en-US' : SOURCE_LOCALE; }; export const parseDate = (dateToParse: Date | string | number) => { if (dateToParse === 'now') return DateTime.fromJSDate(new Date()); let formattedDate: DateTime | null = null; if (!dateToParse) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } else if (isString(dateToParse)) { formattedDate = DateTime.fromISO(dateToParse); } else if (isDate(dateToParse)) { formattedDate = DateTime.fromJSDate(dateToParse); } else if (isNumber(dateToParse)) { formattedDate = DateTime.fromMillis(dateToParse); } if (!formattedDate) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } if (!formattedDate.isValid) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } return formattedDate.setLocale(getLuxonLocale()); }; const isSameDay = (a: DateTime, b: DateTime): boolean => a.hasSame(b, 'day') && a.hasSame(b, 'month') && a.hasSame(b, 'year'); export const formatDate = ( dateToFormat: Date | string | number, format: string, ) => { try { const parsedDate = parseDate(dateToFormat); return parsedDate.toFormat(format); } catch (error) { logError(error); return ''; } }; export const beautifyExactDateTime = ( dateToBeautify: Date | string | number, ) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); const dateFormat = isToday ? 'T' : 'DD · T'; return formatDate(dateToBeautify, dateFormat); }; export const beautifyExactDate = (dateToBeautify: Date | string | number) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); if (isToday) { return t`Today`; } return formatDate(dateToBeautify, 'DD'); }; export const beautifyPastDateRelativeToNow = ( pastDate: Date | string | number, locale?: Locale, ) => { try { const parsedDate = parseDate(pastDate); const now = new Date(); const diffInSeconds = Math.abs( (now.getTime() - parsedDate.toJSDate().getTime()) / 1000, ); // For very recent times (less than 30 seconds), show "now" if (diffInSeconds < 30) { return t`now`; } return formatDistanceToNow(parsedDate.toJSDate(), { addSuffix: true, locale, includeSeconds: true, }); } catch (error) { logError(error); return ''; } }; export const hasDatePassed = (date: Date | string | number) => { try { const parsedDate = parseDate(date); return ( differenceInCalendarDays( DateTime.local().toJSDate(), parsedDate.toJSDate(), ) >= 1 ); } catch (error) { logError(error); return false; } }; export const beautifyDateDiff = ( date: string, dateToCompareWith?: string, short = false, locale?: Locale, ) => { // For simple cases, use date-fns which has excellent locale support if (!short && isDefined(locale)) { const fromDate = new Date(date); const toDate = dateToCompareWith ? new Date(dateToCompareWith) : new Date(); return formatDistance(fromDate, toDate, { locale }); } // Manual implementation for complex cases or when locale is not available const dateDiff = DateTime.fromISO(date).diff( dateToCompareWith ? DateTime.fromISO(dateToCompareWith) : DateTime.now(), ['years', 'days'], ); const years = Math.floor(dateDiff.years); const days = Math.floor(dateDiff.days); let result = ''; if (years !== 0) { result = plural(Math.abs(years), { one: `${years} ${t`year`}`, other: `${years} ${t`years`}`, }); if (short) return result; } if (years !== 0 && days !== 0) { result += ` ${t`and`} `; } if (days !== 0) { const daysPart = plural(Math.abs(days), { one: `${days} ${t`day`}`, other: `${days} ${t`days`}`, }); result += daysPart; } return result; }; export const formatToHumanReadableDate = (date: Date | string) => { const parsedJSDate = parseDate(date).toJSDate(); return i18n.date(parsedJSDate, { dateStyle: 'medium' }); }; export const getDateFormatString = ( dateFormat: DateFormat, isDateTimeInput: boolean, ): string => { const timePart = isDateTimeInput ? ' HH:mm' : ''; switch (dateFormat) { case DateFormat.DAY_FIRST: return `dd/MM/yyyy${timePart}`; case DateFormat.YEAR_FIRST: return `yyyy-MM-dd${timePart}`; case DateFormat.MONTH_FIRST: default: return `MM/dd/yyyy${timePart}`; } }; 
+#: src/utils/date-utils.ts
+msgid "{0, plural, one {{days} {1}} other {{days} {2}}}"
+msgstr "{0, plural, one {{days} {1}} other {{days} {2}}}"
+
+#. js-lingui-id: FYY5cK
+#. placeholder {0}: Math.abs(years)
+#. placeholder {1}: import { isDate, isNumber, isString } from '@sniptt/guards'; import { differenceInCalendarDays, formatDistance, formatDistanceToNow, type Locale, } from 'date-fns'; import { DateTime } from 'luxon'; import { DateFormat } from '@/localization/constants/DateFormat'; import { SOURCE_LOCALE } from 'twenty-shared/translations'; import { isDefined } from 'twenty-shared/utils'; import { CustomError } from '@/error-handler/CustomError'; import { i18n } from '@lingui/core'; import { plural, t } from '@lingui/core/macro'; import { logError } from './logError'; const getLuxonLocale = () => { return SOURCE_LOCALE === 'en' ? 'en-US' : SOURCE_LOCALE; }; export const parseDate = (dateToParse: Date | string | number) => { if (dateToParse === 'now') return DateTime.fromJSDate(new Date()); let formattedDate: DateTime | null = null; if (!dateToParse) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } else if (isString(dateToParse)) { formattedDate = DateTime.fromISO(dateToParse); } else if (isDate(dateToParse)) { formattedDate = DateTime.fromJSDate(dateToParse); } else if (isNumber(dateToParse)) { formattedDate = DateTime.fromMillis(dateToParse); } if (!formattedDate) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } if (!formattedDate.isValid) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } return formattedDate.setLocale(getLuxonLocale()); }; const isSameDay = (a: DateTime, b: DateTime): boolean => a.hasSame(b, 'day') && a.hasSame(b, 'month') && a.hasSame(b, 'year'); export const formatDate = ( dateToFormat: Date | string | number, format: string, ) => { try { const parsedDate = parseDate(dateToFormat); return parsedDate.toFormat(format); } catch (error) { logError(error); return ''; } }; export const beautifyExactDateTime = ( dateToBeautify: Date | string | number, ) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); const dateFormat = isToday ? 'T' : 'DD · T'; return formatDate(dateToBeautify, dateFormat); }; export const beautifyExactDate = (dateToBeautify: Date | string | number) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); if (isToday) { return t`Today`; } return formatDate(dateToBeautify, 'DD'); }; export const beautifyPastDateRelativeToNow = ( pastDate: Date | string | number, locale?: Locale, ) => { try { const parsedDate = parseDate(pastDate); const now = new Date(); const diffInSeconds = Math.abs( (now.getTime() - parsedDate.toJSDate().getTime()) / 1000, ); // For very recent times (less than 30 seconds), show "now" if (diffInSeconds < 30) { return t`now`; } return formatDistanceToNow(parsedDate.toJSDate(), { addSuffix: true, locale, includeSeconds: true, }); } catch (error) { logError(error); return ''; } }; export const hasDatePassed = (date: Date | string | number) => { try { const parsedDate = parseDate(date); return ( differenceInCalendarDays( DateTime.local().toJSDate(), parsedDate.toJSDate(), ) >= 1 ); } catch (error) { logError(error); return false; } }; export const beautifyDateDiff = ( date: string, dateToCompareWith?: string, short = false, locale?: Locale, ) => { // For simple cases, use date-fns which has excellent locale support if (!short && isDefined(locale)) { const fromDate = new Date(date); const toDate = dateToCompareWith ? new Date(dateToCompareWith) : new Date(); return formatDistance(fromDate, toDate, { locale }); } // Manual implementation for complex cases or when locale is not available const dateDiff = DateTime.fromISO(date).diff( dateToCompareWith ? DateTime.fromISO(dateToCompareWith) : DateTime.now(), ['years', 'days'], ); const years = Math.floor(dateDiff.years); const days = Math.floor(dateDiff.days); let result = ''; if (years !== 0) { result = plural(Math.abs(years), { one: `${years} ${t`year`}`, other: `${years} ${t`years`}`, }); if (short) return result; } if (years !== 0 && days !== 0) { result += ` ${t`and`} `; } if (days !== 0) { const daysPart = plural(Math.abs(days), { one: `${days} ${t`day`}`, other: `${days} ${t`days`}`, }); result += daysPart; } return result; }; export const formatToHumanReadableDate = (date: Date | string) => { const parsedJSDate = parseDate(date).toJSDate(); return i18n.date(parsedJSDate, { dateStyle: 'medium' }); }; export const getDateFormatString = ( dateFormat: DateFormat, isDateTimeInput: boolean, ): string => { const timePart = isDateTimeInput ? ' HH:mm' : ''; switch (dateFormat) { case DateFormat.DAY_FIRST: return `dd/MM/yyyy${timePart}`; case DateFormat.YEAR_FIRST: return `yyyy-MM-dd${timePart}`; case DateFormat.MONTH_FIRST: default: return `MM/dd/yyyy${timePart}`; } }; 
+#. placeholder {2}: import { isDate, isNumber, isString } from '@sniptt/guards'; import { differenceInCalendarDays, formatDistance, formatDistanceToNow, type Locale, } from 'date-fns'; import { DateTime } from 'luxon'; import { DateFormat } from '@/localization/constants/DateFormat'; import { SOURCE_LOCALE } from 'twenty-shared/translations'; import { isDefined } from 'twenty-shared/utils'; import { CustomError } from '@/error-handler/CustomError'; import { i18n } from '@lingui/core'; import { plural, t } from '@lingui/core/macro'; import { logError } from './logError'; const getLuxonLocale = () => { return SOURCE_LOCALE === 'en' ? 'en-US' : SOURCE_LOCALE; }; export const parseDate = (dateToParse: Date | string | number) => { if (dateToParse === 'now') return DateTime.fromJSDate(new Date()); let formattedDate: DateTime | null = null; if (!dateToParse) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } else if (isString(dateToParse)) { formattedDate = DateTime.fromISO(dateToParse); } else if (isDate(dateToParse)) { formattedDate = DateTime.fromJSDate(dateToParse); } else if (isNumber(dateToParse)) { formattedDate = DateTime.fromMillis(dateToParse); } if (!formattedDate) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } if (!formattedDate.isValid) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } return formattedDate.setLocale(getLuxonLocale()); }; const isSameDay = (a: DateTime, b: DateTime): boolean => a.hasSame(b, 'day') && a.hasSame(b, 'month') && a.hasSame(b, 'year'); export const formatDate = ( dateToFormat: Date | string | number, format: string, ) => { try { const parsedDate = parseDate(dateToFormat); return parsedDate.toFormat(format); } catch (error) { logError(error); return ''; } }; export const beautifyExactDateTime = ( dateToBeautify: Date | string | number, ) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); const dateFormat = isToday ? 'T' : 'DD · T'; return formatDate(dateToBeautify, dateFormat); }; export const beautifyExactDate = (dateToBeautify: Date | string | number) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); if (isToday) { return t`Today`; } return formatDate(dateToBeautify, 'DD'); }; export const beautifyPastDateRelativeToNow = ( pastDate: Date | string | number, locale?: Locale, ) => { try { const parsedDate = parseDate(pastDate); const now = new Date(); const diffInSeconds = Math.abs( (now.getTime() - parsedDate.toJSDate().getTime()) / 1000, ); // For very recent times (less than 30 seconds), show "now" if (diffInSeconds < 30) { return t`now`; } return formatDistanceToNow(parsedDate.toJSDate(), { addSuffix: true, locale, includeSeconds: true, }); } catch (error) { logError(error); return ''; } }; export const hasDatePassed = (date: Date | string | number) => { try { const parsedDate = parseDate(date); return ( differenceInCalendarDays( DateTime.local().toJSDate(), parsedDate.toJSDate(), ) >= 1 ); } catch (error) { logError(error); return false; } }; export const beautifyDateDiff = ( date: string, dateToCompareWith?: string, short = false, locale?: Locale, ) => { // For simple cases, use date-fns which has excellent locale support if (!short && isDefined(locale)) { const fromDate = new Date(date); const toDate = dateToCompareWith ? new Date(dateToCompareWith) : new Date(); return formatDistance(fromDate, toDate, { locale }); } // Manual implementation for complex cases or when locale is not available const dateDiff = DateTime.fromISO(date).diff( dateToCompareWith ? DateTime.fromISO(dateToCompareWith) : DateTime.now(), ['years', 'days'], ); const years = Math.floor(dateDiff.years); const days = Math.floor(dateDiff.days); let result = ''; if (years !== 0) { result = plural(Math.abs(years), { one: `${years} ${t`year`}`, other: `${years} ${t`years`}`, }); if (short) return result; } if (years !== 0 && days !== 0) { result += ` ${t`and`} `; } if (days !== 0) { const daysPart = plural(Math.abs(days), { one: `${days} ${t`day`}`, other: `${days} ${t`days`}`, }); result += daysPart; } return result; }; export const formatToHumanReadableDate = (date: Date | string) => { const parsedJSDate = parseDate(date).toJSDate(); return i18n.date(parsedJSDate, { dateStyle: 'medium' }); }; export const getDateFormatString = ( dateFormat: DateFormat, isDateTimeInput: boolean, ): string => { const timePart = isDateTimeInput ? ' HH:mm' : ''; switch (dateFormat) { case DateFormat.DAY_FIRST: return `dd/MM/yyyy${timePart}`; case DateFormat.YEAR_FIRST: return `yyyy-MM-dd${timePart}`; case DateFormat.MONTH_FIRST: default: return `MM/dd/yyyy${timePart}`; } }; 
+#: src/utils/date-utils.ts
+msgid "{0, plural, one {{years} {1}} other {{years} {2}}}"
+msgstr "{0, plural, one {{years} {1}} other {{years} {2}}}"
+
 #. js-lingui-id: ROdDR9
 #: src/modules/object-record/record-board/record-board-column/utils/computeAggregateValueAndLabel.ts
 msgid "{aggregateLabel} of {fieldLabel}"
@@ -106,6 +127,11 @@ msgstr "{roleLabel} μπορεί να {humanReadableAction} αρχεία {object
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelOverrideCell.tsx
 msgid "{roleLabel} can't {humanReadableAction} {objectLabel} records"
 msgstr "{roleLabel} δεν μπορεί να {humanReadableAction} αρχεία {objectLabel}"
+
+#. js-lingui-id: uHZWwU
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentConfirmationModal.tsx
+msgid "{roleTargetName} will be assigned to the \"{newRoleName}\" role."
+msgstr "Ο χρήστης {roleTargetName} θα εκχωρηθεί στο ρόλο \"{newRoleName}\"."
 
 #. js-lingui-id: WN9tFl
 #: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentConfirmationModalSubtitle.tsx
@@ -183,6 +209,16 @@ msgstr "Η μέθοδος 2FA διαγράφηκε με επιτυχία."
 msgid "2FA Method Reset"
 msgstr "Επαναφορά Μεθόδου 2FA"
 
+#. js-lingui-id: keUlu+
+#: src/modules/workflow/components/OverrideWorkflowDraftConfirmationModal.tsx
+msgid "A draft already exists"
+msgstr "Ένα πρόχειρο υπάρχει ήδη"
+
+#. js-lingui-id: OITESn
+#: src/modules/workflow/components/OverrideWorkflowDraftConfirmationModal.tsx
+msgid "A draft already exists for this workflow. Are you sure you want to erase it?"
+msgstr "Ένα πρόχειρο υπάρχει ήδη για αυτή τη ροή εργασίας. Είστε βέβαιοι ότι θέλετε να το διαγράψετε;"
+
 #. js-lingui-id: C6xZqR
 #: src/pages/settings/developers/api-keys/SettingsDevelopersApiKeyDetail.tsx
 msgid "A role must be selected for the API key"
@@ -242,6 +278,11 @@ msgstr "Σχετικά με αυτό το χώρο εργασίας"
 msgid "Account"
 msgstr "Λογαριασμός"
 
+#. js-lingui-id: 9o6rjW
+#: src/utils/title-utils.ts
+msgid "Account - Settings"
+msgstr "Λογαριασμός - Ρυθμίσεις"
+
 #. js-lingui-id: nD0Y+a
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
 #: src/modules/settings/profile/components/DeleteAccount.tsx
@@ -300,6 +341,7 @@ msgid "Activate Workflow"
 msgstr "Ενεργοποίηση διεργασιών"
 
 #. js-lingui-id: F6pfE9
+#: src/pages/settings/SettingsProfile.tsx
 #: src/pages/settings/data-model/SettingsObjects.tsx
 #: src/pages/settings/data-model/SettingsObjectFieldTable.tsx
 #: src/modules/settings/domains/components/SettingsWorkspaceDomainCard.tsx
@@ -329,11 +371,22 @@ msgstr "Προσθήκη λογαριασμού"
 msgid "Add Approved Access Domain"
 msgstr "Προσθήκη Εγκεκριμένου Τομέα Πρόσβασης"
 
+#. js-lingui-id: We0vOO
+#: src/modules/ui/input/editor/components/CustomSideMenu.tsx
+msgid "Add Block"
+msgstr "Προσθήκη Μπλοκ"
+
 #. js-lingui-id: DpV70M
 #: src/modules/workflow/workflow-steps/workflow-actions/form-action/components/WorkflowEditActionFormBuilder.tsx
 #: src/modules/settings/data-model/object-details/components/tabs/ObjectFields.tsx
 msgid "Add Field"
 msgstr "Προσθήκη Πεδίου"
+
+#. js-lingui-id: T7RGT6
+#: src/modules/activities/files/components/Attachments.tsx
+#: src/modules/activities/files/components/Attachments.tsx
+msgid "Add file"
+msgstr "Προσθήκη αρχείου"
 
 #. js-lingui-id: vCSBPD
 #: src/modules/views/components/ViewBarDetailsAddFilterButton.tsx
@@ -360,7 +413,7 @@ msgstr "Προσθέστε εισόδους στη φόρμα σας"
 #. js-lingui-id: rejvy6
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 msgid "Add layout"
-msgstr ""
+msgstr "Προσθήκη διάταξης"
 
 #. js-lingui-id: Hkobke
 #: src/modules/object-record/record-table/record-table-section/components/RecordTableRecordGroupSectionAddNew.tsx
@@ -444,7 +497,7 @@ msgstr "Προσθήκη προβολής"
 #. js-lingui-id: iRpDWj
 #: src/pages/settings/page-layout/SettingsPageLayoutEdit.tsx
 msgid "Add Widget"
-msgstr ""
+msgstr "Προσθήκη widget"
 
 #. js-lingui-id: m2qDV8
 #: src/modules/object-record/record-table/empty-state/utils/getEmptyStateTitle.ts
@@ -526,8 +579,14 @@ msgstr "Χειρισμοί Πρακτόρων"
 msgid "Agent not found"
 msgstr "Ο Πράκτορας δεν βρέθηκε"
 
+#. js-lingui-id: jJT5pC
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "Agent Roles"
+msgstr "Ρόλοι Πράκτορα"
+
 #. js-lingui-id: 8Uv5e6
 #: src/pages/settings/ai/SettingsAI.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 msgid "Agents"
 msgstr "Πράκτορες"
 
@@ -565,6 +624,7 @@ msgstr "Σχήμα Απόκρισης AI"
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelUpdateFieldsValueForObject.tsx
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelSeeFieldsValueForObject.tsx
 #: src/modules/object-record/record-board/record-board-column/utils/getAggregateOperationShortLabel.ts
+#: src/modules/activities/files/components/Attachments.tsx
 msgid "All"
 msgstr "Όλα"
 
@@ -607,6 +667,11 @@ msgstr "Όλοι οι ρόλοι"
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelObjectPicker.tsx
 msgid "All the standard objects"
 msgstr "Όλα τα τυπικά αντικείμενα"
+
+#. js-lingui-id: XLzFVD
+#: src/modules/settings/roles/role-assignment/constants/RoleTargetConfig.ts
+msgid "All workspace members already have this role"
+msgstr "Όλα τα μέλη του χώρου εργασίας έχουν ήδη αυτόν τον ρόλο"
 
 #. js-lingui-id: MLmnB2
 #: src/modules/settings/admin-panel/components/SettingsAdminGeneral.tsx
@@ -671,6 +736,7 @@ msgid "An unexpected error occurred"
 msgstr "Παρουσιάστηκε ένα απρόβλεπτο σφάλμα"
 
 #. js-lingui-id: HZFm5R
+#: src/utils/date-utils.ts
 #: src/modules/auth/sign-in-up/components/FooterNote.tsx
 msgid "and"
 msgstr "και"
@@ -708,8 +774,14 @@ msgstr "API Key"
 msgid "API Key copied to clipboard"
 msgstr "Το κλειδί API αντιγράφηκε στο πρόχειρο"
 
+#. js-lingui-id: K84VsN
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "API Key Roles"
+msgstr "Ρόλοι Κλειδιών API"
+
 #. js-lingui-id: 5h8ooz
 #: src/pages/settings/developers/api-keys/SettingsApiKeys.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 msgid "API keys"
 msgstr "Κλειδιά API"
 
@@ -717,6 +789,11 @@ msgstr "Κλειδιά API"
 #: src/pages/settings/workspace/SettingsApiWebhooks.tsx
 msgid "API Keys"
 msgstr "Κλειδιά API"
+
+#. js-lingui-id: VIs5Hx
+#: src/utils/title-utils.ts
+msgid "API Keys - Settings"
+msgstr "Κλειδιά API - Ρυθμίσεις"
 
 #. js-lingui-id: vByqA1
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
@@ -766,6 +843,11 @@ msgstr "API & Webhooks"
 msgid "Appearance"
 msgstr "Εμφάνιση"
 
+#. js-lingui-id: d7+zQ6
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Applicability"
+msgstr "Εφαρμογή"
+
 #. js-lingui-id: UDlRcx
 #: src/modules/settings/security/components/approvedAccessDomains/SettingsSecurityApprovedAccessDomainValidationEffect.tsx
 msgid "Approved access domain validated"
@@ -811,25 +893,45 @@ msgstr "Αύξουσα"
 msgid "Ask AI"
 msgstr "Ρώτησε την AI"
 
-#. js-lingui-id: 9ch9Mz
+#. js-lingui-id: OBqG7p
 #: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentConfirmationModal.tsx
-msgid "Assign {workspaceMemberName}?"
-msgstr "Ανάθεση στον χρήστη {workspaceMemberName};"
+msgid "Assign {roleTargetName}?"
+msgstr "Ανάθεση στον χρήστη {roleTargetName};"
 
-#. js-lingui-id: 17M/rH
-#: src/modules/settings/roles/components/SettingsRolesList.tsx
-msgid "Assign roles to manage each member’s access and permissions"
-msgstr "Αναθέστε ρόλους για να διαχειρίζεστε την πρόσβαση και τα δικαιώματα κάθε μέλους"
+#. js-lingui-id: krsgB0
+#: src/modules/settings/roles/role-assignment/constants/RoleTargetConfig.ts
+msgid "Assign to agent"
+msgstr "Ανάθεση σε πράκτορα"
+
+#. js-lingui-id: ngx6hS
+#: src/modules/settings/roles/role-assignment/constants/RoleTargetConfig.ts
+msgid "Assign to API key"
+msgstr "Ανάθεση σε Κλειδί API"
 
 #. js-lingui-id: 2y2quh
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
+#: src/modules/settings/roles/role-assignment/constants/RoleTargetConfig.ts
 msgid "Assign to member"
 msgstr "Ανάθεση σε μέλος"
 
-#. js-lingui-id: OItM/o
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
-msgid "Assigned members"
-msgstr "Ανατεθειμένα μέλη"
+#. js-lingui-id: sqEW29
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Assignable to Agents"
+msgstr "Αναθέσιμο στους Πράκτορες"
+
+#. js-lingui-id: kOksfH
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Assignable to API Keys"
+msgstr "Αναθέσιμο στα Κλειδιά API"
+
+#. js-lingui-id: 6cOTMx
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Assignable to team members"
+msgstr "Αναθέσιμο στα μέλη της ομάδας"
+
+#. js-lingui-id: 7qh2Hx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "Assigned {roleTargetDisplayName}"
+msgstr "Ανατίθεται {roleTargetDisplayName}"
 
 #. js-lingui-id: lxQ+5m
 #: src/modules/settings/roles/components/SettingsRolesTableHeader.tsx
@@ -1082,6 +1184,11 @@ msgstr "Ακύρωση της συνδρομής σας"
 msgid "Catalan"
 msgstr "Καταλανικά"
 
+#. js-lingui-id: tHntRt
+#: src/modules/ui/input/editor/components/CustomSideMenu.tsx
+msgid "Change Color"
+msgstr "Αλλαγή Χρώματος"
+
 #. js-lingui-id: feCRNv
 #: src/modules/auth/sign-in-up/components/EmailVerificationSent.tsx
 msgid "Change email"
@@ -1210,7 +1317,7 @@ msgid "Click on the checkmark to apply your changes."
 msgstr "Κάντε κλικ στο σημάδι επιλογής για να εφαρμόσετε τις αλλαγές σας."
 
 #. js-lingui-id: d0rtA5
-#: src/modules/dashboards/graphs/components/GraphWidgetTooltip.tsx
+#: src/modules/dashboards/widgets/graph/components/GraphWidgetTooltip.tsx
 msgid "Click to see data"
 msgstr "Κάντε κλικ για να δείτε τα δεδομένα"
 
@@ -1265,7 +1372,7 @@ msgstr "Κωδικός χρώματος"
 #. js-lingui-id: P8gRog
 #: src/modules/spreadsheet-import/utils/setColumn.ts
 msgid "column data is not compatible with Multi-Select. Format required is '[\"option1\", \"option2\"]' or option1,option2."
-msgstr ""
+msgstr "τα δεδομένα της στήλης δεν είναι συμβατά με τη δυνατότητα πολλαπλής επιλογής. Η απαιτούμενη μορφή είναι '[\"επιλογή1\", \"επιλογή2\"]' ή επιλογή1,επιλογή2."
 
 #. js-lingui-id: 93hd3e
 #: src/modules/spreadsheet-import/steps/components/MatchColumnsStep/MatchColumnsStep.tsx
@@ -1448,7 +1555,12 @@ msgstr "Συνέχεια με τη Microsoft"
 #. js-lingui-id: XgMEX4
 #: src/modules/settings/accounts/components/SettingsAccountsMessageChannelDetails.tsx
 msgid "Control which folders are synced"
-msgstr ""
+msgstr "Ελέγξτε ποιους φακέλους συγχρονίζονται"
+
+#. js-lingui-id: +iFqZW
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Control which types of entities this role can be assigned to"
+msgstr "Ελέγξτε σε ποιους τύπους οντοτήτων μπορεί να ανατεθεί αυτός ο ρόλος"
 
 #. js-lingui-id: FxVG/l
 #: src/hooks/useCopyToClipboard.tsx
@@ -1620,6 +1732,11 @@ msgstr "Δημιουργήστε νέα ροή εργασιών"
 msgid "Create profile"
 msgstr "Δημιουργήστε προφίλ"
 
+#. js-lingui-id: ccH5/A
+#: src/utils/title-utils.ts
+msgid "Create Profile"
+msgstr "Δημιουργία προφίλ"
+
 #. js-lingui-id: GPuEIc
 #: src/modules/command-menu/components/CommandMenu.tsx
 msgid "Create Related Record"
@@ -1663,6 +1780,7 @@ msgid "Create Webhook"
 msgstr "Δημιουργήστε Webhook"
 
 #. js-lingui-id: kdLGki
+#: src/utils/title-utils.ts
 #: src/modules/ui/navigation/navigation-drawer/components/MultiWorkspaceDropdown/internal/MultiWorkspaceDropdownDefaultComponents.tsx
 msgid "Create Workspace"
 msgstr "Δημιουργία Χώρου Εργασίας"
@@ -1813,6 +1931,11 @@ msgstr "Μοντέλο δεδομένων"
 msgid "Data Model"
 msgstr "Μοντέλο Δεδομένων"
 
+#. js-lingui-id: zAfYtx
+#: src/utils/title-utils.ts
+msgid "Data model - Settings"
+msgstr "Μοντέλο δεδομένων - Ρυθμίσεις"
+
 #. js-lingui-id: r+cVRP
 #: src/pages/settings/data-model/SettingsObjectFieldTable.tsx
 #: src/pages/settings/data-model/SettingsObjectFieldTable.tsx
@@ -1844,6 +1967,16 @@ msgstr "Ημερομηνία και ώρα"
 #: src/modules/settings/experience/components/DateTimeSettingsDateFormatSelect.tsx
 msgid "Date format"
 msgstr "Μορφή Ημερομηνίας"
+
+#. js-lingui-id: /ITcnz
+#: src/utils/date-utils.ts
+msgid "day"
+msgstr "ημέρα"
+
+#. js-lingui-id: J/Upwb
+#: src/utils/date-utils.ts
+msgid "days"
+msgstr "ημέρες"
 
 #. js-lingui-id: cpDASC
 #: src/modules/workflow/workflow-trigger/components/WorkflowEditTriggerCronForm.tsx
@@ -1880,6 +2013,7 @@ msgid "Deactivate Workflow"
 msgstr "Απενεργοποίηση Workflow"
 
 #. js-lingui-id: yAT3be
+#: src/pages/settings/SettingsProfile.tsx
 #: src/modules/settings/data-model/fields/forms/components/text/constants/TextDataModelSelectOptions.ts
 msgid "Deactivated"
 msgstr "Απενεργοποιημένο"
@@ -1903,6 +2037,11 @@ msgstr "Προεπιλεγμένη Χώρα"
 #: src/modules/settings/data-model/fields/forms/phones/components/SettingsDataModelFieldPhonesForm.tsx
 msgid "Default Country Code"
 msgstr "Προεπιλεγμένος Κωδικός Χώρας"
+
+#. js-lingui-id: CGhRMh
+#: src/modules/settings/roles/components/SettingsRolesDefaultRole.tsx
+msgid "Default Role"
+msgstr "Προεπιλεγμένος Ρόλος"
 
 #. js-lingui-id: TlEEts
 #: src/modules/settings/admin-panel/config-variables/utils/useSourceContent.ts
@@ -1946,6 +2085,8 @@ msgstr "διαγραφή"
 #: src/pages/settings/developers/api-keys/SettingsDevelopersApiKeyDetail.tsx
 #: src/modules/views/view-picker/components/ViewPickerOptionDropdown.tsx
 #: src/modules/views/view-picker/components/ViewPickerCreateButton.tsx
+#: src/modules/ui/input/editor/components/CustomSideMenu.tsx
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTabEnvironmentVariableTableRow.tsx
 #: src/modules/settings/security/components/SSO/SettingsSecuritySSORowDropdownMenu.tsx
 #: src/modules/settings/developers/components/SettingsDevelopersWebhookForm.tsx
 #: src/modules/settings/developers/components/SettingsDevelopersWebhookForm.tsx
@@ -2106,6 +2247,7 @@ msgstr "Περιγράψτε πότε πρέπει να χρησιμοποιεί
 #: src/pages/settings/ai/components/SettingsAgentHandoffTable.tsx
 #: src/modules/workflow/workflow-steps/workflow-actions/ai-agent-action/components/WorkflowOutputSchemaBuilder.tsx
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsTableHeader.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 #: src/modules/settings/developers/components/SettingsDevelopersWebhookForm.tsx
 msgid "Description"
 msgstr "Περιγραφή"
@@ -2263,6 +2405,7 @@ msgstr "Νωρίτερη ημερομηνία"
 
 #. js-lingui-id: ePK91l
 #: src/modules/views/view-picker/components/ViewPickerOptionDropdown.tsx
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTabEnvironmentVariableTableRow.tsx
 #: src/modules/settings/roles/role-permissions/object-level-permissions/field-permissions/components/SettingsRolePermissionsObjectLevelObjectFieldPermissionTable.tsx
 #: src/modules/settings/data-model/object-details/components/SettingsObjectFieldDisabledActionDropdown.tsx
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableActionButtons.tsx
@@ -2285,6 +2428,11 @@ msgstr "Επεξεργασία Λογαριασμού"
 #: src/pages/settings/ai/SettingsAgentForm.tsx
 msgid "Edit Agent"
 msgstr "Επεξεργασία Πράκτορα"
+
+#. js-lingui-id: X8x8v5
+#: src/modules/settings/integrations/database-connection/components/SettingsIntegrationEditDatabaseConnectionContent.tsx
+msgid "Edit Connection"
+msgstr "Επεξεργασία Σύνδεσης"
 
 #. js-lingui-id: 6vZ75d
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
@@ -2312,6 +2460,11 @@ msgstr "Επεξεργασία τρόπου πληρωμής, προβολή τ�
 msgid "Edit Records on All Objects"
 msgstr "Επεξεργασία εγγραφών σε όλα τα αντικείμενα"
 
+#. js-lingui-id: vjOt/P
+#: src/modules/settings/integrations/database-connection/components/SettingsIntegrationEditDatabaseConnectionContent.tsx
+msgid "Edit the information to connect your database"
+msgstr "Επεξεργαστείτε τις πληροφορίες για να συνδέσετε τη βάση δεδομένων σας"
+
 #. js-lingui-id: 6o1M/Q
 #: src/pages/settings/domains/SettingsDomains.tsx
 msgid "Edit your subdomain name or set a custom domain."
@@ -2328,6 +2481,7 @@ msgstr "Όγδοος"
 #: src/pages/settings/SettingsProfile.tsx
 #: src/pages/auth/PasswordReset.tsx
 #: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTableHeader.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 #: src/modules/settings/admin-panel/components/SettingsAdminGeneral.tsx
 msgid "Email"
 msgstr "Ηλεκτρονικό ταχυδρομείο"
@@ -2426,6 +2580,11 @@ msgstr "Κενό"
 msgid "Empty Array"
 msgstr "Κενός Πίνακας"
 
+#. js-lingui-id: 8X+jbk
+#: src/modules/activities/emails/components/EmailThreads.tsx
+msgid "Empty Inbox"
+msgstr "Άδειο Γραμματοκιβώτιο"
+
 #. js-lingui-id: 3hSGoJ
 #: src/modules/workflow/workflow-steps/components/WorkflowRunStepOutputDetail.tsx
 #: src/modules/workflow/workflow-steps/components/WorkflowRunStepInputDetail.tsx
@@ -2477,12 +2636,12 @@ msgstr "Εισάγετε το όνομα του πράκτορα*"
 #. js-lingui-id: kOybqX
 #: src/modules/workflow/workflow-steps/workflow-actions/iterator-action/WorkflowEditActionIterator.tsx
 msgid "Enter array of items or variable expression"
-msgstr ""
+msgstr "Εισάγετε έναν πίνακα αντικειμένων ή μια μεταβλητή έκφραση"
 
 #. js-lingui-id: uyFQs5
 #: src/modules/workflow/workflow-steps/workflow-actions/iterator-action/WorkflowEditActionIterator.tsx
 msgid "Enter array of step IDs"
-msgstr ""
+msgstr "Εισάγετε έναν πίνακα από αναγνωριστικά βημάτων"
 
 #. js-lingui-id: 9/30HU
 #: src/modules/settings/data-model/fields/forms/date/utils/getDisplayFormatSelectDescription.tsx
@@ -2636,7 +2795,7 @@ msgstr "Εξαιρέστε τα παρακάτω άτομα και τομείς 
 #. js-lingui-id: uwM4yU
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 msgid "Existing layouts"
-msgstr ""
+msgstr "Υπάρχουσες διατάξεις"
 
 #. js-lingui-id: fV7V51
 #: src/pages/settings/data-model/SettingsObjects.tsx
@@ -2678,6 +2837,11 @@ msgstr "Επέκταση σε Πλήρη Οθόνη"
 msgid "Experience"
 msgstr "Εμπειρία"
 
+#. js-lingui-id: 8TiwZn
+#: src/utils/title-utils.ts
+msgid "Experience - Settings"
+msgstr "Εμπειρία - Ρυθμίσεις"
+
 #. js-lingui-id: LxRNPw
 #: src/pages/settings/developers/api-keys/SettingsDevelopersApiKeyDetail.tsx
 #: src/modules/settings/developers/components/SettingsApiKeysTable.tsx
@@ -2691,13 +2855,24 @@ msgstr "Ημερομηνία λήξης"
 
 #. js-lingui-id: M1RnFv
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
+#: src/modules/settings/developers/utils/formatExpiration.ts
 msgid "Expired"
 msgstr "Έληξε"
+
+#. js-lingui-id: KnN1Tu
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "Expires"
+msgstr "Λήγει"
 
 #. js-lingui-id: i9qiyR
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
 msgid "Expires in"
 msgstr "Λήγει σε"
+
+#. js-lingui-id: 1RvVK1
+#: src/modules/settings/developers/utils/formatExpiration.ts
+msgid "Expires in {dateDiff}"
+msgstr "Λήγει σε {dateDiff}"
 
 #. js-lingui-id: GS+Mus
 #: src/modules/object-record/record-index/export/hooks/useRecordIndexExportRecords.ts
@@ -2945,12 +3120,12 @@ msgstr "Όνομα"
 #. js-lingui-id: kNqMMd
 #: src/modules/settings/accounts/components/message-folders/SettingsMessageFoldersTableHeader.tsx
 msgid "Folder"
-msgstr ""
+msgstr "Φάκελος"
 
 #. js-lingui-id: NRJn87
 #: src/modules/settings/accounts/components/SettingsAccountsMessageChannelDetails.tsx
 msgid "Folder Management"
-msgstr ""
+msgstr "Διαχείριση φακέλων"
 
 #. js-lingui-id: glx6on
 #: src/modules/auth/sign-in-up/components/SignInUpWorkspaceScopeForm.tsx
@@ -2988,6 +3163,11 @@ msgstr "Πλήρης πρόσβαση"
 msgid "Functions"
 msgstr "Λειτουργίες"
 
+#. js-lingui-id: tkr79G
+#: src/utils/title-utils.ts
+msgid "Functions - Settings"
+msgstr "Λειτουργίες - Ρυθμίσεις"
+
 #. js-lingui-id: Weq9zb
 #: src/pages/settings/SettingsWorkspace.tsx
 #: src/pages/settings/SettingsWorkspace.tsx
@@ -2995,6 +3175,11 @@ msgstr "Λειτουργίες"
 #: src/modules/settings/admin-panel/components/SettingsAdminContent.tsx
 msgid "General"
 msgstr "Γενικά"
+
+#. js-lingui-id: p+rXSW
+#: src/utils/title-utils.ts
+msgid "General - Settings"
+msgstr "Γενικά - Ρυθμίσεις"
 
 #. js-lingui-id: DDcvSo
 #: src/pages/settings/profile/appearance/components/LocalePicker.tsx
@@ -3332,12 +3517,22 @@ msgstr "Εισαγωγή"
 msgid "Importing Data ..."
 msgstr "Εισαγωγή δεδομένων ..."
 
+#. js-lingui-id: HiyKEP
+#: src/modules/settings/developers/utils/formatExpiration.ts
+msgid "In {dateDiff}"
+msgstr "Σε {dateDiff}"
+
 #. js-lingui-id: NoNwIX
 #: src/pages/settings/data-model/SettingsObjects.tsx
 #: src/pages/settings/data-model/SettingsObjectFieldTable.tsx
 #: src/modules/settings/domains/components/SettingsWorkspaceDomainCard.tsx
 msgid "Inactive"
 msgstr "Ανενεργό"
+
+#. js-lingui-id: Gp4Yi6
+#: src/modules/activities/emails/components/EmailThreads.tsx
+msgid "Inbox"
+msgstr "Εισερχόμενα"
 
 #. js-lingui-id: pZ/USH
 #: src/pages/settings/data-model/SettingsObjectDetailPage.tsx
@@ -3347,7 +3542,12 @@ msgstr "Ευρετήρια"
 #. js-lingui-id: T6szT2
 #: src/modules/workflow/workflow-steps/workflow-actions/iterator-action/WorkflowEditActionIterator.tsx
 msgid "Initial loop step IDs"
-msgstr ""
+msgstr "Αρχικά αναγνωριστικά βημάτων του βρόχου"
+
+#. js-lingui-id: XU5AOg
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTestTab.tsx
+msgid "Input"
+msgstr "Εισαγωγή"
 
 #. js-lingui-id: JE2tjr
 #: src/modules/settings/data-model/objects/forms/components/SettingsDataModelObjectAboutForm.tsx
@@ -3359,6 +3559,11 @@ msgstr "Η εισαγωγή πρέπει να είναι σε μορφή camel c
 #: src/modules/workflow/workflow-steps/workflow-actions/form-action/components/WorkflowEditActionFormFieldSettings.tsx
 msgid "Input settings"
 msgstr "Ρυθμίσεις Εισόδου"
+
+#. js-lingui-id: T8avpe
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTestTab.tsx
+msgid "Insert a JSON input, then press \"Run\" to test your function."
+msgstr "Εισάγετε μια είσοδο JSON και, στη συνέχεια, πατήστε \"Εκτέλεση\" για να δοκιμάσετε τη λειτουργία σας."
 
 #. js-lingui-id: AwUsnG
 #: src/pages/settings/data-model/constants/SettingsObjectTableMetadata.ts
@@ -3375,9 +3580,15 @@ msgstr "Οδηγίες για το AI"
 #: src/pages/settings/integrations/SettingsIntegrations.tsx
 #: src/pages/settings/integrations/SettingsIntegrationMCPPage.tsx
 #: src/pages/settings/integrations/SettingsIntegrationMCPPage.tsx
+#: src/modules/settings/integrations/database-connection/components/SettingsIntegrationEditDatabaseConnectionContent.tsx
 #: src/modules/settings/hooks/useSettingsNavigationItems.tsx
 msgid "Integrations"
 msgstr "Ενσωματώσεις"
+
+#. js-lingui-id: RGm66q
+#: src/utils/title-utils.ts
+msgid "Integrations - Settings"
+msgstr "Ενσωματώσεις - Ρυθμίσεις"
 
 #. js-lingui-id: ntgzzG
 #: src/modules/settings/integrations/components/SettingsIntegrationMCP.tsx
@@ -3453,6 +3664,7 @@ msgid "Invitations"
 msgstr "Προσκλήσεις"
 
 #. js-lingui-id: MFKlMB
+#: src/utils/title-utils.ts
 #: src/modules/workspace/components/WorkspaceInviteTeam.tsx
 msgid "Invite"
 msgstr "Πρόσκληση"
@@ -3605,12 +3817,12 @@ msgstr "Ιταλικά"
 #. js-lingui-id: +qz/bj
 #: src/modules/workflow/workflow-steps/workflow-actions/iterator-action/WorkflowEditActionIterator.tsx
 msgid "Items to iterate over"
-msgstr ""
+msgstr "Αντικείμενα προς επανάληψη"
 
 #. js-lingui-id: E08FMd
 #: src/modules/workflow/workflow-steps/workflow-actions/utils/getActionHeaderTypeOrThrow.ts
 msgid "Iterator"
-msgstr ""
+msgstr "Επαναληπτική διεργασία"
 
 #. js-lingui-id: dFtidv
 #: src/pages/settings/profile/appearance/components/LocalePicker.tsx
@@ -3694,6 +3906,11 @@ msgstr "Τελευταίες 4 Ώρες (παλιότερα → νεότερα)"
 msgid "Last 7 Days (oldest → newest)"
 msgstr "Τελευταίες 7 Ημέρες (παλιότερα → νεότερα)"
 
+#. js-lingui-id: P4FGJG
+#: src/modules/activities/emails/components/EmailThreadHeader.tsx
+msgid "Last message {lastMessageSentAtFormatted}"
+msgstr "Τελευταίο μήνυμα {lastMessageSentAtFormatted}"
+
 #. js-lingui-id: UXBCwc
 #: src/pages/onboarding/CreateProfile.tsx
 #: src/modules/settings/profile/components/NameFields.tsx
@@ -3739,7 +3956,7 @@ msgstr "Διάταξη"
 #. js-lingui-id: A/oBX5
 #: src/pages/settings/page-layout/SettingsPageLayoutEdit.tsx
 msgid "Layout Name"
-msgstr ""
+msgstr "Όνομα διάταξης"
 
 #. js-lingui-id: 8QyoLb
 #: src/modules/settings/accounts/components/SettingsAccountsConnectionForm.tsx
@@ -3777,6 +3994,11 @@ msgstr "Φωτεινό"
 msgid "Link copied to clipboard"
 msgstr "Ο σύνδεσμος αντιγράφηκε στο πρόχειρο"
 
+#. js-lingui-id: HhVDr2
+#: src/modules/settings/data-model/objects/forms/components/SettingsDataModelObjectAboutForm.tsx
+msgid "Listing"
+msgstr "Καταχώρηση"
+
 #. js-lingui-id: DL2sg0
 #: src/modules/settings/data-model/objects/forms/components/SettingsDataModelObjectAboutForm.tsx
 msgid "Listings"
@@ -3794,7 +4016,7 @@ msgstr "Φόρτωση δεδομένων μετρήσεων..."
 
 #. js-lingui-id: Z3FXyt
 #: src/pages/settings/ai/components/SettingsAgentHandoffForm.tsx
-#: src/modules/views/hooks/useComputeRecordRelationFilterLabelValue.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
 #: src/modules/settings/admin-panel/components/SettingsAdminVersionDisplay.tsx
 #: src/modules/activities/timeline-activities/rows/message/components/EventCardMessage.tsx
 msgid "Loading..."
@@ -3852,6 +4074,16 @@ msgstr "Διαχείριση αγαπημένων"
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
 msgid "Manage Members"
 msgstr "Διαχείριση Μελών"
+
+#. js-lingui-id: GzInS6
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "Manage roles and permissions for team members and API keys"
+msgstr "Διαχείριση ρόλων και δικαιωμάτων για μέλη ομάδας και κλειδιά API"
+
+#. js-lingui-id: wMlk+o
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "Manage roles and permissions for team members, agents, and API keys"
+msgstr "Διαχείριση ρόλων και δικαιωμάτων για μέλη ομάδας, πράκτορες και κλειδιά API"
 
 #. js-lingui-id: eGGH1l
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
@@ -3917,10 +4149,16 @@ msgstr "Μέλος του"
 #. js-lingui-id: wlQNTg
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 #: src/modules/settings/hooks/useSettingsNavigationItems.tsx
 #: src/modules/settings/admin-panel/components/SettingsAdminWorkspaceContent.tsx
 msgid "Members"
 msgstr "Μέλη"
+
+#. js-lingui-id: Max/je
+#: src/utils/title-utils.ts
+msgid "Members - Settings"
+msgstr "Μέλη - Ρυθμίσεις"
 
 #. js-lingui-id: UODtG8
 #: src/modules/action-menu/actions/record-actions/constants/DefaultRecordActionsConfig.tsx
@@ -4062,6 +4300,9 @@ msgstr "πρέπει να είναι μια σειρά έγκυρων emails"
 #: src/modules/settings/roles/role-permissions/object-level-permissions/object-form/components/SettingsRolePermissionsObjectLevelObjectFormObjectLevelTableHeader.tsx
 #: src/modules/settings/roles/role-permissions/object-level-permissions/field-permissions/components/SettingsRolePermissionsObjectLevelObjectFieldPermissionTable.tsx
 #: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTableHeader.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 #: src/modules/settings/roles/components/SettingsRolesTableHeader.tsx
 #: src/modules/settings/developers/components/SettingsApiKeysTable.tsx
 #: src/modules/settings/admin-panel/components/SettingsAdminWorkspaceContent.tsx
@@ -4124,6 +4365,16 @@ msgstr "Μετάβαση στην προηγούμενη έκδοση"
 #: src/modules/action-menu/actions/record-actions/constants/WorkflowActionsConfig.tsx
 msgid "Navigate to previous workflow"
 msgstr "Μετάβαση στον προηγούμενο workflow"
+
+#. js-lingui-id: qqeAJM
+#: src/modules/settings/developers/utils/formatExpiration.ts
+msgid "Never"
+msgstr "Ποτέ"
+
+#. js-lingui-id: O1Aswy
+#: src/modules/settings/developers/utils/formatExpiration.ts
+msgid "Never expires"
+msgstr "Δεν λήγει ποτέ"
 
 #. js-lingui-id: isRobC
 #: src/pages/settings/data-model/SettingsNewObject.tsx
@@ -4200,6 +4451,11 @@ msgstr "Νέα ρύθμιση SSO"
 msgid "New SSO provider"
 msgstr "Νέος πάροχος SSO"
 
+#. js-lingui-id: hXzOVo
+#: src/modules/auth/sign-in-up/components/internal/SignInUpTwoFactorAuthenticationProvision.tsx
+msgid "Next"
+msgstr "Επόμενο"
+
 #. js-lingui-id: AxNmtI
 #: src/modules/spreadsheet-import/steps/components/SelectSheetStep/SelectSheetStep.tsx
 #: src/modules/spreadsheet-import/steps/components/MatchColumnsStep/MatchColumnsStep.tsx
@@ -4217,15 +4473,55 @@ msgstr "Ένατος"
 msgid "No"
 msgstr "Όχι"
 
+#. js-lingui-id: xUXmJM
+#: src/modules/object-record/record-field/ui/meta-types/input/components/RelationToOneFieldInput.tsx
+msgid "No {fieldLabel}"
+msgstr "Όχι {fieldLabel}"
+
+#. js-lingui-id: yWS1Mx
+#: src/modules/object-record/record-field/ui/form-types/components/FormSingleRecordPicker.tsx
+msgid "No {objectNameSingular}"
+msgstr "Όχι {objectNameSingular}"
+
 #. js-lingui-id: vhsJG1
 #: src/modules/workflow/workflow-steps/workflow-actions/ai-agent-action/components/WorkflowEditActionAiAgent.tsx
 msgid "No Agent"
 msgstr "Χωρίς Πράκτορα"
 
+#. js-lingui-id: f9b1sj
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "No agents assigned"
+msgstr "Δεν έχουν ανατεθεί πράκτορες"
+
+#. js-lingui-id: 2jU+NX
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "No agents available"
+msgstr "Δεν υπάρχουν διαθέσιμοι πράκτορες"
+
 #. js-lingui-id: pC+mOo
 #: src/pages/settings/ai/components/SettingsAgentHandoffForm.tsx
 msgid "No agents available for handoff"
 msgstr "Δεν υπάρχουν διαθέσιμοι πράκτορες για ανάθεση"
+
+#. js-lingui-id: mU1OkO
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "No agents match your search"
+msgstr "Κανένας πράκτορας δεν ταιριάζει με την αναζήτησή σας"
+
+#. js-lingui-id: 9mx36q
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "No API keys assigned"
+msgstr "Δεν έχουν ανατεθεί κλειδιά API"
+
+#. js-lingui-id: QnvikC
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "No API keys available"
+msgstr "Δεν υπάρχουν διαθέσιμα κλειδιά API"
+
+#. js-lingui-id: wZT6U/
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "No API keys match your search"
+msgstr "Κανένα κλειδί API δεν ταιριάζει με την αναζήτησή σας"
 
 #. js-lingui-id: tFxVHz
 #: src/modules/workflow/workflow-steps/workflow-actions/filter-action/components/WorkflowStepFilterFieldSelect.tsx
@@ -4262,15 +4558,35 @@ msgstr "Δεν υπάρχουν δεδομένα που περιέχουν λά�
 msgid "No data found"
 msgstr "Δεν βρέθηκαν δεδομένα"
 
+#. js-lingui-id: P4KXUa
+#: src/modules/object-record/record-table/empty-state/components/RecordTableEmptyStateSoftDelete.tsx
+msgid "No Deleted {objectLabelSingular} found"
+msgstr "Δεν βρέθηκε κανένα διαγραμμένο {objectLabelSingular}"
+
+#. js-lingui-id: s7QKq9
+#: src/modules/object-record/record-table/empty-state/components/RecordTableEmptyStateSoftDelete.tsx
+msgid "No deleted records matching the filter criteria were found."
+msgstr "Δεν βρέθηκαν διαγραμμένα αρχεία που να αντιστοιχούν στα κριτήρια φιλτραρίσματος."
+
 #. js-lingui-id: flmDTf
 #: src/pages/settings/ai/components/SettingsAgentHandoffTable.tsx
 msgid "No description"
 msgstr "Χωρίς περιγραφή"
 
+#. js-lingui-id: mINrlz
+#: src/modules/activities/emails/components/EmailThreads.tsx
+msgid "No email exchange has occurred with this record yet."
+msgstr "Δεν έχει πραγματοποιηθεί ανταλλαγή email με αυτήν την καταχώρηση ακόμη."
+
+#. js-lingui-id: 23Rceg
+#: src/modules/activities/files/components/Attachments.tsx
+msgid "No Files"
+msgstr "Χωρίς αρχεία"
+
 #. js-lingui-id: 1jgsYC
 #: src/modules/settings/accounts/components/message-folders/SettingsMessageFoldersEmptyStateCard.tsx
 msgid "No folders found for this account"
-msgstr ""
+msgstr "Δεν βρέθηκαν φάκελοι για αυτόν το λογαριασμό"
 
 #. js-lingui-id: xlUOps
 #: src/modules/information-banner/components/billing/InformationBannerEndTrialPeriod.tsx
@@ -4303,13 +4619,12 @@ msgid "No members"
 msgstr "Κανένα μέλος"
 
 #. js-lingui-id: Y4qK8/
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 msgid "No members assigned"
 msgstr "Δεν έχουν ανατεθεί μέλη"
 
 #. js-lingui-id: /nLvVj
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
 msgid "No members match your search"
 msgstr "Κανένα μέλος δεν ταιριάζει με την αναζήτησή σας"
 
@@ -4345,6 +4660,7 @@ msgstr "Δεν έχουν οριστεί δικαιώματα για μεμον�
 
 #. js-lingui-id: EqGTpW
 #: src/modules/object-record/record-table/empty-state/components/RecordTableEmptyStateReadOnly.tsx
+#: src/modules/object-record/record-picker/components/RecordPickerNoRecordFoundMenuItem.tsx
 msgid "No records found"
 msgstr "Δεν βρέθηκαν εγγραφές"
 
@@ -4392,6 +4708,7 @@ msgstr "Δεν υπάρχουν ακόμα έκδοσεις του workflow"
 #. js-lingui-id: EdQY6l
 #: src/modules/settings/accounts/components/SettingsAccountsMessageAutoCreationCard.tsx
 #: src/modules/object-record/record-table/record-table-footer/components/RecordTableColumnAggregateFooterMenuContent.tsx
+#: src/modules/object-record/record-table/record-table-footer/components/RecordTableColumnAggregateFooterAggregateOperationMenuItems.tsx
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownRecordGroupFieldsContent.tsx
 msgid "None"
 msgstr "Κανένα"
@@ -4448,6 +4765,11 @@ msgstr "Δεν συγχρονίζεται"
 #: src/modules/action-menu/actions/record-actions/constants/DefaultRecordActionsConfig.tsx
 msgid "Notes"
 msgstr "Σημειώματα"
+
+#. js-lingui-id: YwzE9K
+#: src/utils/date-utils.ts
+msgid "now"
+msgstr "τώρα"
 
 #. js-lingui-id: HptUxX
 #: src/modules/settings/data-model/fields/forms/number/constants/NumberDataModelSelectOptions.ts
@@ -4578,6 +4900,11 @@ msgstr "Επιλογές"
 msgid "or"
 msgstr "ή"
 
+#. js-lingui-id: ZAVklK
+#: src/modules/settings/security/components/SSO/SettingsSSOSAMLForm.tsx
+msgid "Or"
+msgstr "Ή"
+
 #. js-lingui-id: ucgZ0o
 #: src/modules/billing/components/SettingsBillingSubscriptionInfo.tsx
 msgid "Organization"
@@ -4601,7 +4928,7 @@ msgstr "Άλλοι χώροι εργασίας"
 #. js-lingui-id: NuKR0h
 #: src/modules/command-menu/pages/workflow/action/components/CommandMenuWorkflowSelectActionContent.tsx
 msgid "Others"
-msgstr ""
+msgstr "Άλλα"
 
 #. js-lingui-id: p5ufK6
 #: src/pages/onboarding/BookCallDecision.tsx
@@ -4613,13 +4940,18 @@ msgstr "Η ομάδα μας μπορεί να σας βοηθήσει να ρυ
 msgid "Output Field {fieldNumber}"
 msgstr "Πεδίο Εξόδου {fieldNumber}"
 
+#. js-lingui-id: in6CUw
+#: src/modules/workflow/components/OverrideWorkflowDraftConfirmationModal.tsx
+msgid "Override Draft"
+msgstr "Αντικατάσταση Προχείρου"
+
 #. js-lingui-id: lXe6vt
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 #: src/pages/settings/page-layout/SettingsPageLayoutEdit.tsx
 #: src/modules/settings/hooks/useSettingsNavigationItems.tsx
 msgid "Page Layouts"
-msgstr ""
+msgstr "Διατάξεις Σελίδας"
 
 #. js-lingui-id: boJlGf
 #: src/pages/not-found/NotFound.tsx
@@ -4823,6 +5155,12 @@ msgstr "Προηγούμενες Συνομιλίες AI"
 msgid "Price updated."
 msgstr "Η τιμή ενημερώθηκε."
 
+#. js-lingui-id: 0Ni6nR
+#: src/modules/object-record/record-field/ui/form-types/components/FormEmailsFieldInput.tsx
+#: src/modules/object-record/record-field/ui/form-types/components/FormEmailsFieldInput.tsx
+msgid "Primary Email"
+msgstr "Κύριο Email"
+
 #. js-lingui-id: LcET2C
 #: src/modules/auth/sign-in-up/components/FooterNote.tsx
 msgid "Privacy Policy"
@@ -4845,6 +5183,11 @@ msgstr "Επεξεργασία..."
 #: src/modules/settings/hooks/useSettingsNavigationItems.tsx
 msgid "Profile"
 msgstr "Προφίλ"
+
+#. js-lingui-id: 6Fs5Ks
+#: src/utils/title-utils.ts
+msgid "Profile - Settings"
+msgstr "Προφίλ - Ρυθμίσεις"
 
 #. js-lingui-id: GVxbU6
 #: src/modules/settings/security/components/SSO/SettingsSSOOIDCForm.tsx
@@ -4963,6 +5306,11 @@ msgstr "Ενημερώσεις"
 msgid "Reload"
 msgstr "Ανανέωση"
 
+#. js-lingui-id: qlAIQ1
+#: src/modules/object-metadata/components/RemoteNavigationDrawerSection.tsx
+msgid "Remote"
+msgstr "Απομακρυσμένα"
+
 #. js-lingui-id: t/YqKh
 #: src/modules/ui/input/components/ImageInput.tsx
 #: src/modules/spreadsheet-import/steps/components/ValidationStep/ValidationStep.tsx
@@ -4978,6 +5326,11 @@ msgstr "Αφαίρεση λογαριασμού"
 #: src/modules/settings/data-model/fields/forms/select/components/SettingsDataModelFieldSelectFormOptionRow.tsx
 msgid "Remove as default"
 msgstr "Αφαίρεση ως προεπιλεγμένο"
+
+#. js-lingui-id: 2HpFUd
+#: src/modules/object-record/record-table/empty-state/components/RecordTableEmptyStateSoftDelete.tsx
+msgid "Remove Deleted filter"
+msgstr "Αφαίρεση φίλτρου διαγραμμένων"
 
 #. js-lingui-id: rn2/2V
 #: src/modules/workflow/workflow-diagram/workflow-edges/components/WorkflowDiagramFilterEdgeEditable.tsx
@@ -5004,6 +5357,16 @@ msgstr "Αφαίρεση ανάθεσης"
 #: src/modules/settings/data-model/fields/forms/select/components/SettingsDataModelFieldSelectFormOptionRow.tsx
 msgid "Remove option"
 msgstr "Αφαίρεση επιλογής"
+
+#. js-lingui-id: NRCCKG
+#: src/modules/object-record/record-index/components/RecordIndexRemoveSortingModal.tsx
+msgid "Remove Sorting"
+msgstr "Αφαίρεση Ταξινόμησης"
+
+#. js-lingui-id: qMPWg0
+#: src/modules/object-record/record-index/components/RecordIndexRemoveSortingModal.tsx
+msgid "Remove sorting?"
+msgstr "Αφαίρεση ταξινόμησης;"
 
 #. js-lingui-id: oQjB9l
 #: src/modules/billing/components/SettingsBillingSubscriptionInfo.tsx
@@ -5150,6 +5513,11 @@ msgstr "Ρουμανικά"
 msgid "Run a workflow and return here to view its executions"
 msgstr "Εκτελέστε ένα workflow και επιστρέψτε εδώ για να δείτε τις εκτελέσεις του"
 
+#. js-lingui-id: UPaWvi
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTestTab.tsx
+msgid "Run Function"
+msgstr "Εκτελέστε τη Λειτουργία"
+
 #. js-lingui-id: nji0/X
 #: src/pages/settings/profile/appearance/components/LocalePicker.tsx
 msgid "Russian"
@@ -5216,15 +5584,20 @@ msgstr "Αναζήτηση ενός μέλους..."
 msgid "Search a type"
 msgstr "Αναζήτηση τύπου"
 
+#. js-lingui-id: +7s4fw
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "Search agents"
+msgstr "Αναζήτηση πρακτόρων"
+
 #. js-lingui-id: 4fd0q+
 #: src/pages/settings/ai/components/SettingsAIAgentsTable.tsx
 msgid "Search an agent..."
 msgstr "Αναζήτηση πράκτορα..."
 
-#. js-lingui-id: x55IVv
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
-msgid "Search an assigned team member..."
-msgstr "Αναζητήστε ένα ανατεθέν μέλος της ομάδας..."
+#. js-lingui-id: kdagxk
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "Search an assigned {roleTargetDisplayName}..."
+msgstr "Αναζήτηση ανατεθέντος {roleTargetDisplayName}..."
 
 #. js-lingui-id: k7kp5/
 #: src/pages/settings/data-model/SettingsObjectIndexTable.tsx
@@ -5244,6 +5617,11 @@ msgstr "Αναζήτηση αντικειμένου"
 #: src/modules/object-record/object-filter-dropdown/components/ObjectFilterDropdownAnyFieldSearchInput.tsx
 msgid "Search any field"
 msgstr "Αναζήτηση οποιοδήποτε πεδίο"
+
+#. js-lingui-id: FzcOoG
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "Search API keys"
+msgstr "Αναζήτηση Κλειδιών API"
 
 #. js-lingui-id: 3UPqHL
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableSearchInput.tsx
@@ -5660,6 +6038,11 @@ msgstr "Είσοδος"
 msgid "Sign In"
 msgstr "Είσοδος"
 
+#. js-lingui-id: Vt3mQ2
+#: src/utils/title-utils.ts
+msgid "Sign in or Create an account"
+msgstr "Σύνδεση ή δημιουργία λογαριασμού"
+
 #. js-lingui-id: e+RpCP
 #: src/modules/auth/sign-in-up/components/internal/SignInUpWithCredentials.tsx
 msgid "Sign up"
@@ -5866,6 +6249,7 @@ msgstr "Το θέμα, το σώμα και τα συνημμένα θα μοι�
 
 #. js-lingui-id: hQRttt
 #: src/modules/spreadsheet-import/steps/components/ValidationStep/ValidationStep.tsx
+#: src/modules/auth/sign-in-up/components/internal/SignInUpTwoFactorAuthenticationVerification.tsx
 msgid "Submit"
 msgstr "Υποβολή"
 
@@ -5943,7 +6327,7 @@ msgstr "Αλλαγή σε ετήσια"
 #. js-lingui-id: Nu4DdT
 #: src/modules/settings/accounts/components/message-folders/SettingsMessageFoldersTableHeader.tsx
 msgid "Sync"
-msgstr ""
+msgstr "Συγχρονισμός"
 
 #. js-lingui-id: 5TRY4+
 #: src/modules/settings/accounts/components/SettingsAccountsConnectedAccountsRowRightContainer.tsx
@@ -6043,6 +6427,11 @@ msgstr "Δοκιμή"
 msgid "Test Workflow"
 msgstr "Δοκιμή Ροής Εργασίας"
 
+#. js-lingui-id: 3nWPN6
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTestTab.tsx
+msgid "Test your function"
+msgstr "Δοκιμάστε τη λειτουργία σας"
+
 #. js-lingui-id: xeiujy
 #: src/modules/ai/constants/OutputFieldTypeOptions.ts
 msgid "Text"
@@ -6125,11 +6514,6 @@ msgstr "Οι τιμές αυτού του πεδίου πρέπει να είν�
 msgid "The whole event details will be shared with your team."
 msgstr "Όλες οι λεπτομέρειες του γεγονότος θα μοιραστούν με την ομάδα σας."
 
-#. js-lingui-id: MssRHl
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
-msgid "The workspace needs at least one Admin"
-msgstr "Το χώρο εργασίας χρειάζεται τουλάχιστον έναν Διαχειριστή"
-
 #. js-lingui-id: FEr96N
 #: src/modules/ui/navigation/navigation-drawer/components/MultiWorkspaceDropdown/internal/MultiWorkspaceDropdownThemesComponents.tsx
 msgid "Theme"
@@ -6139,6 +6523,16 @@ msgstr "Θέμα"
 #: src/modules/ui/navigation/navigation-drawer/components/MultiWorkspaceDropdown/internal/MultiWorkspaceDropdownDefaultComponents.tsx
 msgid "Theme "
 msgstr "Θέμα "
+
+#. js-lingui-id: Wn862P
+#: src/modules/keyboard-shortcut-menu/components/KeyboardShortcutMenuItem.tsx
+msgid "then"
+msgstr "έπειτα"
+
+#. js-lingui-id: l2fWLK
+#: src/modules/activities/files/components/Attachments.tsx
+msgid "There are no associated files with this record."
+msgstr "Δεν υπάρχουν συσχετισμένα αρχεία με αυτήν την καταχώρηση."
 
 #. js-lingui-id: /cSDOy
 #: src/modules/spreadsheet-import/steps/components/MatchColumnsStep/MatchColumnsStep.tsx
@@ -6185,15 +6579,20 @@ msgstr "Αυτή η ενέργεια δεν μπορεί να αναιρεθεί
 msgid "This database value overrides environment settings. "
 msgstr "Αυτή η τιμή βάσης δεδομένων υπερισχύει των ρυθμίσεων περιβάλλοντος."
 
+#. js-lingui-id: E4JJ5C
+#: src/modules/object-record/record-index/components/RecordIndexRemoveSortingModal.tsx
+msgid "This is required to enable manual row reordering."
+msgstr "Αυτό είναι απαραίτητο για να επιτρέψετε την χειροκίνητη αναδιάταξη σειρών."
+
 #. js-lingui-id: vbLBMd
 #: src/modules/settings/roles/role-permissions/object-level-permissions/object-form/components/SettingsRolePermissionsObjectLevelObjectFormObjectLevelTableRow.tsx
 msgid "This role can {humanReadableAction} all records"
 msgstr "Αυτός ο ρόλος μπορεί {humanReadableAction} όλα τα αρχεία"
 
-#. js-lingui-id: xPfDRx
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
-msgid "This role is assigned to these workspace members."
-msgstr "Αυτός ο ρόλος έχει ανατεθεί σε αυτά τα μέλη του χώρου εργασίας."
+#. js-lingui-id: BifDEA
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "This role is assigned to these {roleTargetDisplayName}."
+msgstr "Αυτός ο ρόλος ανατίθεται σε αυτούς τους {roleTargetDisplayName}."
 
 #. js-lingui-id: C/wr0z
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableHelpText.tsx
@@ -6243,6 +6642,7 @@ msgid "Timestamp and participants will be shared with your team."
 msgstr "Η χρονική σήμανση και οι συμμετέχοντες θα μοιραστούν με την ομάδα σας."
 
 #. js-lingui-id: ecUA8p
+#: src/utils/date-utils.ts
 #: src/modules/settings/admin-panel/health-status/constants/WorkerQueueMetricsSelectOptions.ts
 #: src/modules/localization/utils/formatDateISOStringToRelativeDate.ts
 msgid "Today"
@@ -6514,6 +6914,11 @@ msgstr "Πληροφορίες Χρήστη"
 msgid "User is not logged in"
 msgstr "Ο χρήστης δεν έχει συνδεθεί"
 
+#. js-lingui-id: LVecP9
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "User Roles"
+msgstr "Ρόλοι Χρηστών"
+
 #. js-lingui-id: Sxm8rQ
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
 msgid "Users"
@@ -6535,6 +6940,7 @@ msgid "Validate Data"
 msgstr "Επικύρωση δεδομένων"
 
 #. js-lingui-id: wMHvYH
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTabEnvironmentVariableTableRow.tsx
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableValueInput.tsx
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableValueInput.tsx
 msgid "Value"
@@ -6565,6 +6971,11 @@ msgstr "Η μεταβλητή δεν βρέθηκε"
 #: src/modules/settings/admin-panel/config-variables/hooks/useConfigVariableActions.ts
 msgid "Variable updated successfully."
 msgstr "Η μεταβλητή ενημερώθηκε με επιτυχία."
+
+#. js-lingui-id: uSMfoN
+#: src/utils/title-utils.ts
+msgid "Verify"
+msgstr "Επαλήθευση"
 
 #. js-lingui-id: IoglDq
 #: src/pages/auth/SignInUp.tsx
@@ -6732,7 +7143,7 @@ msgstr "Όταν το κλειδί θα απενεργοποιηθεί"
 #. js-lingui-id: tL6W2K
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 msgid "Widgets"
-msgstr ""
+msgstr "Γραφικά Στοιχεία"
 
 #. js-lingui-id: woYYQq
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
@@ -6825,6 +7236,7 @@ msgid "Write a description for this agent"
 msgstr "Γράψτε μια περιγραφή για αυτόν τον πράκτορα"
 
 #. js-lingui-id: 7qI8sJ
+#: src/utils/date-utils.ts
 #: src/modules/billing/utils/subscriptionFlags.ts
 msgid "year"
 msgstr "έτος"
@@ -6833,6 +7245,11 @@ msgstr "έτος"
 #: src/modules/billing/utils/subscriptionFlags.ts
 msgid "yearly"
 msgstr "ετήσια"
+
+#. js-lingui-id: +BGee5
+#: src/utils/date-utils.ts
+msgid "years"
+msgstr "χρόνια"
 
 #. js-lingui-id: 3d1wCB
 #: src/pages/settings/developers/api-keys/SettingsDevelopersApiKeyDetail.tsx
@@ -6865,6 +7282,13 @@ msgstr "Δεν επιτρέπεται να δημιουργείτε εγγραφ
 #: src/modules/settings/accounts/components/SettingsAccountsConnectionForm.tsx
 msgid "You can set up any combination of IMAP (receiving emails), SMTP (sending emails), and CalDAV (calendar sync)."
 msgstr "Μπορείτε να ρυθμίσετε οποιονδήποτε συνδυασμό IMAP (λήψη email), SMTP (αποστολή email) και CalDAV (συγχρονισμός ημερολογίου)."
+
+#. js-lingui-id: aiJY7y
+#: src/modules/settings/integrations/database-connection/components/SettingsIntegrationEditDatabaseConnectionContent.tsx
+msgid ""
+"You cannot edit this connection because it has tracked tables.\n"
+"If you need to make changes, please create a new connection or unsync the tables first."
+msgstr "Δεν μπορείτε να επεξεργαστείτε αυτή τη σύνδεση γιατί έχει καταγεγραμμένους πίνακες. Αν χρειαστεί να κάνετε αλλαγές, δημιουργήστε μια νέα σύνδεση ή αποσυνδέστε πρώτα τους πίνακες."
 
 #. js-lingui-id: zEM7Ne
 #: src/modules/billing/components/SettingsBillingSubscriptionInfo.tsx

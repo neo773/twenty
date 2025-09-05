@@ -33,6 +33,11 @@ msgstr ": Trống"
 msgid ": Future"
 msgstr ": Tương lai"
 
+#. js-lingui-id: uhan84
+#: src/modules/views/hooks/useComputeRecordRelationFilterLabelValue.tsx
+msgid ": Loading..."
+msgstr ": Đang tải..."
+
 #. js-lingui-id: Nk/d+Z
 #: src/modules/object-record/object-filter-dropdown/utils/getOperandLabel.ts
 msgid ": Not"
@@ -72,6 +77,22 @@ msgstr "· {objectFilterDropdownSearchInput}"
 msgid "[empty string]"
 msgstr ""
 
+#. js-lingui-id: m6BGdm
+#. placeholder {0}: Math.abs(days)
+#. placeholder {1}: import { isDate, isNumber, isString } from '@sniptt/guards'; import { differenceInCalendarDays, formatDistance, formatDistanceToNow, type Locale, } from 'date-fns'; import { DateTime } from 'luxon'; import { DateFormat } from '@/localization/constants/DateFormat'; import { SOURCE_LOCALE } from 'twenty-shared/translations'; import { isDefined } from 'twenty-shared/utils'; import { CustomError } from '@/error-handler/CustomError'; import { i18n } from '@lingui/core'; import { plural, t } from '@lingui/core/macro'; import { logError } from './logError'; const getLuxonLocale = () => { return SOURCE_LOCALE === 'en' ? 'en-US' : SOURCE_LOCALE; }; export const parseDate = (dateToParse: Date | string | number) => { if (dateToParse === 'now') return DateTime.fromJSDate(new Date()); let formattedDate: DateTime | null = null; if (!dateToParse) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } else if (isString(dateToParse)) { formattedDate = DateTime.fromISO(dateToParse); } else if (isDate(dateToParse)) { formattedDate = DateTime.fromJSDate(dateToParse); } else if (isNumber(dateToParse)) { formattedDate = DateTime.fromMillis(dateToParse); } if (!formattedDate) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } if (!formattedDate.isValid) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } return formattedDate.setLocale(getLuxonLocale()); }; const isSameDay = (a: DateTime, b: DateTime): boolean => a.hasSame(b, 'day') && a.hasSame(b, 'month') && a.hasSame(b, 'year'); export const formatDate = ( dateToFormat: Date | string | number, format: string, ) => { try { const parsedDate = parseDate(dateToFormat); return parsedDate.toFormat(format); } catch (error) { logError(error); return ''; } }; export const beautifyExactDateTime = ( dateToBeautify: Date | string | number, ) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); const dateFormat = isToday ? 'T' : 'DD · T'; return formatDate(dateToBeautify, dateFormat); }; export const beautifyExactDate = (dateToBeautify: Date | string | number) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); if (isToday) { return t`Today`; } return formatDate(dateToBeautify, 'DD'); }; export const beautifyPastDateRelativeToNow = ( pastDate: Date | string | number, locale?: Locale, ) => { try { const parsedDate = parseDate(pastDate); const now = new Date(); const diffInSeconds = Math.abs( (now.getTime() - parsedDate.toJSDate().getTime()) / 1000, ); // For very recent times (less than 30 seconds), show "now" if (diffInSeconds < 30) { return t`now`; } return formatDistanceToNow(parsedDate.toJSDate(), { addSuffix: true, locale, includeSeconds: true, }); } catch (error) { logError(error); return ''; } }; export const hasDatePassed = (date: Date | string | number) => { try { const parsedDate = parseDate(date); return ( differenceInCalendarDays( DateTime.local().toJSDate(), parsedDate.toJSDate(), ) >= 1 ); } catch (error) { logError(error); return false; } }; export const beautifyDateDiff = ( date: string, dateToCompareWith?: string, short = false, locale?: Locale, ) => { // For simple cases, use date-fns which has excellent locale support if (!short && isDefined(locale)) { const fromDate = new Date(date); const toDate = dateToCompareWith ? new Date(dateToCompareWith) : new Date(); return formatDistance(fromDate, toDate, { locale }); } // Manual implementation for complex cases or when locale is not available const dateDiff = DateTime.fromISO(date).diff( dateToCompareWith ? DateTime.fromISO(dateToCompareWith) : DateTime.now(), ['years', 'days'], ); const years = Math.floor(dateDiff.years); const days = Math.floor(dateDiff.days); let result = ''; if (years !== 0) { result = plural(Math.abs(years), { one: `${years} ${t`year`}`, other: `${years} ${t`years`}`, }); if (short) return result; } if (years !== 0 && days !== 0) { result += ` ${t`and`} `; } if (days !== 0) { const daysPart = plural(Math.abs(days), { one: `${days} ${t`day`}`, other: `${days} ${t`days`}`, }); result += daysPart; } return result; }; export const formatToHumanReadableDate = (date: Date | string) => { const parsedJSDate = parseDate(date).toJSDate(); return i18n.date(parsedJSDate, { dateStyle: 'medium' }); }; export const getDateFormatString = ( dateFormat: DateFormat, isDateTimeInput: boolean, ): string => { const timePart = isDateTimeInput ? ' HH:mm' : ''; switch (dateFormat) { case DateFormat.DAY_FIRST: return `dd/MM/yyyy${timePart}`; case DateFormat.YEAR_FIRST: return `yyyy-MM-dd${timePart}`; case DateFormat.MONTH_FIRST: default: return `MM/dd/yyyy${timePart}`; } }; 
+#. placeholder {2}: import { isDate, isNumber, isString } from '@sniptt/guards'; import { differenceInCalendarDays, formatDistance, formatDistanceToNow, type Locale, } from 'date-fns'; import { DateTime } from 'luxon'; import { DateFormat } from '@/localization/constants/DateFormat'; import { SOURCE_LOCALE } from 'twenty-shared/translations'; import { isDefined } from 'twenty-shared/utils'; import { CustomError } from '@/error-handler/CustomError'; import { i18n } from '@lingui/core'; import { plural, t } from '@lingui/core/macro'; import { logError } from './logError'; const getLuxonLocale = () => { return SOURCE_LOCALE === 'en' ? 'en-US' : SOURCE_LOCALE; }; export const parseDate = (dateToParse: Date | string | number) => { if (dateToParse === 'now') return DateTime.fromJSDate(new Date()); let formattedDate: DateTime | null = null; if (!dateToParse) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } else if (isString(dateToParse)) { formattedDate = DateTime.fromISO(dateToParse); } else if (isDate(dateToParse)) { formattedDate = DateTime.fromJSDate(dateToParse); } else if (isNumber(dateToParse)) { formattedDate = DateTime.fromMillis(dateToParse); } if (!formattedDate) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } if (!formattedDate.isValid) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } return formattedDate.setLocale(getLuxonLocale()); }; const isSameDay = (a: DateTime, b: DateTime): boolean => a.hasSame(b, 'day') && a.hasSame(b, 'month') && a.hasSame(b, 'year'); export const formatDate = ( dateToFormat: Date | string | number, format: string, ) => { try { const parsedDate = parseDate(dateToFormat); return parsedDate.toFormat(format); } catch (error) { logError(error); return ''; } }; export const beautifyExactDateTime = ( dateToBeautify: Date | string | number, ) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); const dateFormat = isToday ? 'T' : 'DD · T'; return formatDate(dateToBeautify, dateFormat); }; export const beautifyExactDate = (dateToBeautify: Date | string | number) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); if (isToday) { return t`Today`; } return formatDate(dateToBeautify, 'DD'); }; export const beautifyPastDateRelativeToNow = ( pastDate: Date | string | number, locale?: Locale, ) => { try { const parsedDate = parseDate(pastDate); const now = new Date(); const diffInSeconds = Math.abs( (now.getTime() - parsedDate.toJSDate().getTime()) / 1000, ); // For very recent times (less than 30 seconds), show "now" if (diffInSeconds < 30) { return t`now`; } return formatDistanceToNow(parsedDate.toJSDate(), { addSuffix: true, locale, includeSeconds: true, }); } catch (error) { logError(error); return ''; } }; export const hasDatePassed = (date: Date | string | number) => { try { const parsedDate = parseDate(date); return ( differenceInCalendarDays( DateTime.local().toJSDate(), parsedDate.toJSDate(), ) >= 1 ); } catch (error) { logError(error); return false; } }; export const beautifyDateDiff = ( date: string, dateToCompareWith?: string, short = false, locale?: Locale, ) => { // For simple cases, use date-fns which has excellent locale support if (!short && isDefined(locale)) { const fromDate = new Date(date); const toDate = dateToCompareWith ? new Date(dateToCompareWith) : new Date(); return formatDistance(fromDate, toDate, { locale }); } // Manual implementation for complex cases or when locale is not available const dateDiff = DateTime.fromISO(date).diff( dateToCompareWith ? DateTime.fromISO(dateToCompareWith) : DateTime.now(), ['years', 'days'], ); const years = Math.floor(dateDiff.years); const days = Math.floor(dateDiff.days); let result = ''; if (years !== 0) { result = plural(Math.abs(years), { one: `${years} ${t`year`}`, other: `${years} ${t`years`}`, }); if (short) return result; } if (years !== 0 && days !== 0) { result += ` ${t`and`} `; } if (days !== 0) { const daysPart = plural(Math.abs(days), { one: `${days} ${t`day`}`, other: `${days} ${t`days`}`, }); result += daysPart; } return result; }; export const formatToHumanReadableDate = (date: Date | string) => { const parsedJSDate = parseDate(date).toJSDate(); return i18n.date(parsedJSDate, { dateStyle: 'medium' }); }; export const getDateFormatString = ( dateFormat: DateFormat, isDateTimeInput: boolean, ): string => { const timePart = isDateTimeInput ? ' HH:mm' : ''; switch (dateFormat) { case DateFormat.DAY_FIRST: return `dd/MM/yyyy${timePart}`; case DateFormat.YEAR_FIRST: return `yyyy-MM-dd${timePart}`; case DateFormat.MONTH_FIRST: default: return `MM/dd/yyyy${timePart}`; } }; 
+#: src/utils/date-utils.ts
+msgid "{0, plural, one {{days} {1}} other {{days} {2}}}"
+msgstr "{0, plural, other {{ngày} {2}}}"
+
+#. js-lingui-id: FYY5cK
+#. placeholder {0}: Math.abs(years)
+#. placeholder {1}: import { isDate, isNumber, isString } from '@sniptt/guards'; import { differenceInCalendarDays, formatDistance, formatDistanceToNow, type Locale, } from 'date-fns'; import { DateTime } from 'luxon'; import { DateFormat } from '@/localization/constants/DateFormat'; import { SOURCE_LOCALE } from 'twenty-shared/translations'; import { isDefined } from 'twenty-shared/utils'; import { CustomError } from '@/error-handler/CustomError'; import { i18n } from '@lingui/core'; import { plural, t } from '@lingui/core/macro'; import { logError } from './logError'; const getLuxonLocale = () => { return SOURCE_LOCALE === 'en' ? 'en-US' : SOURCE_LOCALE; }; export const parseDate = (dateToParse: Date | string | number) => { if (dateToParse === 'now') return DateTime.fromJSDate(new Date()); let formattedDate: DateTime | null = null; if (!dateToParse) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } else if (isString(dateToParse)) { formattedDate = DateTime.fromISO(dateToParse); } else if (isDate(dateToParse)) { formattedDate = DateTime.fromJSDate(dateToParse); } else if (isNumber(dateToParse)) { formattedDate = DateTime.fromMillis(dateToParse); } if (!formattedDate) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } if (!formattedDate.isValid) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } return formattedDate.setLocale(getLuxonLocale()); }; const isSameDay = (a: DateTime, b: DateTime): boolean => a.hasSame(b, 'day') && a.hasSame(b, 'month') && a.hasSame(b, 'year'); export const formatDate = ( dateToFormat: Date | string | number, format: string, ) => { try { const parsedDate = parseDate(dateToFormat); return parsedDate.toFormat(format); } catch (error) { logError(error); return ''; } }; export const beautifyExactDateTime = ( dateToBeautify: Date | string | number, ) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); const dateFormat = isToday ? 'T' : 'DD · T'; return formatDate(dateToBeautify, dateFormat); }; export const beautifyExactDate = (dateToBeautify: Date | string | number) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); if (isToday) { return t`Today`; } return formatDate(dateToBeautify, 'DD'); }; export const beautifyPastDateRelativeToNow = ( pastDate: Date | string | number, locale?: Locale, ) => { try { const parsedDate = parseDate(pastDate); const now = new Date(); const diffInSeconds = Math.abs( (now.getTime() - parsedDate.toJSDate().getTime()) / 1000, ); // For very recent times (less than 30 seconds), show "now" if (diffInSeconds < 30) { return t`now`; } return formatDistanceToNow(parsedDate.toJSDate(), { addSuffix: true, locale, includeSeconds: true, }); } catch (error) { logError(error); return ''; } }; export const hasDatePassed = (date: Date | string | number) => { try { const parsedDate = parseDate(date); return ( differenceInCalendarDays( DateTime.local().toJSDate(), parsedDate.toJSDate(), ) >= 1 ); } catch (error) { logError(error); return false; } }; export const beautifyDateDiff = ( date: string, dateToCompareWith?: string, short = false, locale?: Locale, ) => { // For simple cases, use date-fns which has excellent locale support if (!short && isDefined(locale)) { const fromDate = new Date(date); const toDate = dateToCompareWith ? new Date(dateToCompareWith) : new Date(); return formatDistance(fromDate, toDate, { locale }); } // Manual implementation for complex cases or when locale is not available const dateDiff = DateTime.fromISO(date).diff( dateToCompareWith ? DateTime.fromISO(dateToCompareWith) : DateTime.now(), ['years', 'days'], ); const years = Math.floor(dateDiff.years); const days = Math.floor(dateDiff.days); let result = ''; if (years !== 0) { result = plural(Math.abs(years), { one: `${years} ${t`year`}`, other: `${years} ${t`years`}`, }); if (short) return result; } if (years !== 0 && days !== 0) { result += ` ${t`and`} `; } if (days !== 0) { const daysPart = plural(Math.abs(days), { one: `${days} ${t`day`}`, other: `${days} ${t`days`}`, }); result += daysPart; } return result; }; export const formatToHumanReadableDate = (date: Date | string) => { const parsedJSDate = parseDate(date).toJSDate(); return i18n.date(parsedJSDate, { dateStyle: 'medium' }); }; export const getDateFormatString = ( dateFormat: DateFormat, isDateTimeInput: boolean, ): string => { const timePart = isDateTimeInput ? ' HH:mm' : ''; switch (dateFormat) { case DateFormat.DAY_FIRST: return `dd/MM/yyyy${timePart}`; case DateFormat.YEAR_FIRST: return `yyyy-MM-dd${timePart}`; case DateFormat.MONTH_FIRST: default: return `MM/dd/yyyy${timePart}`; } }; 
+#. placeholder {2}: import { isDate, isNumber, isString } from '@sniptt/guards'; import { differenceInCalendarDays, formatDistance, formatDistanceToNow, type Locale, } from 'date-fns'; import { DateTime } from 'luxon'; import { DateFormat } from '@/localization/constants/DateFormat'; import { SOURCE_LOCALE } from 'twenty-shared/translations'; import { isDefined } from 'twenty-shared/utils'; import { CustomError } from '@/error-handler/CustomError'; import { i18n } from '@lingui/core'; import { plural, t } from '@lingui/core/macro'; import { logError } from './logError'; const getLuxonLocale = () => { return SOURCE_LOCALE === 'en' ? 'en-US' : SOURCE_LOCALE; }; export const parseDate = (dateToParse: Date | string | number) => { if (dateToParse === 'now') return DateTime.fromJSDate(new Date()); let formattedDate: DateTime | null = null; if (!dateToParse) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } else if (isString(dateToParse)) { formattedDate = DateTime.fromISO(dateToParse); } else if (isDate(dateToParse)) { formattedDate = DateTime.fromJSDate(dateToParse); } else if (isNumber(dateToParse)) { formattedDate = DateTime.fromMillis(dateToParse); } if (!formattedDate) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } if (!formattedDate.isValid) { throw new CustomError( `Invalid date passed to formatPastDate: "${dateToParse}"`, 'INVALID_DATE_FORMAT', ); } return formattedDate.setLocale(getLuxonLocale()); }; const isSameDay = (a: DateTime, b: DateTime): boolean => a.hasSame(b, 'day') && a.hasSame(b, 'month') && a.hasSame(b, 'year'); export const formatDate = ( dateToFormat: Date | string | number, format: string, ) => { try { const parsedDate = parseDate(dateToFormat); return parsedDate.toFormat(format); } catch (error) { logError(error); return ''; } }; export const beautifyExactDateTime = ( dateToBeautify: Date | string | number, ) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); const dateFormat = isToday ? 'T' : 'DD · T'; return formatDate(dateToBeautify, dateFormat); }; export const beautifyExactDate = (dateToBeautify: Date | string | number) => { const isToday = isSameDay(parseDate(dateToBeautify), DateTime.local()); if (isToday) { return t`Today`; } return formatDate(dateToBeautify, 'DD'); }; export const beautifyPastDateRelativeToNow = ( pastDate: Date | string | number, locale?: Locale, ) => { try { const parsedDate = parseDate(pastDate); const now = new Date(); const diffInSeconds = Math.abs( (now.getTime() - parsedDate.toJSDate().getTime()) / 1000, ); // For very recent times (less than 30 seconds), show "now" if (diffInSeconds < 30) { return t`now`; } return formatDistanceToNow(parsedDate.toJSDate(), { addSuffix: true, locale, includeSeconds: true, }); } catch (error) { logError(error); return ''; } }; export const hasDatePassed = (date: Date | string | number) => { try { const parsedDate = parseDate(date); return ( differenceInCalendarDays( DateTime.local().toJSDate(), parsedDate.toJSDate(), ) >= 1 ); } catch (error) { logError(error); return false; } }; export const beautifyDateDiff = ( date: string, dateToCompareWith?: string, short = false, locale?: Locale, ) => { // For simple cases, use date-fns which has excellent locale support if (!short && isDefined(locale)) { const fromDate = new Date(date); const toDate = dateToCompareWith ? new Date(dateToCompareWith) : new Date(); return formatDistance(fromDate, toDate, { locale }); } // Manual implementation for complex cases or when locale is not available const dateDiff = DateTime.fromISO(date).diff( dateToCompareWith ? DateTime.fromISO(dateToCompareWith) : DateTime.now(), ['years', 'days'], ); const years = Math.floor(dateDiff.years); const days = Math.floor(dateDiff.days); let result = ''; if (years !== 0) { result = plural(Math.abs(years), { one: `${years} ${t`year`}`, other: `${years} ${t`years`}`, }); if (short) return result; } if (years !== 0 && days !== 0) { result += ` ${t`and`} `; } if (days !== 0) { const daysPart = plural(Math.abs(days), { one: `${days} ${t`day`}`, other: `${days} ${t`days`}`, }); result += daysPart; } return result; }; export const formatToHumanReadableDate = (date: Date | string) => { const parsedJSDate = parseDate(date).toJSDate(); return i18n.date(parsedJSDate, { dateStyle: 'medium' }); }; export const getDateFormatString = ( dateFormat: DateFormat, isDateTimeInput: boolean, ): string => { const timePart = isDateTimeInput ? ' HH:mm' : ''; switch (dateFormat) { case DateFormat.DAY_FIRST: return `dd/MM/yyyy${timePart}`; case DateFormat.YEAR_FIRST: return `yyyy-MM-dd${timePart}`; case DateFormat.MONTH_FIRST: default: return `MM/dd/yyyy${timePart}`; } }; 
+#: src/utils/date-utils.ts
+msgid "{0, plural, one {{years} {1}} other {{years} {2}}}"
+msgstr "{0, plural, other {{năm} {2}}}"
+
 #. js-lingui-id: ROdDR9
 #: src/modules/object-record/record-board/record-board-column/utils/computeAggregateValueAndLabel.ts
 msgid "{aggregateLabel} of {fieldLabel}"
@@ -106,6 +127,11 @@ msgstr "{roleLabel} có thể {humanReadableAction} bản ghi {objectLabel}"
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelOverrideCell.tsx
 msgid "{roleLabel} can't {humanReadableAction} {objectLabel} records"
 msgstr "{roleLabel} không thể {humanReadableAction} bản ghi {objectLabel}"
+
+#. js-lingui-id: uHZWwU
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentConfirmationModal.tsx
+msgid "{roleTargetName} will be assigned to the \"{newRoleName}\" role."
+msgstr "{roleTargetName} sẽ được gán vào vai trò \"{newRoleName}\"."
 
 #. js-lingui-id: WN9tFl
 #: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentConfirmationModalSubtitle.tsx
@@ -183,6 +209,16 @@ msgstr "Phương thức 2FA đã được xóa thành công."
 msgid "2FA Method Reset"
 msgstr "Đặt lại phương thức 2FA"
 
+#. js-lingui-id: keUlu+
+#: src/modules/workflow/components/OverrideWorkflowDraftConfirmationModal.tsx
+msgid "A draft already exists"
+msgstr "Một bản nháp đã tồn tại"
+
+#. js-lingui-id: OITESn
+#: src/modules/workflow/components/OverrideWorkflowDraftConfirmationModal.tsx
+msgid "A draft already exists for this workflow. Are you sure you want to erase it?"
+msgstr "Một bản nháp đã tồn tại cho quy trình làm việc này. Bạn có chắc chắn muốn xóa nó không?"
+
 #. js-lingui-id: C6xZqR
 #: src/pages/settings/developers/api-keys/SettingsDevelopersApiKeyDetail.tsx
 msgid "A role must be selected for the API key"
@@ -242,6 +278,11 @@ msgstr "Giới thiệu về không gian làm việc này"
 msgid "Account"
 msgstr "Tài khoản"
 
+#. js-lingui-id: 9o6rjW
+#: src/utils/title-utils.ts
+msgid "Account - Settings"
+msgstr "Tài khoản - Cài đặt"
+
 #. js-lingui-id: nD0Y+a
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
 #: src/modules/settings/profile/components/DeleteAccount.tsx
@@ -300,6 +341,7 @@ msgid "Activate Workflow"
 msgstr "Kích hoạt Workflow"
 
 #. js-lingui-id: F6pfE9
+#: src/pages/settings/SettingsProfile.tsx
 #: src/pages/settings/data-model/SettingsObjects.tsx
 #: src/pages/settings/data-model/SettingsObjectFieldTable.tsx
 #: src/modules/settings/domains/components/SettingsWorkspaceDomainCard.tsx
@@ -329,11 +371,22 @@ msgstr "Thêm tài khoản"
 msgid "Add Approved Access Domain"
 msgstr "Thêm Miền Truy Cập Đã Được Phê Duyệt"
 
+#. js-lingui-id: We0vOO
+#: src/modules/ui/input/editor/components/CustomSideMenu.tsx
+msgid "Add Block"
+msgstr "Thêm khối"
+
 #. js-lingui-id: DpV70M
 #: src/modules/workflow/workflow-steps/workflow-actions/form-action/components/WorkflowEditActionFormBuilder.tsx
 #: src/modules/settings/data-model/object-details/components/tabs/ObjectFields.tsx
 msgid "Add Field"
 msgstr "Thêm Trường"
+
+#. js-lingui-id: T7RGT6
+#: src/modules/activities/files/components/Attachments.tsx
+#: src/modules/activities/files/components/Attachments.tsx
+msgid "Add file"
+msgstr "Thêm tệp"
 
 #. js-lingui-id: vCSBPD
 #: src/modules/views/components/ViewBarDetailsAddFilterButton.tsx
@@ -360,7 +413,7 @@ msgstr "Thêm đầu vào vào biểu mẫu của bạn"
 #. js-lingui-id: rejvy6
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 msgid "Add layout"
-msgstr ""
+msgstr "Thêm bố cục"
 
 #. js-lingui-id: Hkobke
 #: src/modules/object-record/record-table/record-table-section/components/RecordTableRecordGroupSectionAddNew.tsx
@@ -444,7 +497,7 @@ msgstr "Thêm chế độ xem"
 #. js-lingui-id: iRpDWj
 #: src/pages/settings/page-layout/SettingsPageLayoutEdit.tsx
 msgid "Add Widget"
-msgstr ""
+msgstr "Thêm Widget"
 
 #. js-lingui-id: m2qDV8
 #: src/modules/object-record/record-table/empty-state/utils/getEmptyStateTitle.ts
@@ -526,8 +579,14 @@ msgstr "Chuyển giao đại lý"
 msgid "Agent not found"
 msgstr "Không tìm thấy đại lý"
 
+#. js-lingui-id: jJT5pC
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "Agent Roles"
+msgstr "Vai trò Đại lý"
+
 #. js-lingui-id: 8Uv5e6
 #: src/pages/settings/ai/SettingsAI.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 msgid "Agents"
 msgstr "Đại lý"
 
@@ -565,6 +624,7 @@ msgstr "Schema phản hồi AI"
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelUpdateFieldsValueForObject.tsx
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelSeeFieldsValueForObject.tsx
 #: src/modules/object-record/record-board/record-board-column/utils/getAggregateOperationShortLabel.ts
+#: src/modules/activities/files/components/Attachments.tsx
 msgid "All"
 msgstr "Tất cả"
 
@@ -607,6 +667,11 @@ msgstr "Tất cả vai trò"
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelObjectPicker.tsx
 msgid "All the standard objects"
 msgstr "Tất cả đối tượng tiêu chuẩn"
+
+#. js-lingui-id: XLzFVD
+#: src/modules/settings/roles/role-assignment/constants/RoleTargetConfig.ts
+msgid "All workspace members already have this role"
+msgstr "Tất cả thành viên trong không gian làm việc đã có vai trò này"
 
 #. js-lingui-id: MLmnB2
 #: src/modules/settings/admin-panel/components/SettingsAdminGeneral.tsx
@@ -671,6 +736,7 @@ msgid "An unexpected error occurred"
 msgstr "Đã xảy ra lỗi không mong muốn"
 
 #. js-lingui-id: HZFm5R
+#: src/utils/date-utils.ts
 #: src/modules/auth/sign-in-up/components/FooterNote.tsx
 msgid "and"
 msgstr "và"
@@ -708,8 +774,14 @@ msgstr "Khóa API"
 msgid "API Key copied to clipboard"
 msgstr "Đã sao chép khóa API vào bảng tạm"
 
+#. js-lingui-id: K84VsN
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "API Key Roles"
+msgstr "Vai trò Khóa API"
+
 #. js-lingui-id: 5h8ooz
 #: src/pages/settings/developers/api-keys/SettingsApiKeys.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 msgid "API keys"
 msgstr "Khóa API"
 
@@ -717,6 +789,11 @@ msgstr "Khóa API"
 #: src/pages/settings/workspace/SettingsApiWebhooks.tsx
 msgid "API Keys"
 msgstr "Các khóa API"
+
+#. js-lingui-id: VIs5Hx
+#: src/utils/title-utils.ts
+msgid "API Keys - Settings"
+msgstr "Cài đặt - API Keys"
 
 #. js-lingui-id: vByqA1
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
@@ -766,6 +843,11 @@ msgstr "API và Webhooks"
 msgid "Appearance"
 msgstr "Giao diện"
 
+#. js-lingui-id: d7+zQ6
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Applicability"
+msgstr "Tính áp dụng"
+
 #. js-lingui-id: UDlRcx
 #: src/modules/settings/security/components/approvedAccessDomains/SettingsSecurityApprovedAccessDomainValidationEffect.tsx
 msgid "Approved access domain validated"
@@ -811,25 +893,45 @@ msgstr "Tăng dần"
 msgid "Ask AI"
 msgstr "Yêu cầu AI"
 
-#. js-lingui-id: 9ch9Mz
+#. js-lingui-id: OBqG7p
 #: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentConfirmationModal.tsx
-msgid "Assign {workspaceMemberName}?"
-msgstr "Phân công cho {workspaceMemberName}?"
+msgid "Assign {roleTargetName}?"
+msgstr "Phân công cho {roleTargetName}?"
 
-#. js-lingui-id: 17M/rH
-#: src/modules/settings/roles/components/SettingsRolesList.tsx
-msgid "Assign roles to manage each member’s access and permissions"
-msgstr "Gán vai trò để quản lý quyền truy cập và quyền hạn của từng thành viên"
+#. js-lingui-id: krsgB0
+#: src/modules/settings/roles/role-assignment/constants/RoleTargetConfig.ts
+msgid "Assign to agent"
+msgstr "Phân công cho tác nhân"
+
+#. js-lingui-id: ngx6hS
+#: src/modules/settings/roles/role-assignment/constants/RoleTargetConfig.ts
+msgid "Assign to API key"
+msgstr "Phân công cho khóa API"
 
 #. js-lingui-id: 2y2quh
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
+#: src/modules/settings/roles/role-assignment/constants/RoleTargetConfig.ts
 msgid "Assign to member"
 msgstr "Phân công cho thành viên"
 
-#. js-lingui-id: OItM/o
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
-msgid "Assigned members"
-msgstr "Thành viên được gán"
+#. js-lingui-id: sqEW29
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Assignable to Agents"
+msgstr "Có thể phân cho tác nhân"
+
+#. js-lingui-id: kOksfH
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Assignable to API Keys"
+msgstr "Có thể phân cho Khóa API"
+
+#. js-lingui-id: 6cOTMx
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Assignable to team members"
+msgstr "Có thể phân cho thành viên trong đội"
+
+#. js-lingui-id: 7qh2Hx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "Assigned {roleTargetDisplayName}"
+msgstr "Phân công {roleTargetDisplayName}"
 
 #. js-lingui-id: lxQ+5m
 #: src/modules/settings/roles/components/SettingsRolesTableHeader.tsx
@@ -1082,6 +1184,11 @@ msgstr "Hủy đăng ký của bạn"
 msgid "Catalan"
 msgstr "Tiếng Catalan"
 
+#. js-lingui-id: tHntRt
+#: src/modules/ui/input/editor/components/CustomSideMenu.tsx
+msgid "Change Color"
+msgstr "Thay đổi màu sắc"
+
 #. js-lingui-id: feCRNv
 #: src/modules/auth/sign-in-up/components/EmailVerificationSent.tsx
 msgid "Change email"
@@ -1210,7 +1317,7 @@ msgid "Click on the checkmark to apply your changes."
 msgstr "Nhấn vào dấu kiểm để áp dụng thay đổi của bạn."
 
 #. js-lingui-id: d0rtA5
-#: src/modules/dashboards/graphs/components/GraphWidgetTooltip.tsx
+#: src/modules/dashboards/widgets/graph/components/GraphWidgetTooltip.tsx
 msgid "Click to see data"
 msgstr "Nhấp để xem dữ liệu"
 
@@ -1265,7 +1372,7 @@ msgstr "Mã màu"
 #. js-lingui-id: P8gRog
 #: src/modules/spreadsheet-import/utils/setColumn.ts
 msgid "column data is not compatible with Multi-Select. Format required is '[\"option1\", \"option2\"]' or option1,option2."
-msgstr ""
+msgstr "dữ liệu cột không tương thích với Đa Lựa Chọn. Định dạng yêu cầu là '[\"option1\", \"option2\"]' hoặc option1,option2."
 
 #. js-lingui-id: 93hd3e
 #: src/modules/spreadsheet-import/steps/components/MatchColumnsStep/MatchColumnsStep.tsx
@@ -1448,7 +1555,12 @@ msgstr "Tiếp tục với Microsoft"
 #. js-lingui-id: XgMEX4
 #: src/modules/settings/accounts/components/SettingsAccountsMessageChannelDetails.tsx
 msgid "Control which folders are synced"
-msgstr ""
+msgstr "Kiểm soát các thư mục nào được đồng bộ hóa"
+
+#. js-lingui-id: +iFqZW
+#: src/modules/settings/roles/role-settings/components/SettingsRoleApplicability.tsx
+msgid "Control which types of entities this role can be assigned to"
+msgstr "Kiểm soát loại thực thể nào mà vai trò này có thể được chỉ định"
 
 #. js-lingui-id: FxVG/l
 #: src/hooks/useCopyToClipboard.tsx
@@ -1620,6 +1732,11 @@ msgstr "Tạo quy trình làm việc mới"
 msgid "Create profile"
 msgstr "Tạo hồ sơ"
 
+#. js-lingui-id: ccH5/A
+#: src/utils/title-utils.ts
+msgid "Create Profile"
+msgstr "Tạo hồ sơ"
+
 #. js-lingui-id: GPuEIc
 #: src/modules/command-menu/components/CommandMenu.tsx
 msgid "Create Related Record"
@@ -1663,6 +1780,7 @@ msgid "Create Webhook"
 msgstr "Tạo Webhook"
 
 #. js-lingui-id: kdLGki
+#: src/utils/title-utils.ts
 #: src/modules/ui/navigation/navigation-drawer/components/MultiWorkspaceDropdown/internal/MultiWorkspaceDropdownDefaultComponents.tsx
 msgid "Create Workspace"
 msgstr "Tạo không gian làm việc"
@@ -1813,6 +1931,11 @@ msgstr "Mô hình dữ liệu"
 msgid "Data Model"
 msgstr "Mô hình dữ liệu"
 
+#. js-lingui-id: zAfYtx
+#: src/utils/title-utils.ts
+msgid "Data model - Settings"
+msgstr "Cài đặt - Mô hình dữ liệu"
+
 #. js-lingui-id: r+cVRP
 #: src/pages/settings/data-model/SettingsObjectFieldTable.tsx
 #: src/pages/settings/data-model/SettingsObjectFieldTable.tsx
@@ -1844,6 +1967,16 @@ msgstr "Ngày và giờ"
 #: src/modules/settings/experience/components/DateTimeSettingsDateFormatSelect.tsx
 msgid "Date format"
 msgstr "Định dạng ngày"
+
+#. js-lingui-id: /ITcnz
+#: src/utils/date-utils.ts
+msgid "day"
+msgstr "ngày"
+
+#. js-lingui-id: J/Upwb
+#: src/utils/date-utils.ts
+msgid "days"
+msgstr "ngày"
 
 #. js-lingui-id: cpDASC
 #: src/modules/workflow/workflow-trigger/components/WorkflowEditTriggerCronForm.tsx
@@ -1880,6 +2013,7 @@ msgid "Deactivate Workflow"
 msgstr "Hủy kích hoạt Quy trình làm việc"
 
 #. js-lingui-id: yAT3be
+#: src/pages/settings/SettingsProfile.tsx
 #: src/modules/settings/data-model/fields/forms/components/text/constants/TextDataModelSelectOptions.ts
 msgid "Deactivated"
 msgstr "Đã hủy kích hoạt"
@@ -1903,6 +2037,11 @@ msgstr "Quốc gia mặc định"
 #: src/modules/settings/data-model/fields/forms/phones/components/SettingsDataModelFieldPhonesForm.tsx
 msgid "Default Country Code"
 msgstr "Mã quốc gia mặc định"
+
+#. js-lingui-id: CGhRMh
+#: src/modules/settings/roles/components/SettingsRolesDefaultRole.tsx
+msgid "Default Role"
+msgstr "Vai trò Mặc định"
 
 #. js-lingui-id: TlEEts
 #: src/modules/settings/admin-panel/config-variables/utils/useSourceContent.ts
@@ -1946,6 +2085,8 @@ msgstr "xóa"
 #: src/pages/settings/developers/api-keys/SettingsDevelopersApiKeyDetail.tsx
 #: src/modules/views/view-picker/components/ViewPickerOptionDropdown.tsx
 #: src/modules/views/view-picker/components/ViewPickerCreateButton.tsx
+#: src/modules/ui/input/editor/components/CustomSideMenu.tsx
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTabEnvironmentVariableTableRow.tsx
 #: src/modules/settings/security/components/SSO/SettingsSecuritySSORowDropdownMenu.tsx
 #: src/modules/settings/developers/components/SettingsDevelopersWebhookForm.tsx
 #: src/modules/settings/developers/components/SettingsDevelopersWebhookForm.tsx
@@ -2106,6 +2247,7 @@ msgstr "Mô tả khi nào việc chuyển giao này nên được sử dụng"
 #: src/pages/settings/ai/components/SettingsAgentHandoffTable.tsx
 #: src/modules/workflow/workflow-steps/workflow-actions/ai-agent-action/components/WorkflowOutputSchemaBuilder.tsx
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsTableHeader.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 #: src/modules/settings/developers/components/SettingsDevelopersWebhookForm.tsx
 msgid "Description"
 msgstr "Mô tả"
@@ -2263,6 +2405,7 @@ msgstr "Ngày sớm nhất"
 
 #. js-lingui-id: ePK91l
 #: src/modules/views/view-picker/components/ViewPickerOptionDropdown.tsx
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTabEnvironmentVariableTableRow.tsx
 #: src/modules/settings/roles/role-permissions/object-level-permissions/field-permissions/components/SettingsRolePermissionsObjectLevelObjectFieldPermissionTable.tsx
 #: src/modules/settings/data-model/object-details/components/SettingsObjectFieldDisabledActionDropdown.tsx
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableActionButtons.tsx
@@ -2285,6 +2428,11 @@ msgstr "Chỉnh Sửa Tài Khoản"
 #: src/pages/settings/ai/SettingsAgentForm.tsx
 msgid "Edit Agent"
 msgstr "Chỉnh Sửa Tác Nhân"
+
+#. js-lingui-id: X8x8v5
+#: src/modules/settings/integrations/database-connection/components/SettingsIntegrationEditDatabaseConnectionContent.tsx
+msgid "Edit Connection"
+msgstr "Chỉnh sửa kết nối"
 
 #. js-lingui-id: 6vZ75d
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
@@ -2312,6 +2460,11 @@ msgstr "Chỉnh sửa phương pháp thanh toán, xem hóa đơn của bạn và
 msgid "Edit Records on All Objects"
 msgstr "Chỉnh sửa bản ghi trên tất cả các đối tượng"
 
+#. js-lingui-id: vjOt/P
+#: src/modules/settings/integrations/database-connection/components/SettingsIntegrationEditDatabaseConnectionContent.tsx
+msgid "Edit the information to connect your database"
+msgstr "Chỉnh sửa thông tin để kết nối cơ sở dữ liệu của bạn"
+
 #. js-lingui-id: 6o1M/Q
 #: src/pages/settings/domains/SettingsDomains.tsx
 msgid "Edit your subdomain name or set a custom domain."
@@ -2328,6 +2481,7 @@ msgstr "Thứ tám"
 #: src/pages/settings/SettingsProfile.tsx
 #: src/pages/auth/PasswordReset.tsx
 #: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTableHeader.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 #: src/modules/settings/admin-panel/components/SettingsAdminGeneral.tsx
 msgid "Email"
 msgstr "Thư điện tử"
@@ -2426,6 +2580,11 @@ msgstr "Trống"
 msgid "Empty Array"
 msgstr "Mảng trống"
 
+#. js-lingui-id: 8X+jbk
+#: src/modules/activities/emails/components/EmailThreads.tsx
+msgid "Empty Inbox"
+msgstr "Hộp thư rỗng"
+
 #. js-lingui-id: 3hSGoJ
 #: src/modules/workflow/workflow-steps/components/WorkflowRunStepOutputDetail.tsx
 #: src/modules/workflow/workflow-steps/components/WorkflowRunStepInputDetail.tsx
@@ -2477,12 +2636,12 @@ msgstr "Nhập tên tác nhân*"
 #. js-lingui-id: kOybqX
 #: src/modules/workflow/workflow-steps/workflow-actions/iterator-action/WorkflowEditActionIterator.tsx
 msgid "Enter array of items or variable expression"
-msgstr ""
+msgstr "Nhập mảng các mục hoặc biểu thức biến"
 
 #. js-lingui-id: uyFQs5
 #: src/modules/workflow/workflow-steps/workflow-actions/iterator-action/WorkflowEditActionIterator.tsx
 msgid "Enter array of step IDs"
-msgstr ""
+msgstr "Nhập mảng các ID bước"
 
 #. js-lingui-id: 9/30HU
 #: src/modules/settings/data-model/fields/forms/date/utils/getDisplayFormatSelectDescription.tsx
@@ -2636,7 +2795,7 @@ msgstr "Loại trừ những người và miền sau từ đồng bộ email c�
 #. js-lingui-id: uwM4yU
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 msgid "Existing layouts"
-msgstr ""
+msgstr "Bố cục hiện có"
 
 #. js-lingui-id: fV7V51
 #: src/pages/settings/data-model/SettingsObjects.tsx
@@ -2678,6 +2837,11 @@ msgstr "Mở rộng ra toàn màn hình"
 msgid "Experience"
 msgstr "\"Kinh nghiệm\""
 
+#. js-lingui-id: 8TiwZn
+#: src/utils/title-utils.ts
+msgid "Experience - Settings"
+msgstr "Cài đặt - Trải nghiệm"
+
 #. js-lingui-id: LxRNPw
 #: src/pages/settings/developers/api-keys/SettingsDevelopersApiKeyDetail.tsx
 #: src/modules/settings/developers/components/SettingsApiKeysTable.tsx
@@ -2691,13 +2855,24 @@ msgstr "\"Ngày hết hạn\""
 
 #. js-lingui-id: M1RnFv
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
+#: src/modules/settings/developers/utils/formatExpiration.ts
 msgid "Expired"
 msgstr "Đã hết hạn"
+
+#. js-lingui-id: KnN1Tu
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "Expires"
+msgstr "Ngày hết hạn"
 
 #. js-lingui-id: i9qiyR
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
 msgid "Expires in"
 msgstr "\"Hết hạn trong\""
+
+#. js-lingui-id: 1RvVK1
+#: src/modules/settings/developers/utils/formatExpiration.ts
+msgid "Expires in {dateDiff}"
+msgstr "Hết hạn sau {dateDiff}"
 
 #. js-lingui-id: GS+Mus
 #: src/modules/object-record/record-index/export/hooks/useRecordIndexExportRecords.ts
@@ -2945,12 +3120,12 @@ msgstr "\"Tên riêng\""
 #. js-lingui-id: kNqMMd
 #: src/modules/settings/accounts/components/message-folders/SettingsMessageFoldersTableHeader.tsx
 msgid "Folder"
-msgstr ""
+msgstr "Thư mục"
 
 #. js-lingui-id: NRJn87
 #: src/modules/settings/accounts/components/SettingsAccountsMessageChannelDetails.tsx
 msgid "Folder Management"
-msgstr ""
+msgstr "Quản lý thư mục"
 
 #. js-lingui-id: glx6on
 #: src/modules/auth/sign-in-up/components/SignInUpWorkspaceScopeForm.tsx
@@ -2988,6 +3163,11 @@ msgstr "\\"
 msgid "Functions"
 msgstr "\\"
 
+#. js-lingui-id: tkr79G
+#: src/utils/title-utils.ts
+msgid "Functions - Settings"
+msgstr "Cài đặt - Chức năng"
+
 #. js-lingui-id: Weq9zb
 #: src/pages/settings/SettingsWorkspace.tsx
 #: src/pages/settings/SettingsWorkspace.tsx
@@ -2995,6 +3175,11 @@ msgstr "\\"
 #: src/modules/settings/admin-panel/components/SettingsAdminContent.tsx
 msgid "General"
 msgstr "\\"
+
+#. js-lingui-id: p+rXSW
+#: src/utils/title-utils.ts
+msgid "General - Settings"
+msgstr "Cài đặt - Chung"
 
 #. js-lingui-id: DDcvSo
 #: src/pages/settings/profile/appearance/components/LocalePicker.tsx
@@ -3332,12 +3517,22 @@ msgstr "Đang nhập"
 msgid "Importing Data ..."
 msgstr "Đang nhập dữ liệu ..."
 
+#. js-lingui-id: HiyKEP
+#: src/modules/settings/developers/utils/formatExpiration.ts
+msgid "In {dateDiff}"
+msgstr "Trong {dateDiff}"
+
 #. js-lingui-id: NoNwIX
 #: src/pages/settings/data-model/SettingsObjects.tsx
 #: src/pages/settings/data-model/SettingsObjectFieldTable.tsx
 #: src/modules/settings/domains/components/SettingsWorkspaceDomainCard.tsx
 msgid "Inactive"
 msgstr "Không hoạt động"
+
+#. js-lingui-id: Gp4Yi6
+#: src/modules/activities/emails/components/EmailThreads.tsx
+msgid "Inbox"
+msgstr "Hộp thư"
 
 #. js-lingui-id: pZ/USH
 #: src/pages/settings/data-model/SettingsObjectDetailPage.tsx
@@ -3347,7 +3542,12 @@ msgstr "Chỉ mục"
 #. js-lingui-id: T6szT2
 #: src/modules/workflow/workflow-steps/workflow-actions/iterator-action/WorkflowEditActionIterator.tsx
 msgid "Initial loop step IDs"
-msgstr ""
+msgstr "ID bước vòng lặp ban đầu"
+
+#. js-lingui-id: XU5AOg
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTestTab.tsx
+msgid "Input"
+msgstr "Đầu vào"
 
 #. js-lingui-id: JE2tjr
 #: src/modules/settings/data-model/objects/forms/components/SettingsDataModelObjectAboutForm.tsx
@@ -3359,6 +3559,11 @@ msgstr "Đầu vào phải theo cú pháp lạc đà và không thể bắt đ�
 #: src/modules/workflow/workflow-steps/workflow-actions/form-action/components/WorkflowEditActionFormFieldSettings.tsx
 msgid "Input settings"
 msgstr "Cài đặt đầu vào"
+
+#. js-lingui-id: T8avpe
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTestTab.tsx
+msgid "Insert a JSON input, then press \"Run\" to test your function."
+msgstr "Chèn đầu vào JSON, sau đó nhấn \"Chạy\" để kiểm tra chức năng của bạn."
 
 #. js-lingui-id: AwUsnG
 #: src/pages/settings/data-model/constants/SettingsObjectTableMetadata.ts
@@ -3375,9 +3580,15 @@ msgstr "Hướng dẫn cho AI"
 #: src/pages/settings/integrations/SettingsIntegrations.tsx
 #: src/pages/settings/integrations/SettingsIntegrationMCPPage.tsx
 #: src/pages/settings/integrations/SettingsIntegrationMCPPage.tsx
+#: src/modules/settings/integrations/database-connection/components/SettingsIntegrationEditDatabaseConnectionContent.tsx
 #: src/modules/settings/hooks/useSettingsNavigationItems.tsx
 msgid "Integrations"
 msgstr "Tích hợp"
+
+#. js-lingui-id: RGm66q
+#: src/utils/title-utils.ts
+msgid "Integrations - Settings"
+msgstr "Cài đặt - Tích hợp"
 
 #. js-lingui-id: ntgzzG
 #: src/modules/settings/integrations/components/SettingsIntegrationMCP.tsx
@@ -3453,6 +3664,7 @@ msgid "Invitations"
 msgstr "Thư mời"
 
 #. js-lingui-id: MFKlMB
+#: src/utils/title-utils.ts
 #: src/modules/workspace/components/WorkspaceInviteTeam.tsx
 msgid "Invite"
 msgstr "Mời"
@@ -3605,12 +3817,12 @@ msgstr "Tiếng Ý"
 #. js-lingui-id: +qz/bj
 #: src/modules/workflow/workflow-steps/workflow-actions/iterator-action/WorkflowEditActionIterator.tsx
 msgid "Items to iterate over"
-msgstr ""
+msgstr "Các mục để lặp lại"
 
 #. js-lingui-id: E08FMd
 #: src/modules/workflow/workflow-steps/workflow-actions/utils/getActionHeaderTypeOrThrow.ts
 msgid "Iterator"
-msgstr ""
+msgstr "Bộ lặp"
 
 #. js-lingui-id: dFtidv
 #: src/pages/settings/profile/appearance/components/LocalePicker.tsx
@@ -3694,6 +3906,11 @@ msgstr "4 Giờ Cuối (cũ nhất → mới nhất)"
 msgid "Last 7 Days (oldest → newest)"
 msgstr "7 Ngày Qua (cũ nhất → mới nhất)"
 
+#. js-lingui-id: P4FGJG
+#: src/modules/activities/emails/components/EmailThreadHeader.tsx
+msgid "Last message {lastMessageSentAtFormatted}"
+msgstr "Tin nhắn cuối {lastMessageSentAtFormatted}"
+
 #. js-lingui-id: UXBCwc
 #: src/pages/onboarding/CreateProfile.tsx
 #: src/modules/settings/profile/components/NameFields.tsx
@@ -3739,7 +3956,7 @@ msgstr "Bố cục"
 #. js-lingui-id: A/oBX5
 #: src/pages/settings/page-layout/SettingsPageLayoutEdit.tsx
 msgid "Layout Name"
-msgstr ""
+msgstr "Tên bố cục"
 
 #. js-lingui-id: 8QyoLb
 #: src/modules/settings/accounts/components/SettingsAccountsConnectionForm.tsx
@@ -3777,6 +3994,11 @@ msgstr "Giao diện sáng"
 msgid "Link copied to clipboard"
 msgstr "Đã sao chép đường dẫn vào bảng tạm"
 
+#. js-lingui-id: HhVDr2
+#: src/modules/settings/data-model/objects/forms/components/SettingsDataModelObjectAboutForm.tsx
+msgid "Listing"
+msgstr "Danh sách"
+
 #. js-lingui-id: DL2sg0
 #: src/modules/settings/data-model/objects/forms/components/SettingsDataModelObjectAboutForm.tsx
 msgid "Listings"
@@ -3794,7 +4016,7 @@ msgstr "Đang tải dữ liệu chỉ số..."
 
 #. js-lingui-id: Z3FXyt
 #: src/pages/settings/ai/components/SettingsAgentHandoffForm.tsx
-#: src/modules/views/hooks/useComputeRecordRelationFilterLabelValue.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
 #: src/modules/settings/admin-panel/components/SettingsAdminVersionDisplay.tsx
 #: src/modules/activities/timeline-activities/rows/message/components/EventCardMessage.tsx
 msgid "Loading..."
@@ -3852,6 +4074,16 @@ msgstr "Quản lý mục yêu thích"
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
 msgid "Manage Members"
 msgstr "Quản lý Thành viên"
+
+#. js-lingui-id: GzInS6
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "Manage roles and permissions for team members and API keys"
+msgstr "Quản lý vai trò và quyền hạn cho thành viên đội và khóa API"
+
+#. js-lingui-id: wMlk+o
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "Manage roles and permissions for team members, agents, and API keys"
+msgstr "Quản lý vai trò và quyền hạn cho thành viên đội, tác nhân và khóa API"
 
 #. js-lingui-id: eGGH1l
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
@@ -3917,10 +4149,16 @@ msgstr "Thành viên của"
 #. js-lingui-id: wlQNTg
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 #: src/modules/settings/hooks/useSettingsNavigationItems.tsx
 #: src/modules/settings/admin-panel/components/SettingsAdminWorkspaceContent.tsx
 msgid "Members"
 msgstr "Thành viên"
+
+#. js-lingui-id: Max/je
+#: src/utils/title-utils.ts
+msgid "Members - Settings"
+msgstr "Cài đặt - Thành viên"
 
 #. js-lingui-id: UODtG8
 #: src/modules/action-menu/actions/record-actions/constants/DefaultRecordActionsConfig.tsx
@@ -4062,6 +4300,9 @@ msgstr "phải là một mảng email hợp lệ"
 #: src/modules/settings/roles/role-permissions/object-level-permissions/object-form/components/SettingsRolePermissionsObjectLevelObjectFormObjectLevelTableHeader.tsx
 #: src/modules/settings/roles/role-permissions/object-level-permissions/field-permissions/components/SettingsRolePermissionsObjectLevelObjectFieldPermissionTable.tsx
 #: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTableHeader.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 #: src/modules/settings/roles/components/SettingsRolesTableHeader.tsx
 #: src/modules/settings/developers/components/SettingsApiKeysTable.tsx
 #: src/modules/settings/admin-panel/components/SettingsAdminWorkspaceContent.tsx
@@ -4124,6 +4365,16 @@ msgstr "Điều hướng đến phiên bản trước đó"
 #: src/modules/action-menu/actions/record-actions/constants/WorkflowActionsConfig.tsx
 msgid "Navigate to previous workflow"
 msgstr "Điều hướng đến quy trình trước đó"
+
+#. js-lingui-id: qqeAJM
+#: src/modules/settings/developers/utils/formatExpiration.ts
+msgid "Never"
+msgstr "Không bao giờ"
+
+#. js-lingui-id: O1Aswy
+#: src/modules/settings/developers/utils/formatExpiration.ts
+msgid "Never expires"
+msgstr "Không bao giờ hết hạn"
 
 #. js-lingui-id: isRobC
 #: src/pages/settings/data-model/SettingsNewObject.tsx
@@ -4200,6 +4451,11 @@ msgstr "Cấu hình SSO mới"
 msgid "New SSO provider"
 msgstr "Nhà cung cấp SSO mới"
 
+#. js-lingui-id: hXzOVo
+#: src/modules/auth/sign-in-up/components/internal/SignInUpTwoFactorAuthenticationProvision.tsx
+msgid "Next"
+msgstr "Tiếp theo"
+
 #. js-lingui-id: AxNmtI
 #: src/modules/spreadsheet-import/steps/components/SelectSheetStep/SelectSheetStep.tsx
 #: src/modules/spreadsheet-import/steps/components/MatchColumnsStep/MatchColumnsStep.tsx
@@ -4217,15 +4473,55 @@ msgstr "Thứ chín"
 msgid "No"
 msgstr "Không"
 
+#. js-lingui-id: xUXmJM
+#: src/modules/object-record/record-field/ui/meta-types/input/components/RelationToOneFieldInput.tsx
+msgid "No {fieldLabel}"
+msgstr "Không có {fieldLabel}"
+
+#. js-lingui-id: yWS1Mx
+#: src/modules/object-record/record-field/ui/form-types/components/FormSingleRecordPicker.tsx
+msgid "No {objectNameSingular}"
+msgstr "Không có {objectNameSingular}"
+
 #. js-lingui-id: vhsJG1
 #: src/modules/workflow/workflow-steps/workflow-actions/ai-agent-action/components/WorkflowEditActionAiAgent.tsx
 msgid "No Agent"
 msgstr "Không có tác nhân nào"
 
+#. js-lingui-id: f9b1sj
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "No agents assigned"
+msgstr "Không có tác nhân nào được chỉ định"
+
+#. js-lingui-id: 2jU+NX
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "No agents available"
+msgstr "Không có tác nhân nào có sẵn"
+
 #. js-lingui-id: pC+mOo
 #: src/pages/settings/ai/components/SettingsAgentHandoffForm.tsx
 msgid "No agents available for handoff"
 msgstr "Không có tác nhân nào sẵn sàng chuyển giao"
+
+#. js-lingui-id: mU1OkO
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "No agents match your search"
+msgstr "Không có tác nhân nào nào phù hợp với tìm kiếm của bạn"
+
+#. js-lingui-id: 9mx36q
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "No API keys assigned"
+msgstr "Không có khóa API nào được chỉ định"
+
+#. js-lingui-id: QnvikC
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "No API keys available"
+msgstr "Không có khóa API nào có sẵn"
+
+#. js-lingui-id: wZT6U/
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "No API keys match your search"
+msgstr "Không có khóa API nào nào phù hợp với tìm kiếm của bạn"
 
 #. js-lingui-id: tFxVHz
 #: src/modules/workflow/workflow-steps/workflow-actions/filter-action/components/WorkflowStepFilterFieldSelect.tsx
@@ -4262,15 +4558,35 @@ msgstr "Không có dữ liệu chứa lỗi"
 msgid "No data found"
 msgstr "Không có dữ liệu"
 
+#. js-lingui-id: P4KXUa
+#: src/modules/object-record/record-table/empty-state/components/RecordTableEmptyStateSoftDelete.tsx
+msgid "No Deleted {objectLabelSingular} found"
+msgstr "Không tìm thấy {objectLabelSingular} nào đã xóa"
+
+#. js-lingui-id: s7QKq9
+#: src/modules/object-record/record-table/empty-state/components/RecordTableEmptyStateSoftDelete.tsx
+msgid "No deleted records matching the filter criteria were found."
+msgstr "Không tìm thấy bản ghi nào bị xóa khớp với tiêu chí bộ lọc."
+
 #. js-lingui-id: flmDTf
 #: src/pages/settings/ai/components/SettingsAgentHandoffTable.tsx
 msgid "No description"
 msgstr "Không có mô tả"
 
+#. js-lingui-id: mINrlz
+#: src/modules/activities/emails/components/EmailThreads.tsx
+msgid "No email exchange has occurred with this record yet."
+msgstr "Chưa có trao đổi email nào với hồ sơ này."
+
+#. js-lingui-id: 23Rceg
+#: src/modules/activities/files/components/Attachments.tsx
+msgid "No Files"
+msgstr "Không có tệp"
+
 #. js-lingui-id: 1jgsYC
 #: src/modules/settings/accounts/components/message-folders/SettingsMessageFoldersEmptyStateCard.tsx
 msgid "No folders found for this account"
-msgstr ""
+msgstr "Không tìm thấy thư mục nào cho tài khoản này"
 
 #. js-lingui-id: xlUOps
 #: src/modules/information-banner/components/billing/InformationBannerEndTrialPeriod.tsx
@@ -4303,13 +4619,12 @@ msgid "No members"
 msgstr "Không có thành viên nào"
 
 #. js-lingui-id: Y4qK8/
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
 msgid "No members assigned"
 msgstr "Không có thành viên nào được chỉ định"
 
 #. js-lingui-id: /nLvVj
 #: src/pages/settings/SettingsWorkspaceMembers.tsx
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
 msgid "No members match your search"
 msgstr "Không có thành viên nào phù hợp với tìm kiếm của bạn"
 
@@ -4345,6 +4660,7 @@ msgstr "Chưa thiết lập quyền cho các đối tượng cá nhân."
 
 #. js-lingui-id: EqGTpW
 #: src/modules/object-record/record-table/empty-state/components/RecordTableEmptyStateReadOnly.tsx
+#: src/modules/object-record/record-picker/components/RecordPickerNoRecordFoundMenuItem.tsx
 msgid "No records found"
 msgstr "Không tìm thấy bản ghi"
 
@@ -4392,6 +4708,7 @@ msgstr "Chưa có phiên bản workflows nào"
 #. js-lingui-id: EdQY6l
 #: src/modules/settings/accounts/components/SettingsAccountsMessageAutoCreationCard.tsx
 #: src/modules/object-record/record-table/record-table-footer/components/RecordTableColumnAggregateFooterMenuContent.tsx
+#: src/modules/object-record/record-table/record-table-footer/components/RecordTableColumnAggregateFooterAggregateOperationMenuItems.tsx
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownRecordGroupFieldsContent.tsx
 msgid "None"
 msgstr "Không có"
@@ -4448,6 +4765,11 @@ msgstr "Chưa đồng bộ hóa"
 #: src/modules/action-menu/actions/record-actions/constants/DefaultRecordActionsConfig.tsx
 msgid "Notes"
 msgstr "Ghi chú"
+
+#. js-lingui-id: YwzE9K
+#: src/utils/date-utils.ts
+msgid "now"
+msgstr "bây giờ"
 
 #. js-lingui-id: HptUxX
 #: src/modules/settings/data-model/fields/forms/number/constants/NumberDataModelSelectOptions.ts
@@ -4578,6 +4900,11 @@ msgstr "Tùy chọn"
 msgid "or"
 msgstr "hoặc"
 
+#. js-lingui-id: ZAVklK
+#: src/modules/settings/security/components/SSO/SettingsSSOSAMLForm.tsx
+msgid "Or"
+msgstr "Hoặc"
+
 #. js-lingui-id: ucgZ0o
 #: src/modules/billing/components/SettingsBillingSubscriptionInfo.tsx
 msgid "Organization"
@@ -4601,7 +4928,7 @@ msgstr "Không gian làm việc khác"
 #. js-lingui-id: NuKR0h
 #: src/modules/command-menu/pages/workflow/action/components/CommandMenuWorkflowSelectActionContent.tsx
 msgid "Others"
-msgstr ""
+msgstr "Khác"
 
 #. js-lingui-id: p5ufK6
 #: src/pages/onboarding/BookCallDecision.tsx
@@ -4613,13 +4940,18 @@ msgstr "Đội ngũ của chúng tôi có thể giúp bạn thiết lập không
 msgid "Output Field {fieldNumber}"
 msgstr "Trường Đầu Ra {fieldNumber}"
 
+#. js-lingui-id: in6CUw
+#: src/modules/workflow/components/OverrideWorkflowDraftConfirmationModal.tsx
+msgid "Override Draft"
+msgstr "Ghi đè bản thảo"
+
 #. js-lingui-id: lXe6vt
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 #: src/pages/settings/page-layout/SettingsPageLayoutEdit.tsx
 #: src/modules/settings/hooks/useSettingsNavigationItems.tsx
 msgid "Page Layouts"
-msgstr ""
+msgstr "Bố cục Trang"
 
 #. js-lingui-id: boJlGf
 #: src/pages/not-found/NotFound.tsx
@@ -4823,6 +5155,12 @@ msgstr "Trò chuyện AI trước đây"
 msgid "Price updated."
 msgstr "Giá đã cập nhật."
 
+#. js-lingui-id: 0Ni6nR
+#: src/modules/object-record/record-field/ui/form-types/components/FormEmailsFieldInput.tsx
+#: src/modules/object-record/record-field/ui/form-types/components/FormEmailsFieldInput.tsx
+msgid "Primary Email"
+msgstr "Email chính"
+
 #. js-lingui-id: LcET2C
 #: src/modules/auth/sign-in-up/components/FooterNote.tsx
 msgid "Privacy Policy"
@@ -4845,6 +5183,11 @@ msgstr "Đang xử lý..."
 #: src/modules/settings/hooks/useSettingsNavigationItems.tsx
 msgid "Profile"
 msgstr "Hồ sơ"
+
+#. js-lingui-id: 6Fs5Ks
+#: src/utils/title-utils.ts
+msgid "Profile - Settings"
+msgstr "Cài đặt - Hồ sơ"
 
 #. js-lingui-id: GVxbU6
 #: src/modules/settings/security/components/SSO/SettingsSSOOIDCForm.tsx
@@ -4963,6 +5306,11 @@ msgstr "Phát hành"
 msgid "Reload"
 msgstr "Tải lại"
 
+#. js-lingui-id: qlAIQ1
+#: src/modules/object-metadata/components/RemoteNavigationDrawerSection.tsx
+msgid "Remote"
+msgstr "Từ xa"
+
 #. js-lingui-id: t/YqKh
 #: src/modules/ui/input/components/ImageInput.tsx
 #: src/modules/spreadsheet-import/steps/components/ValidationStep/ValidationStep.tsx
@@ -4978,6 +5326,11 @@ msgstr "Xóa tài khoản"
 #: src/modules/settings/data-model/fields/forms/select/components/SettingsDataModelFieldSelectFormOptionRow.tsx
 msgid "Remove as default"
 msgstr "Xóa mặc định"
+
+#. js-lingui-id: 2HpFUd
+#: src/modules/object-record/record-table/empty-state/components/RecordTableEmptyStateSoftDelete.tsx
+msgid "Remove Deleted filter"
+msgstr "Gỡ bỏ bộ lọc đã xóa"
 
 #. js-lingui-id: rn2/2V
 #: src/modules/workflow/workflow-diagram/workflow-edges/components/WorkflowDiagramFilterEdgeEditable.tsx
@@ -5004,6 +5357,16 @@ msgstr "Xóa Chuyển Giao"
 #: src/modules/settings/data-model/fields/forms/select/components/SettingsDataModelFieldSelectFormOptionRow.tsx
 msgid "Remove option"
 msgstr "Xóa tùy chọn"
+
+#. js-lingui-id: NRCCKG
+#: src/modules/object-record/record-index/components/RecordIndexRemoveSortingModal.tsx
+msgid "Remove Sorting"
+msgstr "Gỡ bỏ sắp xếp"
+
+#. js-lingui-id: qMPWg0
+#: src/modules/object-record/record-index/components/RecordIndexRemoveSortingModal.tsx
+msgid "Remove sorting?"
+msgstr "Gỡ bỏ sắp xếp?"
 
 #. js-lingui-id: oQjB9l
 #: src/modules/billing/components/SettingsBillingSubscriptionInfo.tsx
@@ -5150,6 +5513,11 @@ msgstr "Tiếng Romania"
 msgid "Run a workflow and return here to view its executions"
 msgstr "Chạy một quy trình làm việc và trở lại đây để xem các thực thi của nó"
 
+#. js-lingui-id: UPaWvi
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTestTab.tsx
+msgid "Run Function"
+msgstr "Chạy chức năng"
+
 #. js-lingui-id: nji0/X
 #: src/pages/settings/profile/appearance/components/LocalePicker.tsx
 msgid "Russian"
@@ -5216,15 +5584,20 @@ msgstr "Tìm kiếm một thành viên..."
 msgid "Search a type"
 msgstr "Tìm kiếm một loại"
 
+#. js-lingui-id: +7s4fw
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "Search agents"
+msgstr "Tìm kiếm tác nhân"
+
 #. js-lingui-id: 4fd0q+
 #: src/pages/settings/ai/components/SettingsAIAgentsTable.tsx
 msgid "Search an agent..."
 msgstr "Tìm kiếm một tác nhân..."
 
-#. js-lingui-id: x55IVv
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
-msgid "Search an assigned team member..."
-msgstr "Tìm một thành viên nhóm được phân công..."
+#. js-lingui-id: kdagxk
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "Search an assigned {roleTargetDisplayName}..."
+msgstr "Tìm kiếm một {roleTargetDisplayName} đã phân công..."
 
 #. js-lingui-id: k7kp5/
 #: src/pages/settings/data-model/SettingsObjectIndexTable.tsx
@@ -5244,6 +5617,11 @@ msgstr "Tìm kiếm một đối tượng"
 #: src/modules/object-record/object-filter-dropdown/components/ObjectFilterDropdownAnyFieldSearchInput.tsx
 msgid "Search any field"
 msgstr "Tìm kiếm bất kỳ trường nào"
+
+#. js-lingui-id: FzcOoG
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentEntityPickerDropdown.tsx
+msgid "Search API keys"
+msgstr "Tìm kiếm khóa API"
 
 #. js-lingui-id: 3UPqHL
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableSearchInput.tsx
@@ -5658,6 +6036,11 @@ msgstr "Đăng nhập"
 msgid "Sign In"
 msgstr "Đăng nhập"
 
+#. js-lingui-id: Vt3mQ2
+#: src/utils/title-utils.ts
+msgid "Sign in or Create an account"
+msgstr "Đăng nhập hoặc Tạo tài khoản"
+
 #. js-lingui-id: e+RpCP
 #: src/modules/auth/sign-in-up/components/internal/SignInUpWithCredentials.tsx
 msgid "Sign up"
@@ -5864,6 +6247,7 @@ msgstr "Chủ đề, nội dung và tệp đính kèm sẽ được chia sẻ v�
 
 #. js-lingui-id: hQRttt
 #: src/modules/spreadsheet-import/steps/components/ValidationStep/ValidationStep.tsx
+#: src/modules/auth/sign-in-up/components/internal/SignInUpTwoFactorAuthenticationVerification.tsx
 msgid "Submit"
 msgstr "Gửi"
 
@@ -5941,7 +6325,7 @@ msgstr "Chuyển sang hàng năm"
 #. js-lingui-id: Nu4DdT
 #: src/modules/settings/accounts/components/message-folders/SettingsMessageFoldersTableHeader.tsx
 msgid "Sync"
-msgstr ""
+msgstr "Đồng bộ hóa"
 
 #. js-lingui-id: 5TRY4+
 #: src/modules/settings/accounts/components/SettingsAccountsConnectedAccountsRowRightContainer.tsx
@@ -6041,6 +6425,11 @@ msgstr "Kiểm tra"
 msgid "Test Workflow"
 msgstr "Kiểm tra Workflows"
 
+#. js-lingui-id: 3nWPN6
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTestTab.tsx
+msgid "Test your function"
+msgstr "Kiểm tra chức năng của bạn"
+
 #. js-lingui-id: xeiujy
 #: src/modules/ai/constants/OutputFieldTypeOptions.ts
 msgid "Text"
@@ -6123,11 +6512,6 @@ msgstr "Giá trị của trường này phải là duy nhất"
 msgid "The whole event details will be shared with your team."
 msgstr "Toàn bộ chi tiết sự kiện sẽ được chia sẻ với nhóm của bạn."
 
-#. js-lingui-id: MssRHl
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
-msgid "The workspace needs at least one Admin"
-msgstr "Không gian làm việc cần ít nhất một Quản trị viên"
-
 #. js-lingui-id: FEr96N
 #: src/modules/ui/navigation/navigation-drawer/components/MultiWorkspaceDropdown/internal/MultiWorkspaceDropdownThemesComponents.tsx
 msgid "Theme"
@@ -6137,6 +6521,16 @@ msgstr "Chủ đề"
 #: src/modules/ui/navigation/navigation-drawer/components/MultiWorkspaceDropdown/internal/MultiWorkspaceDropdownDefaultComponents.tsx
 msgid "Theme "
 msgstr "Chủ đề "
+
+#. js-lingui-id: Wn862P
+#: src/modules/keyboard-shortcut-menu/components/KeyboardShortcutMenuItem.tsx
+msgid "then"
+msgstr "sau đó"
+
+#. js-lingui-id: l2fWLK
+#: src/modules/activities/files/components/Attachments.tsx
+msgid "There are no associated files with this record."
+msgstr "Không có tệp nào được liên kết với hồ sơ này."
 
 #. js-lingui-id: /cSDOy
 #: src/modules/spreadsheet-import/steps/components/MatchColumnsStep/MatchColumnsStep.tsx
@@ -6183,15 +6577,20 @@ msgstr "Hành động này không thể được hoàn tác. Điều này sẽ x
 msgid "This database value overrides environment settings. "
 msgstr "Giá trị cơ sở dữ liệu này ghi đè các thiết lập môi trường."
 
+#. js-lingui-id: E4JJ5C
+#: src/modules/object-record/record-index/components/RecordIndexRemoveSortingModal.tsx
+msgid "This is required to enable manual row reordering."
+msgstr "Điều này cần thiết để cho phép sắp xếp các hàng thủ công."
+
 #. js-lingui-id: vbLBMd
 #: src/modules/settings/roles/role-permissions/object-level-permissions/object-form/components/SettingsRolePermissionsObjectLevelObjectFormObjectLevelTableRow.tsx
 msgid "This role can {humanReadableAction} all records"
 msgstr "Vai trò này có thể {humanReadableAction} tất cả các ghi chép"
 
-#. js-lingui-id: xPfDRx
-#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignment.tsx
-msgid "This role is assigned to these workspace members."
-msgstr "Vai trò này được phân công cho các thành viên của không gian làm việc."
+#. js-lingui-id: BifDEA
+#: src/modules/settings/roles/role-assignment/components/SettingsRoleAssignmentTable.tsx
+msgid "This role is assigned to these {roleTargetDisplayName}."
+msgstr "Vai trò này được chỉ định cho {roleTargetDisplayName} này."
 
 #. js-lingui-id: C/wr0z
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableHelpText.tsx
@@ -6241,6 +6640,7 @@ msgid "Timestamp and participants will be shared with your team."
 msgstr "Dấu thời gian và người tham gia sẽ được chia sẻ với nhóm của bạn."
 
 #. js-lingui-id: ecUA8p
+#: src/utils/date-utils.ts
 #: src/modules/settings/admin-panel/health-status/constants/WorkerQueueMetricsSelectOptions.ts
 #: src/modules/localization/utils/formatDateISOStringToRelativeDate.ts
 msgid "Today"
@@ -6512,6 +6912,11 @@ msgstr "Thông tin người dùng"
 msgid "User is not logged in"
 msgstr "Người dùng không đăng nhập"
 
+#. js-lingui-id: LVecP9
+#: src/modules/settings/roles/components/SettingsRolesList.tsx
+msgid "User Roles"
+msgstr "Vai trò Người dùng"
+
 #. js-lingui-id: Sxm8rQ
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
 msgid "Users"
@@ -6533,6 +6938,7 @@ msgid "Validate Data"
 msgstr "Xác thực dữ liệu"
 
 #. js-lingui-id: wMHvYH
+#: src/modules/settings/serverless-functions/components/tabs/SettingsServerlessFunctionTabEnvironmentVariableTableRow.tsx
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableValueInput.tsx
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableValueInput.tsx
 msgid "Value"
@@ -6563,6 +6969,11 @@ msgstr "Không tìm thấy biến"
 #: src/modules/settings/admin-panel/config-variables/hooks/useConfigVariableActions.ts
 msgid "Variable updated successfully."
 msgstr "Cập nhật biến thành công."
+
+#. js-lingui-id: uSMfoN
+#: src/utils/title-utils.ts
+msgid "Verify"
+msgstr "Xác minh"
 
 #. js-lingui-id: IoglDq
 #: src/pages/auth/SignInUp.tsx
@@ -6730,7 +7141,7 @@ msgstr "Khi nào khóa sẽ bị vô hiệu hóa"
 #. js-lingui-id: tL6W2K
 #: src/pages/settings/page-layout/SettingsPageLayouts.tsx
 msgid "Widgets"
-msgstr ""
+msgstr "Widgets"
 
 #. js-lingui-id: woYYQq
 #: src/modules/settings/roles/role-permissions/permission-flags/components/SettingsRolePermissionsSettingsSection.tsx
@@ -6823,6 +7234,7 @@ msgid "Write a description for this agent"
 msgstr "Viết mô tả cho tác nhân này"
 
 #. js-lingui-id: 7qI8sJ
+#: src/utils/date-utils.ts
 #: src/modules/billing/utils/subscriptionFlags.ts
 msgid "year"
 msgstr "năm"
@@ -6831,6 +7243,11 @@ msgstr "năm"
 #: src/modules/billing/utils/subscriptionFlags.ts
 msgid "yearly"
 msgstr "hàng năm"
+
+#. js-lingui-id: +BGee5
+#: src/utils/date-utils.ts
+msgid "years"
+msgstr "năm"
 
 #. js-lingui-id: 3d1wCB
 #: src/pages/settings/developers/api-keys/SettingsDevelopersApiKeyDetail.tsx
@@ -6863,6 +7280,15 @@ msgstr "Bạn không được phép tạo bản ghi cho đối tượng này"
 #: src/modules/settings/accounts/components/SettingsAccountsConnectionForm.tsx
 msgid "You can set up any combination of IMAP (receiving emails), SMTP (sending emails), and CalDAV (calendar sync)."
 msgstr "Bạn có thể thiết lập bất kỳ sự kết hợp nào của IMAP (nhận email), SMTP (gửi email) và CalDAV (đồng bộ lịch)."
+
+#. js-lingui-id: aiJY7y
+#: src/modules/settings/integrations/database-connection/components/SettingsIntegrationEditDatabaseConnectionContent.tsx
+msgid ""
+"You cannot edit this connection because it has tracked tables.\n"
+"If you need to make changes, please create a new connection or unsync the tables first."
+msgstr ""
+"Bạn không thể chỉnh sửa kết nối này vì nó có các bảng đang theo dõi.\n"
+"Nếu bạn cần thực hiện thay đổi, vui lòng tạo một kết nối mới hoặc hủy đồng bộ các bảng trước."
 
 #. js-lingui-id: zEM7Ne
 #: src/modules/billing/components/SettingsBillingSubscriptionInfo.tsx
