@@ -4,14 +4,18 @@ import { TwentyORMModule } from 'src/engine/twenty-orm/twenty-orm.module';
 import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/workspace-cache-storage.module';
 
 import { ProcessPreComputedFieldsJob } from './jobs/process-pre-computed-fields.job';
+import { BulkUpdateService } from './services/bulk-update.service';
 import { ExpressionEvaluatorService } from './services/expression-evaluator.service';
 import { PathEvaluatorService } from './services/path-evaluator.service';
 import { PreComputedFieldsService } from './services/pre-computed-fields.service';
+import { VirtualFieldDiscoveryService } from './services/virtual-field-discovery.service';
 
 @Module({
   imports: [TwentyORMModule, WorkspaceCacheStorageModule],
   providers: [
     PreComputedFieldsService,
+    VirtualFieldDiscoveryService,
+    BulkUpdateService,
     ExpressionEvaluatorService,
     PathEvaluatorService,
 
@@ -19,6 +23,8 @@ import { PreComputedFieldsService } from './services/pre-computed-fields.service
   ],
   exports: [
     PreComputedFieldsService,
+    VirtualFieldDiscoveryService,
+    BulkUpdateService,
     ExpressionEvaluatorService,
     PathEvaluatorService,
   ],

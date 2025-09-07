@@ -2,23 +2,22 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/event-emitter/types/object-record-non-destructive-event';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
-import { metadataArgsStorage } from 'src/engine/twenty-orm/storage/metadata-args.storage';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
 import { PreComputedFieldDependencies } from 'src/engine/twenty-orm/types/pre-computed-field-dependencies.enum';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
-import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-ids';
-import { standardObjectMetadataDefinitions } from 'src/engine/workspace-manager/workspace-sync-metadata/standard-objects';
 import { type PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue';
 import {
   type ConditionalField,
   type PathBasedField,
   type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
+import { BulkUpdateService } from 'src/modules/pre-computed-fields/services/bulk-update.service';
 import { ExpressionEvaluatorService } from 'src/modules/pre-computed-fields/services/expression-evaluator.service';
 import {
   PathEvaluatorService,
   type PathEvaluatorResult,
 } from 'src/modules/pre-computed-fields/services/path-evaluator.service';
+import { VirtualFieldDiscoveryService } from 'src/modules/pre-computed-fields/services/virtual-field-discovery.service';
 import { resolveObjectId } from 'src/modules/pre-computed-fields/utils/resolve-object-id.util';
 
 export type ProcessEventsParams = {
@@ -27,26 +26,20 @@ export type ProcessEventsParams = {
 };
 
 type PreComputedFieldMetadata = {
-  entityName: string;
   fieldName: string;
   virtualField: VirtualField;
+  objectMetadataId: string;
+};
+
+type BulkUpdateOperation = {
+  entityId: string;
+  fieldName: string;
+  value: PrimitiveValue;
 };
 
 type EntityRecord = Record<string, PrimitiveValue>;
 
 type FieldComputationResult = PathEvaluatorResult;
-
-type ExtendedConditionalField = ConditionalField & {
-  objectMetadataId: string;
-  fieldMetadataId: string;
-  dependencies: PreComputedFieldDependencies[];
-};
-
-type ExtendedPathBasedField = PathBasedField & {
-  objectMetadataId: string;
-  fieldMetadataId: string;
-  dependencies: PreComputedFieldDependencies[];
-};
 
 @Injectable()
 export class PreComputedFieldsService {
@@ -55,6 +48,8 @@ export class PreComputedFieldsService {
   constructor(
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
+    private readonly virtualFieldDiscoveryService: VirtualFieldDiscoveryService,
+    private readonly bulkUpdateService: BulkUpdateService,
     private readonly expressionEvaluatorService: ExpressionEvaluatorService,
     private readonly pathEvaluatorService: PathEvaluatorService,
   ) {}
@@ -62,147 +57,244 @@ export class PreComputedFieldsService {
   async processEventsForComputedFields(
     params: ProcessEventsParams,
   ): Promise<void> {
-    const computedFields = this.getComputedFieldMetadata();
-
-    if (computedFields.length === 0) {
-      return;
-    }
     const { events, workspaceId } = params;
 
-    console.dir(events, { depth: null });
+    if (events.length === 0) {
+      return;
+    }
+
+    const eventsWithVirtualFields = this.filterEventsWithVirtualFields(events);
+
+    if (eventsWithVirtualFields.length === 0) {
+      this.logger.debug('No events with virtual fields to process', {
+        workspaceId,
+        totalEvents: events.length,
+      });
+
+      return;
+    }
+
+    this.logger.log('Processing events for computed fields', {
+      workspaceId,
+      totalEvents: events.length,
+      eventsWithVirtualFields: eventsWithVirtualFields.length,
+    });
+
+    const objectMetadataMaps =
+      await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(
+        workspaceId,
+      );
+
+    await this.processBatchWithExistingInfra(
+      eventsWithVirtualFields,
+      objectMetadataMaps,
+      workspaceId,
+    );
+  }
+
+  private filterEventsWithVirtualFields(
+    events: ObjectRecordNonDestructiveEvent[],
+  ): ObjectRecordNonDestructiveEvent[] {
+    return events.filter((event) =>
+      this.virtualFieldDiscoveryService.hasVirtualFields(
+        event.objectMetadata.id,
+      ),
+    );
+  }
+
+  private async processBatchWithExistingInfra(
+    events: ObjectRecordNonDestructiveEvent[],
+    objectMetadataMaps: ObjectMetadataMaps,
+    workspaceId: string,
+  ): Promise<void> {
+    const eventsByObjectId = new Map<
+      string,
+      ObjectRecordNonDestructiveEvent[]
+    >();
+
+    for (const event of events) {
+      const objectId = event.objectMetadata.id;
+
+      if (!eventsByObjectId.has(objectId)) {
+        eventsByObjectId.set(objectId, []);
+      }
+      eventsByObjectId.get(objectId)!.push(event);
+    }
+
+    for (const [objectId, objectEvents] of eventsByObjectId.entries()) {
+      try {
+        await this.processEventsForObjectType(
+          objectEvents,
+          objectId,
+          objectMetadataMaps,
+          workspaceId,
+        );
+      } catch (error) {
+        this.logger.error('Error processing events for object type', {
+          objectId,
+          eventCount: objectEvents.length,
+          error,
+        });
+      }
+    }
+  }
+
+  private async processEventsForObjectType(
+    events: ObjectRecordNonDestructiveEvent[],
+    objectMetadataId: string,
+    objectMetadataMaps: ObjectMetadataMaps,
+    workspaceId: string,
+  ): Promise<void> {
+    const virtualFields =
+      this.virtualFieldDiscoveryService.getVirtualFieldsForObjectMetadata(
+        objectMetadataId,
+      );
+
+    if (virtualFields.length === 0) {
+      return;
+    }
 
     const eventTypes = events.map(
       (event) =>
         event.objectMetadata.nameSingular as PreComputedFieldDependencies,
     );
 
-    const fieldsToProcess = computedFields.filter((field) =>
-      field.virtualField?.dependencies?.some((dep) => eventTypes.includes(dep)),
+    const fieldsToProcess = virtualFields.filter((field) =>
+      this.virtualFieldDiscoveryService.fieldNeedsProcessing(field, eventTypes),
     );
 
     if (fieldsToProcess.length === 0) {
+      this.logger.debug('No fields need processing for object type', {
+        objectMetadataId,
+        virtualFieldsCount: virtualFields.length,
+      });
+
       return;
     }
 
-    this.logger.log('ComputedFieldsService - Processing fields:', {
-      workspaceId,
-      fieldsCount: fieldsToProcess.length,
-      fields: fieldsToProcess.map((f) => `${f.entityName}.${f.fieldName}`),
+    this.logger.log('Processing virtual fields for object type', {
+      objectMetadataId,
+      fieldsToProcess: fieldsToProcess.length,
+      eventCount: events.length,
     });
 
-    const affectedEntityMap = await this.extractAffectedEntityIds(
+    await this.bulkProcessVirtualFields(
       events,
       fieldsToProcess,
+      objectMetadataMaps,
       workspaceId,
     );
+  }
 
-    for (const [fieldKey, entityIds] of affectedEntityMap.entries()) {
-      const field = fieldsToProcess.find(
-        (f) => `${f.entityName}.${f.fieldName}` === fieldKey,
+  private async bulkProcessVirtualFields(
+    events: ObjectRecordNonDestructiveEvent[],
+    virtualFields: PreComputedFieldMetadata[],
+    objectMetadataMaps: ObjectMetadataMaps,
+    workspaceId: string,
+  ): Promise<void> {
+    const entityName =
+      this.virtualFieldDiscoveryService.getEntityNameFromTarget(
+        virtualFields[0].objectMetadataId,
       );
 
-      if (!field) continue;
+    const repository =
+      await this.twentyORMGlobalManager.getRepositoryForWorkspace(
+        workspaceId,
+        entityName,
+        { shouldBypassPermissionChecks: true },
+      );
 
-      for (const entityId of entityIds) {
-        await this.executeComputedFieldsForEntity({
-          entityId,
-          workspaceId,
-          fieldsToProcess: [field],
+    const bulkUpdateOperations: BulkUpdateOperation[] = [];
+
+    for (const event of events) {
+      try {
+        const affectedEntityIds = await this.getAffectedEntityIds(
+          event,
+          virtualFields,
+          objectMetadataMaps,
+        );
+
+        for (const entityId of affectedEntityIds) {
+          for (const field of virtualFields) {
+            try {
+              const computedResult = await this.computeFieldValue({
+                virtualField: field.virtualField,
+                entityId,
+                workspaceId,
+                objectMetadataMaps,
+              });
+
+              let valueToStore: PrimitiveValue;
+
+              if (
+                computedResult.isEntityResult &&
+                computedResult.value &&
+                typeof computedResult.value === 'object'
+              ) {
+                valueToStore =
+                  (computedResult.value as EntityRecord).id || null;
+              } else {
+                valueToStore = computedResult.value as PrimitiveValue;
+              }
+
+              bulkUpdateOperations.push({
+                entityId,
+                fieldName: field.fieldName,
+                value: valueToStore,
+              });
+            } catch (error) {
+              this.logger.error('Error computing field value', {
+                entityId,
+                fieldName: field.fieldName,
+                error,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.error('Error processing event for bulk updates', {
+          eventId: event.recordId,
+          objectType: event.objectMetadata.nameSingular,
+          error,
         });
       }
     }
-  }
 
-  public getComputedFieldMetadata(): PreComputedFieldMetadata[] {
-    const computedFields: PreComputedFieldMetadata[] = [];
-
-    for (const entityTarget of standardObjectMetadataDefinitions) {
-      const fieldMetadataArray = metadataArgsStorage.filterFields(entityTarget);
-
-      for (const fieldMetadata of fieldMetadataArray) {
-        if (fieldMetadata.virtualField) {
-          computedFields.push({
-            entityName: this.getEntityNameFromTarget(
-              fieldMetadata.virtualField.objectMetadataId,
-            ),
-            fieldName: fieldMetadata.name,
-            virtualField: fieldMetadata.virtualField,
-          });
-        }
-      }
-    }
-
-    return computedFields;
-  }
-
-  private getEntityNameFromTarget(objectMetadataId: string): string {
-    for (const [key, value] of Object.entries(STANDARD_OBJECT_IDS)) {
-      if (value === objectMetadataId) {
-        return key;
-      }
-    }
-
-    return 'unknown';
-  }
-
-  private async extractAffectedEntityIds(
-    events: ObjectRecordNonDestructiveEvent[],
-    fieldsToProcess: PreComputedFieldMetadata[],
-    workspaceId: string,
-  ): Promise<Map<string, Set<string>>> {
-    const affectedEntityMap = new Map<string, Set<string>>();
-    const objectMetadataMaps =
-      await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(
-        workspaceId,
+    if (bulkUpdateOperations.length > 0) {
+      await this.bulkUpdateService.executeBulkUpdates(
+        repository,
+        bulkUpdateOperations,
       );
+    }
+  }
 
-    for (const event of events) {
-      for (const field of fieldsToProcess) {
-        if (
-          field?.virtualField?.dependencies?.includes(
-            event.objectMetadata.nameSingular as PreComputedFieldDependencies,
-          )
-        ) {
-          const fieldKey = `${field.entityName}.${field.fieldName}`;
+  private async getAffectedEntityIds(
+    event: ObjectRecordNonDestructiveEvent,
+    virtualFields: PreComputedFieldMetadata[],
+    objectMetadataMaps: ObjectMetadataMaps,
+  ): Promise<string[]> {
+    const affectedEntityIds = new Set<string>();
 
-          this.logger.log('Processing dependency:', {
-            eventType: event.objectMetadata.nameSingular,
-            fieldKey,
-            triggerEntityId: event.recordId,
-          });
+    for (const field of virtualFields) {
+      try {
+        const entityIds = await this.findAffectedEntitiesByPath(
+          event.objectMetadata.nameSingular,
+          event.recordId,
+          field.virtualField,
+          objectMetadataMaps,
+        );
 
-          try {
-            const affectedEntityIds = await this.findAffectedEntitiesByPath(
-              event.objectMetadata.nameSingular,
-              event.recordId,
-              field.virtualField,
-              objectMetadataMaps,
-            );
-
-            if (!affectedEntityMap.has(fieldKey)) {
-              affectedEntityMap.set(fieldKey, new Set());
-            }
-
-            affectedEntityIds.forEach((id) =>
-              affectedEntityMap.get(fieldKey)?.add(id),
-            );
-
-            this.logger.log('Found affected entities:', {
-              fieldKey,
-              count: affectedEntityIds.length,
-              entityIds: affectedEntityIds,
-            });
-          } catch (error) {
-            this.logger.error('Error resolving affected entity IDs:', {
-              fieldKey,
-              error,
-            });
-          }
-        }
+        entityIds.forEach((id) => affectedEntityIds.add(id));
+      } catch (error) {
+        this.logger.error('Error finding affected entities for field', {
+          fieldName: field.fieldName,
+          eventId: event.recordId,
+          error,
+        });
       }
     }
 
-    return affectedEntityMap;
+    return Array.from(affectedEntityIds);
   }
 
   private async findAffectedEntitiesByPath(
@@ -224,73 +316,7 @@ export class PreComputedFieldsService {
       return [eventEntityId];
     }
 
-    if ('path' in virtualField && virtualField.path) {
-      return await this.findAffectedEntitiesForPathField(
-        eventObjectName,
-        eventEntityId,
-        virtualField as ExtendedPathBasedField,
-      );
-    }
-
     return [];
-  }
-
-  private async findAffectedEntitiesForPathField(
-    eventObjectName: string,
-    eventEntityId: string,
-    pathField: ExtendedPathBasedField,
-  ): Promise<string[]> {
-    this.logger.debug(
-      'Path-based affected entity resolution not fully implemented',
-      {
-        eventObjectName,
-        eventEntityId,
-        pathLength: pathField.path.length,
-      },
-    );
-
-    return [];
-  }
-
-  public async executeComputedFieldsForEntity(params: {
-    entityId: string;
-    workspaceId: string;
-    fieldsToProcess: PreComputedFieldMetadata[];
-  }): Promise<void> {
-    const { entityId, workspaceId, fieldsToProcess } = params;
-
-    const objectMetadataMaps =
-      await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(
-        workspaceId,
-      );
-
-    for (const field of fieldsToProcess) {
-      try {
-        const computedResult = await this.computeFieldValue({
-          virtualField: field.virtualField,
-          entityId,
-          workspaceId,
-          objectMetadataMaps,
-        });
-
-        await this.updateCachedFieldValue({
-          entityName: field.entityName,
-          entityId,
-          fieldName: field.fieldName,
-          result: computedResult,
-          workspaceId,
-        });
-
-        this.logger.log(
-          `Updated computed field ${field.entityName}.${field.fieldName} for entity ${entityId}: ${JSON.stringify(computedResult.value)}`,
-        );
-      } catch (error) {
-        this.logger.error(
-          `Error executing computed field ${field.entityName}.${field.fieldName}:`,
-          error,
-        );
-      }
-    }
   }
 
   private async computeFieldValue(params: {
@@ -301,9 +327,9 @@ export class PreComputedFieldsService {
   }): Promise<FieldComputationResult> {
     const { virtualField, entityId, workspaceId, objectMetadataMaps } = params;
 
-    if (this.isConditionalField(virtualField)) {
+    if ('when' in virtualField && 'default' in virtualField) {
       return await this.computeConditionalField(
-        virtualField as ExtendedConditionalField,
+        virtualField,
         entityId,
         workspaceId,
         objectMetadataMaps,
@@ -311,7 +337,7 @@ export class PreComputedFieldsService {
     }
 
     return await this.computePathBasedField(
-      virtualField as ExtendedPathBasedField,
+      virtualField,
       entityId,
       workspaceId,
       objectMetadataMaps,
@@ -319,14 +345,15 @@ export class PreComputedFieldsService {
   }
 
   private async computeConditionalField(
-    conditionalField: ExtendedConditionalField,
+    virtualField: VirtualField,
     entityId: string,
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<FieldComputationResult> {
-    const entityName = this.getEntityNameFromTarget(
-      conditionalField.objectMetadataId,
-    );
+    const entityName =
+      this.virtualFieldDiscoveryService.getEntityNameFromTarget(
+        virtualField.objectMetadataId,
+      );
 
     const repository =
       await this.twentyORMGlobalManager.getRepositoryForWorkspace(
@@ -338,11 +365,14 @@ export class PreComputedFieldsService {
     const record = await repository.findOne({ where: { id: entityId } });
 
     if (!record) {
-      return { value: conditionalField.default, isEntityResult: false };
+      return {
+        value: (virtualField as ConditionalField).default,
+        isEntityResult: false,
+      };
     }
 
     const value = this.expressionEvaluatorService.evaluateConditionalField(
-      conditionalField,
+      virtualField as ConditionalField,
       record,
       objectMetadataMaps,
     );
@@ -351,56 +381,22 @@ export class PreComputedFieldsService {
   }
 
   private async computePathBasedField(
-    pathField: ExtendedPathBasedField,
+    virtualField: VirtualField,
     entityId: string,
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<FieldComputationResult> {
-    const entityName = this.getEntityNameFromTarget(pathField.objectMetadataId);
+    const entityName =
+      this.virtualFieldDiscoveryService.getEntityNameFromTarget(
+        virtualField.objectMetadataId,
+      );
 
     return await this.pathEvaluatorService.evaluatePathBasedField(
-      pathField,
+      virtualField as PathBasedField,
       entityId,
       entityName,
       workspaceId,
       objectMetadataMaps,
     );
-  }
-
-  private isConditionalField(virtualField: VirtualField): boolean {
-    return 'when' in virtualField && 'default' in virtualField;
-  }
-
-  private async updateCachedFieldValue(params: {
-    entityName: string;
-    entityId: string;
-    fieldName: string;
-    result: FieldComputationResult;
-    workspaceId: string;
-  }): Promise<void> {
-    const { entityName, entityId, fieldName, result, workspaceId } = params;
-
-    const repository =
-      await this.twentyORMGlobalManager.getRepositoryForWorkspace(
-        workspaceId,
-        entityName,
-        { shouldBypassPermissionChecks: true },
-      );
-
-    let valueToStore: PrimitiveValue;
-
-    if (
-      result.isEntityResult &&
-      result.value &&
-      typeof result.value === 'object'
-    ) {
-      valueToStore = (result.value as EntityRecord).id || null;
-    } else {
-      valueToStore = result.value as PrimitiveValue;
-    }
-
-    await repository.update(entityId, {
-      [fieldName]: valueToStore,
-    });
   }
 }
