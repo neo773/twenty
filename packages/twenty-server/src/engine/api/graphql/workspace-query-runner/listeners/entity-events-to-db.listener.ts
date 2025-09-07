@@ -131,18 +131,16 @@ export class EntityEventsToDbListener {
             events: auditLogsEvents,
           }),
         );
-      }
-    }
 
-    if (action !== DatabaseEventAction.DESTROYED) {
-      promises.push(
-        this.entityEventsToDbQueueService.add<
-          WorkspaceEventBatch<ObjectRecordNonDestructiveEvent>
-        >(ProcessPreComputedFieldsJob.name, {
-          ...batchEvent,
-          events: batchEvent.events as ObjectRecordNonDestructiveEvent[],
-        }),
-      );
+        promises.push(
+          this.entityEventsToDbQueueService.add<
+            WorkspaceEventBatch<ObjectRecordNonDestructiveEvent>
+          >(ProcessPreComputedFieldsJob.name, {
+            ...batchEvent,
+            events: batchEvent.events as ObjectRecordNonDestructiveEvent[],
+          }),
+        );
+      }
     }
 
     await Promise.all(promises);

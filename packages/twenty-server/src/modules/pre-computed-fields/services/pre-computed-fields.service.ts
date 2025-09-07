@@ -62,15 +62,14 @@ export class PreComputedFieldsService {
   async processEventsForComputedFields(
     params: ProcessEventsParams,
   ): Promise<void> {
-    const { events, workspaceId } = params;
-
-    console.dir(events, { depth: null });
-
     const computedFields = this.getComputedFieldMetadata();
 
     if (computedFields.length === 0) {
       return;
     }
+    const { events, workspaceId } = params;
+
+    console.dir(events, { depth: null });
 
     const eventTypes = events.map(
       (event) =>

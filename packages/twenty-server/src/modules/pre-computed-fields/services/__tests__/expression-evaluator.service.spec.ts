@@ -365,36 +365,4 @@ describe('ExpressionEvaluatorService', () => {
       expect(result).toBe(true);
     });
   });
-
-  describe('formatSQLValue', () => {
-    it('should format string values with escaped quotes', () => {
-      const result = service.formatSQLValue("Test's Company");
-
-      expect(result).toBe("'Test''s Company'");
-    });
-
-    it('should format number values', () => {
-      const result = service.formatSQLValue(42);
-
-      expect(result).toBe('42');
-    });
-
-    it('should format boolean values', () => {
-      expect(service.formatSQLValue(true)).toBe('true');
-      expect(service.formatSQLValue(false)).toBe('false');
-    });
-
-    it('should format null values', () => {
-      const result = service.formatSQLValue(null);
-
-      expect(result).toBe('NULL');
-    });
-
-    it('should format date values', () => {
-      const date = new Date('2024-01-01T00:00:00.000Z');
-      const result = service.formatSQLValue(date);
-
-      expect(result).toBe("'2024-01-01T00:00:00.000Z'");
-    });
-  });
 });

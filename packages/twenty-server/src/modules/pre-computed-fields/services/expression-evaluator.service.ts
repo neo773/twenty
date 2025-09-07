@@ -102,9 +102,7 @@ export class ExpressionEvaluatorService {
     const fieldMetadata = getFieldMetadata(condition.field, objectMetadataMaps);
 
     if (fieldMetadata && fieldMetadata.type === FieldMetadataType.CURRENCY) {
-      // Handle both currency objects and plain numbers (for testing/backward compatibility)
       if (typeof rawFieldValue === 'number') {
-        // If it's already a plain number, use it directly
         fieldValue = rawFieldValue;
       } else if (rawFieldValue && typeof rawFieldValue === 'object') {
         const amountMicros = (
@@ -194,28 +192,6 @@ export class ExpressionEvaluatorService {
       case Operator.LTE:
         return fieldValue! <= conditionValue!;
     }
-  }
-
-  public formatSQLValue(value: PrimitiveValue): string {
-    if (value === null) {
-      return 'NULL';
-    }
-
-    if (typeof value === 'string') {
-      return `'${value.replace(/'/g, "''")}'`;
-    }
-
-    if (typeof value === 'number' || typeof value === 'boolean') {
-      return String(value);
-    }
-
-    if (value instanceof Date) {
-      return `'${value.toISOString()}'`;
-    }
-
-    throw new Error(
-      `Unsupported value type: ${typeof value} (${String(value)})`,
-    );
   }
 
   private areComparableValues(

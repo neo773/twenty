@@ -11,7 +11,6 @@ import {
   type PathBasedField,
   type RankingClause,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { ExpressionEvaluatorService } from 'src/modules/pre-computed-fields/services/expression-evaluator.service';
 import { buildColumnReference } from 'src/modules/pre-computed-fields/utils/build-column-reference.util';
 import { buildTableAlias } from 'src/modules/pre-computed-fields/utils/build-table-alias.util';
 import { isFieldCondition } from 'src/modules/pre-computed-fields/utils/isFieldCondition';
@@ -36,7 +35,6 @@ export class PathEvaluatorService {
 
   constructor(
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
-    private readonly expressionEvaluatorService: ExpressionEvaluatorService,
   ) {}
 
   async evaluatePathBasedField(
@@ -155,16 +153,12 @@ export class PathEvaluatorService {
     objectMetadataMaps?: ObjectMetadataMaps,
   ): void {
     if (ranking.field && objectMetadataMaps) {
-      // Apply ORDER BY directly
       queryBuilder.orderBy(
         `"${tableAlias}"."${ranking.field}"`,
-        ranking.direction.toUpperCase() as 'ASC' | 'DESC',
+        ranking.direction,
       );
     } else {
-      queryBuilder.orderBy(
-        `${tableAlias}.id`,
-        ranking.direction.toUpperCase() as 'ASC' | 'DESC',
-      );
+      queryBuilder.orderBy(`${tableAlias}.id`, ranking.direction);
     }
 
     queryBuilder.limit(ranking.limit);
