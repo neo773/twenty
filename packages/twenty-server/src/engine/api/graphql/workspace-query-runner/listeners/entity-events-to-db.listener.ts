@@ -21,7 +21,7 @@ import { CallDatabaseEventTriggerJobsJob } from 'src/engine/metadata-modules/tri
 import { SubscriptionsService } from 'src/engine/subscriptions/subscriptions.service';
 import { WorkspaceEventBatch } from 'src/engine/workspace-event-emitter/types/workspace-event.type';
 import { UpsertTimelineActivityFromInternalEvent } from 'src/modules/timeline/jobs/upsert-timeline-activity-from-internal-event.job';
-import { ProcessPreComputedFieldsJob } from 'src/modules/virtual-fields/jobs/process-pre-computed-fields.job';
+import { ProcessPreComputedFieldsJob } from 'src/modules/virtual-fields/jobs/process-virtual-fields.job';
 
 @Injectable()
 export class EntityEventsToDbListener {
