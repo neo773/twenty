@@ -14,7 +14,7 @@ type PreComputedFieldMetadata = {
 };
 
 @Injectable()
-export class VirtualFieldDiscoveryService {
+export class VirtualFieldsFieldDiscoveryService {
   constructor(
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
   ) {}

@@ -32,9 +32,9 @@ import { CalendarModule } from 'src/modules/calendar/calendar.module';
 import { AutoCompaniesAndContactsCreationJobModule } from 'src/modules/contact-creation-manager/jobs/auto-companies-and-contacts-creation-job.module';
 import { FavoriteModule } from 'src/modules/favorite/favorite.module';
 import { MessagingModule } from 'src/modules/messaging/messaging.module';
-import { PreComputedFieldsModule } from 'src/modules/pre-computed-fields/pre-computed-fields.module';
 import { TimelineJobModule } from 'src/modules/timeline/jobs/timeline-job.module';
 import { TimelineActivityModule } from 'src/modules/timeline/timeline-activity.module';
+import { PreComputedFieldsModule } from 'src/modules/virtual-fields/pre-computed-fields.module';
 import { WorkflowModule } from 'src/modules/workflow/workflow.module';
 
 @Module({

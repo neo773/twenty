@@ -11,14 +11,14 @@ import {
   type PathBasedField,
   type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { BulkUpdateService } from 'src/modules/pre-computed-fields/services/bulk-update.service';
-import { ExpressionEvaluatorService } from 'src/modules/pre-computed-fields/services/expression-evaluator.service';
+import { VirtualFieldsBatchUpdateService } from 'src/modules/virtual-fields/services/virtual-fields-batch-update.service';
+import { VirtualFieldsExpressionEvaluatorService } from 'src/modules/virtual-fields/services/virtual-fields-expression-evaluator.service';
+import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
 import {
-  PathEvaluatorService,
+  VirtualFieldsPathEvaluatorService,
   type PathEvaluatorResult,
-} from 'src/modules/pre-computed-fields/services/path-evaluator.service';
-import { VirtualFieldDiscoveryService } from 'src/modules/pre-computed-fields/services/virtual-field-discovery.service';
-import { resolveObjectId } from 'src/modules/pre-computed-fields/utils/resolve-object-id.util';
+} from 'src/modules/virtual-fields/services/virtual-fields-path-evaluator.service';
+import { resolveObjectId } from 'src/modules/virtual-fields/utils/resolve-object-id.util';
 
 export type ProcessEventsParams = {
   events: ObjectRecordNonDestructiveEvent[];
@@ -42,16 +42,16 @@ type EntityRecord = Record<string, PrimitiveValue>;
 type FieldComputationResult = PathEvaluatorResult;
 
 @Injectable()
-export class PreComputedFieldsService {
-  private readonly logger = new Logger(PreComputedFieldsService.name);
+export class VirtualFieldsService {
+  private readonly logger = new Logger(VirtualFieldsService.name);
 
   constructor(
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
-    private readonly virtualFieldDiscoveryService: VirtualFieldDiscoveryService,
-    private readonly bulkUpdateService: BulkUpdateService,
-    private readonly expressionEvaluatorService: ExpressionEvaluatorService,
-    private readonly pathEvaluatorService: PathEvaluatorService,
+    private readonly virtualFieldDiscoveryService: VirtualFieldsFieldDiscoveryService,
+    private readonly bulkUpdateService: VirtualFieldsBatchUpdateService,
+    private readonly expressionEvaluatorService: VirtualFieldsExpressionEvaluatorService,
+    private readonly pathEvaluatorService: VirtualFieldsPathEvaluatorService,
   ) {}
 
   async processEventsForComputedFields(
@@ -262,7 +262,7 @@ export class PreComputedFieldsService {
     }
 
     if (bulkUpdateOperations.length > 0) {
-      await this.bulkUpdateService.executeBulkUpdates(
+      await this.bulkUpdateService.executeBatchUpdates(
         repository,
         bulkUpdateOperations,
       );

@@ -5,12 +5,12 @@ import { Command, CommandRunner, Option } from 'nest-commander';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
 import {
-  type ConditionalField,
-  type PathBasedField,
-  type VirtualField,
+    type ConditionalField,
+    type PathBasedField,
+    type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { PreComputedFieldsService } from 'src/modules/pre-computed-fields/services/pre-computed-fields.service';
-import { resolveFieldPath } from 'src/modules/pre-computed-fields/utils/resolve-field-path.util';
+import { PreComputedFieldsService } from 'src/modules/virtual-fields/services/pre-computed-fields.service';
+import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
 
 interface TestComputedFieldsOptions {
   companyId?: string;

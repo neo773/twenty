@@ -11,16 +11,18 @@ import {
   type FieldCondition,
   type LogicalCondition,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { getFieldMetadata } from 'src/modules/pre-computed-fields/utils/getFieldMetadata';
-import { isFieldCondition } from 'src/modules/pre-computed-fields/utils/isFieldCondition';
-import { isLogicalCondition } from 'src/modules/pre-computed-fields/utils/isLogicalCondition';
-import { resolveFieldForCondition } from 'src/modules/pre-computed-fields/utils/resolveFieldForCondition';
+import { getFieldMetadata } from 'src/modules/virtual-fields/utils/getFieldMetadata';
+import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondition';
+import { isLogicalCondition } from 'src/modules/virtual-fields/utils/isLogicalCondition';
+import { resolveFieldForCondition } from 'src/modules/virtual-fields/utils/resolveFieldForCondition';
 
 type RecordData = Record<string, PrimitiveValue | PrimitiveValue[]>;
 
 @Injectable()
-export class ExpressionEvaluatorService {
-  private readonly logger = new Logger(ExpressionEvaluatorService.name);
+export class VirtualFieldsExpressionEvaluatorService {
+  private readonly logger = new Logger(
+    VirtualFieldsExpressionEvaluatorService.name,
+  );
 
   evaluateConditionalField(
     conditionalField: ConditionalField,

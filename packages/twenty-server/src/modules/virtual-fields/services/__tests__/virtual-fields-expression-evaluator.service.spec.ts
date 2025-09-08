@@ -4,19 +4,19 @@ import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/objec
 import { COMPANY_STANDARD_FIELD_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-field-ids';
 import { Operator } from 'src/modules/computed-fields/types/Operator';
 import { type ConditionalField } from 'src/modules/computed-fields/types/VirtualField';
-import { ExpressionEvaluatorService } from 'src/modules/pre-computed-fields/services/expression-evaluator.service';
+import { VirtualFieldsExpressionEvaluatorService } from 'src/modules/virtual-fields/services/virtual-fields-expression-evaluator.service';
 
-describe('ExpressionEvaluatorService', () => {
-  let service: ExpressionEvaluatorService;
+describe('VirtualFieldsExpressionEvaluatorService', () => {
+  let service: VirtualFieldsExpressionEvaluatorService;
   let objectMetadataMaps: ObjectMetadataMaps;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      providers: [ExpressionEvaluatorService],
+      providers: [VirtualFieldsExpressionEvaluatorService],
     }).compile();
 
-    service = module.get<ExpressionEvaluatorService>(
-      ExpressionEvaluatorService,
+    service = module.get<VirtualFieldsExpressionEvaluatorService>(
+      VirtualFieldsExpressionEvaluatorService,
     );
 
     objectMetadataMaps = {

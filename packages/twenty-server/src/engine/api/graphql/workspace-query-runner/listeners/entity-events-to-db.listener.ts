@@ -20,8 +20,8 @@ import { type ObjectRecordEventForWebhook } from 'src/engine/core-modules/webhoo
 import { CallDatabaseEventTriggerJobsJob } from 'src/engine/metadata-modules/trigger/jobs/call-database-event-trigger-jobs.job';
 import { SubscriptionsService } from 'src/engine/subscriptions/subscriptions.service';
 import { WorkspaceEventBatch } from 'src/engine/workspace-event-emitter/types/workspace-event.type';
-import { ProcessPreComputedFieldsJob } from 'src/modules/pre-computed-fields/jobs/process-pre-computed-fields.job';
 import { UpsertTimelineActivityFromInternalEvent } from 'src/modules/timeline/jobs/upsert-timeline-activity-from-internal-event.job';
+import { ProcessPreComputedFieldsJob } from 'src/modules/virtual-fields/jobs/process-pre-computed-fields.job';
 
 @Injectable()
 export class EntityEventsToDbListener {

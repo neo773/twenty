@@ -1,14 +1,14 @@
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import {
-  COMPANY_STANDARD_FIELD_IDS,
-  PERSON_STANDARD_FIELD_IDS,
+    COMPANY_STANDARD_FIELD_IDS,
+    PERSON_STANDARD_FIELD_IDS,
 } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-field-ids';
 import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-ids';
-import { buildColumnReference } from 'src/modules/pre-computed-fields/utils/build-column-reference.util';
-import { buildTableAlias } from 'src/modules/pre-computed-fields/utils/build-table-alias.util';
-import { resolveFieldId } from 'src/modules/pre-computed-fields/utils/resolve-field-id.util';
-import { resolveFieldPath } from 'src/modules/pre-computed-fields/utils/resolve-field-path.util';
-import { resolveObjectId } from 'src/modules/pre-computed-fields/utils/resolve-object-id.util';
+import { buildColumnReference } from 'src/modules/virtual-fields/utils/build-column-reference.util';
+import { buildTableAlias } from 'src/modules/virtual-fields/utils/build-table-alias.util';
+import { resolveFieldId } from 'src/modules/virtual-fields/utils/resolve-field-id.util';
+import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
+import { resolveObjectId } from 'src/modules/virtual-fields/utils/resolve-object-id.util';
 
 describe('FieldIdResolverUtil', () => {
   let mockObjectMetadataMaps: ObjectMetadataMaps;

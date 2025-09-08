@@ -1,11 +1,11 @@
 import type { ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import type { AllStandardFieldIds } from 'src/modules/computed-fields/types/AllStandardFieldIds';
 import {
-  type FieldResolution,
-  type FieldResolutionOptions,
-} from 'src/modules/pre-computed-fields/utils/field-resolution.util';
-import { resolveFieldId } from 'src/modules/pre-computed-fields/utils/resolve-field-id.util';
-import { resolveStandardFieldId } from 'src/modules/pre-computed-fields/utils/resolve-standard-field-id.util';
+    type FieldResolution,
+    type FieldResolutionOptions,
+} from 'src/modules/virtual-fields/utils/field-resolution.util';
+import { resolveFieldId } from 'src/modules/virtual-fields/utils/resolve-field-id.util';
+import { resolveStandardFieldId } from 'src/modules/virtual-fields/utils/resolve-standard-field-id.util';
 
 export const resolveFieldForCondition = (
   fieldId: string | AllStandardFieldIds,

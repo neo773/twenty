@@ -12,10 +12,10 @@ type BulkUpdateOperation = {
 };
 
 @Injectable()
-export class BulkUpdateService {
-  private readonly logger = new Logger(BulkUpdateService.name);
+export class VirtualFieldsBatchUpdateService {
+  private readonly logger = new Logger(VirtualFieldsBatchUpdateService.name);
 
-  async executeBulkUpdates<T extends ObjectLiteral>(
+  async executeBatchUpdates<T extends ObjectLiteral>(
     repository: WorkspaceRepository<T>,
     updateOperations: BulkUpdateOperation[],
   ): Promise<void> {

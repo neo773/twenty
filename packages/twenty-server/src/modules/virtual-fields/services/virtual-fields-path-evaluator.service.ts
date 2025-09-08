@@ -11,11 +11,11 @@ import {
   type PathBasedField,
   type RankingClause,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { buildColumnReference } from 'src/modules/pre-computed-fields/utils/build-column-reference.util';
-import { buildTableAlias } from 'src/modules/pre-computed-fields/utils/build-table-alias.util';
-import { isFieldCondition } from 'src/modules/pre-computed-fields/utils/isFieldCondition';
-import { resolveFieldPath } from 'src/modules/pre-computed-fields/utils/resolve-field-path.util';
-import { resolveFieldForCondition } from 'src/modules/pre-computed-fields/utils/resolveFieldForCondition';
+import { buildColumnReference } from 'src/modules/virtual-fields/utils/build-column-reference.util';
+import { buildTableAlias } from 'src/modules/virtual-fields/utils/build-table-alias.util';
+import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondition';
+import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
+import { resolveFieldForCondition } from 'src/modules/virtual-fields/utils/resolveFieldForCondition';
 
 type ResolvedPathStep = {
   objectName: string;
@@ -30,8 +30,8 @@ export type PathEvaluatorResult = {
 };
 
 @Injectable()
-export class PathEvaluatorService {
-  private readonly logger = new Logger(PathEvaluatorService.name);
+export class VirtualFieldsPathEvaluatorService {
+  private readonly logger = new Logger(VirtualFieldsPathEvaluatorService.name);
 
   constructor(
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
