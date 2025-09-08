@@ -6,10 +6,10 @@ import { WorkspaceEventBatch } from 'src/engine/workspace-event-emitter/types/wo
 import { VirtualFieldsService } from 'src/modules/virtual-fields/services/virtual-fields.service';
 
 @Processor(MessageQueue.entityEventsToDbQueue)
-export class ProcessPreComputedFieldsJob {
+export class ProcessVirtualFieldsJob {
   constructor(private readonly virtualFieldsService: VirtualFieldsService) {}
 
-  @Process(ProcessPreComputedFieldsJob.name)
+  @Process(ProcessVirtualFieldsJob.name)
   async handle(
     workspaceEventBatch: WorkspaceEventBatch<ObjectRecordNonDestructiveEvent>,
   ): Promise<void> {

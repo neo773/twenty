@@ -21,7 +21,7 @@ import { CallDatabaseEventTriggerJobsJob } from 'src/engine/metadata-modules/tri
 import { SubscriptionsService } from 'src/engine/subscriptions/subscriptions.service';
 import { WorkspaceEventBatch } from 'src/engine/workspace-event-emitter/types/workspace-event.type';
 import { UpsertTimelineActivityFromInternalEvent } from 'src/modules/timeline/jobs/upsert-timeline-activity-from-internal-event.job';
-import { ProcessPreComputedFieldsJob } from 'src/modules/virtual-fields/jobs/process-virtual-fields.job';
+import { ProcessVirtualFieldsJob } from 'src/modules/virtual-fields/jobs/process-virtual-fields.job';
 
 @Injectable()
 export class EntityEventsToDbListener {
@@ -135,7 +135,7 @@ export class EntityEventsToDbListener {
         promises.push(
           this.entityEventsToDbQueueService.add<
             WorkspaceEventBatch<ObjectRecordNonDestructiveEvent>
-          >(ProcessPreComputedFieldsJob.name, {
+          >(ProcessVirtualFieldsJob.name, {
             ...batchEvent,
             events: batchEvent.events as ObjectRecordNonDestructiveEvent[],
           }),

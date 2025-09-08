@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { TwentyORMModule } from 'src/engine/twenty-orm/twenty-orm.module';
 import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/workspace-cache-storage.module';
 
-import { ProcessPreComputedFieldsJob } from './jobs/process-virtual-fields.job';
+import { ProcessVirtualFieldsJob } from './jobs/process-virtual-fields.job';
 import { VirtualFieldsBatchUpdateService } from './services/virtual-fields-batch-update.service';
 import { VirtualFieldsCacheService } from './services/virtual-fields-cache.service';
 import { VirtualFieldsDependencyService } from './services/virtual-fields-dependency.service';
@@ -22,8 +22,7 @@ import { VirtualFieldsService } from './services/virtual-fields.service';
     VirtualFieldsBatchUpdateService,
     VirtualFieldsExpressionEvaluatorService,
     VirtualFieldsPathEvaluatorService,
-
-    ProcessPreComputedFieldsJob,
+    ProcessVirtualFieldsJob,
   ],
   exports: [
     VirtualFieldsService,
