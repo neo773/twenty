@@ -5,7 +5,7 @@ import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage
 import {
   VirtualFieldsDependencyMapService,
   type VirtualFieldDependencyMap,
-} from 'src/modules/virtual-fields/services/virtual-fields-dependency.service';
+} from 'src/modules/virtual-fields/services/virtual-fields-dependency-map.service';
 
 @Injectable()
 export class VirtualFieldsDependencyManager {

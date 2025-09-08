@@ -2,18 +2,18 @@ import { Module } from '@nestjs/common';
 
 import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/workspace-cache-storage.module';
 
-import { VirtualFieldsCacheService } from './services/virtual-fields-cache.service';
-import { VirtualFieldsDependencyService } from './services/virtual-fields-dependency.service';
+import { VirtualFieldsDependencyManager } from './services/virtual-fields-dependency-manager.service';
+import { VirtualFieldsDependencyMapService } from './services/virtual-fields-dependency-map.service';
 
 @Module({
   imports: [WorkspaceCacheStorageModule],
   providers: [
-    VirtualFieldsDependencyService,
-    VirtualFieldsCacheService,
+    VirtualFieldsDependencyMapService,
+    VirtualFieldsDependencyManager,
   ],
   exports: [
-    VirtualFieldsDependencyService,
-    VirtualFieldsCacheService,
+    VirtualFieldsDependencyMapService,
+    VirtualFieldsDependencyManager,
   ],
 })
 export class VirtualFieldsDependencyModule {} 

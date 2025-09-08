@@ -5,8 +5,11 @@ import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/
 
 import { ProcessVirtualFieldsJob } from './jobs/process-virtual-fields.job';
 import { VirtualFieldsBatchUpdateService } from './services/virtual-fields-batch-update.service';
-import { VirtualFieldsCacheService } from './services/virtual-fields-cache.service';
-import { VirtualFieldsDependencyService } from './services/virtual-fields-dependency.service';
+import { VirtualFieldsComputationService } from './services/virtual-fields-computation.service';
+import { VirtualFieldsDependencyManager } from './services/virtual-fields-dependency-manager.service';
+import { VirtualFieldsDependencyMapService } from './services/virtual-fields-dependency-map.service';
+import { VirtualFieldsEntityResolutionService } from './services/virtual-fields-entity-resolution.service';
+import { VirtualFieldsEventFilterService } from './services/virtual-fields-event-filter.service';
 import { VirtualFieldsExpressionEvaluatorService } from './services/virtual-fields-expression-evaluator.service';
 import { VirtualFieldsFieldDiscoveryService } from './services/virtual-fields-field-discovery.service';
 import { VirtualFieldsPathEvaluatorService } from './services/virtual-fields-path-evaluator.service';
@@ -17,21 +20,27 @@ import { VirtualFieldsService } from './services/virtual-fields.service';
   providers: [
     VirtualFieldsService,
     VirtualFieldsFieldDiscoveryService,
-    VirtualFieldsDependencyService,
-    VirtualFieldsCacheService,
+    VirtualFieldsDependencyMapService,
+    VirtualFieldsDependencyManager,
     VirtualFieldsBatchUpdateService,
     VirtualFieldsExpressionEvaluatorService,
     VirtualFieldsPathEvaluatorService,
+    VirtualFieldsEventFilterService,
+    VirtualFieldsEntityResolutionService,
+    VirtualFieldsComputationService,
     ProcessVirtualFieldsJob,
   ],
   exports: [
     VirtualFieldsService,
     VirtualFieldsFieldDiscoveryService,
-    VirtualFieldsDependencyService,
-    VirtualFieldsCacheService,
+    VirtualFieldsDependencyMapService,
+    VirtualFieldsDependencyManager,
     VirtualFieldsBatchUpdateService,
     VirtualFieldsExpressionEvaluatorService,
     VirtualFieldsPathEvaluatorService,
+    VirtualFieldsEventFilterService,
+    VirtualFieldsEntityResolutionService,
+    VirtualFieldsComputationService,
   ],
 })
 export class PreComputedFieldsModule {}

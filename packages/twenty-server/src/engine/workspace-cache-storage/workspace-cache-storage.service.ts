@@ -19,7 +19,7 @@ import {
   WorkspaceMetadataVersionException,
   WorkspaceMetadataVersionExceptionCode,
 } from 'src/engine/metadata-modules/workspace-metadata-version/exceptions/workspace-metadata-version.exception';
-import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/services/virtual-fields-dependency.service';
+import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/services/virtual-fields-dependency-map.service';
 
 export enum WorkspaceCacheKeys {
   GraphQLTypeDefs = 'graphql:type-defs',
