@@ -146,8 +146,9 @@ export class PreComputedFieldsService {
     workspaceId: string,
   ): Promise<void> {
     const virtualFields =
-      this.virtualFieldDiscoveryService.getVirtualFieldsForObjectMetadata(
+      await this.virtualFieldDiscoveryService.getVirtualFieldsForObjectMetadata(
         objectMetadataId,
+        workspaceId,
       );
 
     if (virtualFields.length === 0) {
