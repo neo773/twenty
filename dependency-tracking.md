@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the implementation plan for adding dependency tracking and initial calculation support to Twenty's virtual field system. The solution builds on existing infrastructure patterns while addressing two key requirements:
+This document outlines the implementation plan for adding dependency tracking and initial calculation support to Twenty's virtual field system. The solution builds on existing infrastructure patterns while addressing two key requirements and following NestJS separation of concerns principles:
 
 1. **Dependency Tracking**: Automatically recalculate virtual fields when dependent entities are mutated
 2. **Initial Calculation**: Compute virtual field values when fields are first declared
@@ -76,12 +76,40 @@ lastCalendarEventDate: Date | null;
 
 ## Implementation Plan
 
+### Code Organization Principles
+
+**NestJS Separation of Concerns:**
+- Follow existing Twenty codebase patterns for service organization
+- Each service should have a single, clear responsibility
+- Use consistent naming conventions: `virtual-fields-{purpose}.service.ts`
+- Follow the flat module structure used in other Twenty modules
+- Maintain proper dependency injection patterns
+
 ### 1. Dependency Cache Structure
 
-**Cache Key Pattern:**
-Following existing metadata caching pattern: `virtual-field-dependencies:{workspaceId}:{metadataVersion}`
+**Cache Integration with WorkspaceCacheStorageService:**
+The dependency mapping will use the existing `WorkspaceCacheStorageService` pattern with dedicated methods:
+- `setVirtualFieldDependencyMap(workspaceId, metadataVersion, dependencyMap)`
+- `getVirtualFieldDependencyMap(workspaceId, metadataVersion)`
+- Cache key: `VirtualFieldDependencyMap:${workspaceId}:${metadataVersion}`
 
-**Cache Structure:**
+**Dependency Mapping Structure:**
+The core data structure for dependency tracking follows this pattern:
+
+```json
+workspaceId: {
+  {
+    // Virtual field ID
+    "virtualField_XYZ": {
+      "dependenciesObjectNameSingular": [
+        "calendarEvent", "company"
+      ]
+    }
+  }
+}
+```
+
+**Concrete Examples:**
 ```json
 {
   "virtualField_company_lastCalendarEventDate": {
@@ -97,10 +125,11 @@ Following existing metadata caching pattern: `virtual-field-dependencies:{worksp
 ```
 
 **Key Benefits:**
-- Simple flat structure for O(1) lookups
-- Clear field-to-dependencies mapping
-- Natural support for self-dependencies
-- Follows existing cache key patterns
+- Simple flat structure for O(1) dependency lookups
+- Clear virtual field to dependencies mapping
+- Natural support for self-dependencies (e.g., company → company)
+- Integrates with existing cache versioning and invalidation
+- Uses established `WorkspaceCacheStorageService` patterns
 
 ### 2. Dependency Discovery System
 
@@ -298,9 +327,17 @@ Modify existing `PreComputedFieldsService.processEventsForComputedFields()`:
 
 **Technical Requirements:**
 1. **Code Quality**: Follow existing Twenty codebase patterns and conventions
-2. **Error Resilience**: Individual failures don't impact system stability
-3. **Scalability**: Support workspaces with hundreds of virtual fields
-4. **Maintainability**: Clear, simple logic that integrates with existing architecture
-5. **Testability**: Comprehensive test coverage for all dependency scenarios
+2. **Separation of Concerns**: Each service has a single, well-defined responsibility
+3. **Consistent Caching**: Use the same caching mechanism as existing field metadata
+4. **Error Resilience**: Individual failures don't impact system stability
+5. **Scalability**: Support workspaces with hundreds of virtual fields
+6. **Maintainability**: Clear, simple logic that integrates with existing architecture
+7. **Testability**: Comprehensive test coverage for all dependency scenarios
+
+**Implementation Notes:**
+- Research existing field metadata caching patterns before implementing dependency cache
+- Follow NestJS best practices for service organization and dependency injection
+- Maintain flat module structure consistent with other Twenty modules
+- Use proper naming conventions with `virtual-fields-` prefix for all services
 
 This implementation plan provides a clear path for adding dependency tracking to Twenty's virtual field system while maintaining the platform's high standards for code quality, performance, and reliability.

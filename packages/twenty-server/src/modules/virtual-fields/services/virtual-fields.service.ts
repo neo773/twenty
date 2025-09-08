@@ -3,7 +3,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/event-emitter/types/object-record-non-destructive-event';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
-import { PreComputedFieldDependencies } from 'src/engine/twenty-orm/types/pre-computed-field-dependencies.enum';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
 import { type PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue';
 import {
@@ -12,6 +11,7 @@ import {
   type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
 import { VirtualFieldsBatchUpdateService } from 'src/modules/virtual-fields/services/virtual-fields-batch-update.service';
+import { VirtualFieldsCacheService } from 'src/modules/virtual-fields/services/virtual-fields-cache.service';
 import { VirtualFieldsExpressionEvaluatorService } from 'src/modules/virtual-fields/services/virtual-fields-expression-evaluator.service';
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
 import {
@@ -49,6 +49,7 @@ export class VirtualFieldsService {
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
     private readonly virtualFieldDiscoveryService: VirtualFieldsFieldDiscoveryService,
+    private readonly virtualFieldsCacheService: VirtualFieldsCacheService,
     private readonly bulkUpdateService: VirtualFieldsBatchUpdateService,
     private readonly expressionEvaluatorService: VirtualFieldsExpressionEvaluatorService,
     private readonly pathEvaluatorService: VirtualFieldsPathEvaluatorService,
@@ -63,10 +64,22 @@ export class VirtualFieldsService {
       return;
     }
 
-    const eventsWithVirtualFields = this.filterEventsWithVirtualFields(events);
+    const objectMetadataMaps =
+      await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(
+        workspaceId,
+      );
 
-    if (eventsWithVirtualFields.length === 0) {
-      this.logger.debug('No events with virtual fields to process', {
+    const dependencyMap =
+      await this.virtualFieldsCacheService.getDependencyMapForWorkspace(
+        workspaceId,
+        objectMetadataMaps,
+      );
+
+    const eventsWithAffectedVirtualFields =
+      this.filterEventsWithAffectedVirtualFields(events, dependencyMap);
+
+    if (eventsWithAffectedVirtualFields.length === 0) {
+      this.logger.debug('No events affect virtual fields', {
         workspaceId,
         totalEvents: events.length,
       });
@@ -77,33 +90,35 @@ export class VirtualFieldsService {
     this.logger.log('Processing events for computed fields', {
       workspaceId,
       totalEvents: events.length,
-      eventsWithVirtualFields: eventsWithVirtualFields.length,
+      eventsWithAffectedVirtualFields: eventsWithAffectedVirtualFields.length,
     });
 
-    const objectMetadataMaps =
-      await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(
-        workspaceId,
-      );
-
-    await this.processBatchWithExistingInfra(
-      eventsWithVirtualFields,
+    await this.processBatchWithDependencyFiltering(
+      eventsWithAffectedVirtualFields,
+      dependencyMap,
       objectMetadataMaps,
       workspaceId,
     );
   }
 
-  private filterEventsWithVirtualFields(
+  private filterEventsWithAffectedVirtualFields(
     events: ObjectRecordNonDestructiveEvent[],
+    dependencyMap: Record<string, { dependenciesObjectNameSingular: string[] }>,
   ): ObjectRecordNonDestructiveEvent[] {
-    return events.filter((event) =>
-      this.virtualFieldDiscoveryService.hasVirtualFields(
-        event.objectMetadata.id,
-      ),
-    );
+    return events.filter((event) => {
+      const affectedFields =
+        this.virtualFieldsCacheService.getVirtualFieldsAffectedByObjectChange(
+          event.objectMetadata.nameSingular,
+          dependencyMap,
+        );
+
+      return affectedFields.length > 0;
+    });
   }
 
-  private async processBatchWithExistingInfra(
+  private async processBatchWithDependencyFiltering(
     events: ObjectRecordNonDestructiveEvent[],
+    dependencyMap: Record<string, { dependenciesObjectNameSingular: string[] }>,
     objectMetadataMaps: ObjectMetadataMaps,
     workspaceId: string,
   ): Promise<void> {
@@ -123,9 +138,10 @@ export class VirtualFieldsService {
 
     for (const [objectId, objectEvents] of eventsByObjectId.entries()) {
       try {
-        await this.processEventsForObjectType(
+        await this.processEventsForObjectTypeWithDependencies(
           objectEvents,
           objectId,
+          dependencyMap,
           objectMetadataMaps,
           workspaceId,
         );
@@ -139,52 +155,141 @@ export class VirtualFieldsService {
     }
   }
 
-  private async processEventsForObjectType(
+  private async processEventsForObjectTypeWithDependencies(
     events: ObjectRecordNonDestructiveEvent[],
     objectMetadataId: string,
+    dependencyMap: Record<string, { dependenciesObjectNameSingular: string[] }>,
     objectMetadataMaps: ObjectMetadataMaps,
     workspaceId: string,
   ): Promise<void> {
-    const virtualFields =
-      await this.virtualFieldDiscoveryService.getVirtualFieldsForObjectMetadata(
-        objectMetadataId,
-        workspaceId,
-      );
+    const eventObjectName = events[0]?.objectMetadata.nameSingular;
 
-    if (virtualFields.length === 0) {
+    if (!eventObjectName) {
       return;
     }
 
-    const eventTypes = events.map(
-      (event) =>
-        event.objectMetadata.nameSingular as PreComputedFieldDependencies,
-    );
+    const affectedVirtualFields =
+      this.virtualFieldsCacheService.getVirtualFieldsAffectedByObjectChange(
+        eventObjectName,
+        dependencyMap,
+      );
 
-    const fieldsToProcess = virtualFields.filter((field) =>
-      this.virtualFieldDiscoveryService.fieldNeedsProcessing(field, eventTypes),
-    );
-
-    if (fieldsToProcess.length === 0) {
-      this.logger.debug('No fields need processing for object type', {
+    if (affectedVirtualFields.length === 0) {
+      this.logger.debug('No virtual fields affected by object changes', {
         objectMetadataId,
-        virtualFieldsCount: virtualFields.length,
+        eventObjectName,
       });
 
       return;
     }
 
-    this.logger.log('Processing virtual fields for object type', {
+    this.logger.log('Processing virtual fields affected by object changes', {
       objectMetadataId,
-      fieldsToProcess: fieldsToProcess.length,
+      eventObjectName,
+      affectedVirtualFields: affectedVirtualFields.length,
       eventCount: events.length,
     });
 
-    await this.bulkProcessVirtualFields(
-      events,
-      fieldsToProcess,
-      objectMetadataMaps,
-      workspaceId,
-    );
+    const fieldsToProcessByObject =
+      await this.groupAffectedFieldsByTargetObject(
+        affectedVirtualFields,
+        workspaceId,
+      );
+
+    for (const [
+      targetObjectId,
+      virtualFields,
+    ] of fieldsToProcessByObject.entries()) {
+      try {
+        await this.bulkProcessVirtualFields(
+          events,
+          virtualFields,
+          objectMetadataMaps,
+          workspaceId,
+        );
+      } catch (error) {
+        this.logger.error('Error processing virtual fields for target object', {
+          targetObjectId,
+          fieldCount: virtualFields.length,
+          error,
+        });
+      }
+    }
+  }
+
+  private async groupAffectedFieldsByTargetObject(
+    affectedFieldKeys: string[],
+    workspaceId: string,
+  ): Promise<Map<string, PreComputedFieldMetadata[]>> {
+    const fieldsToProcessByObject = new Map<
+      string,
+      PreComputedFieldMetadata[]
+    >();
+
+    for (const fieldKey of affectedFieldKeys) {
+      try {
+        const parsedField = this.parseVirtualFieldKey(fieldKey);
+
+        if (!parsedField) {
+          continue;
+        }
+
+        const { objectName, fieldName } = parsedField;
+        const objectMetadata = await this.getObjectMetadataByName(
+          objectName,
+          workspaceId,
+        );
+
+        if (!objectMetadata) {
+          continue;
+        }
+
+        const virtualFields =
+          await this.virtualFieldDiscoveryService.getVirtualFieldsForObjectMetadata(
+            objectMetadata.id,
+            workspaceId,
+          );
+
+        const matchingField = virtualFields.find(
+          (vf) => vf.fieldName === fieldName,
+        );
+
+        if (matchingField) {
+          if (!fieldsToProcessByObject.has(objectMetadata.id)) {
+            fieldsToProcessByObject.set(objectMetadata.id, []);
+          }
+          fieldsToProcessByObject.get(objectMetadata.id)!.push(matchingField);
+        }
+      } catch (error) {
+        this.logger.error('Error processing affected field', {
+          fieldKey,
+          error,
+        });
+      }
+    }
+
+    return fieldsToProcessByObject;
+  }
+
+  private parseVirtualFieldKey(
+    fieldKey: string,
+  ): { objectName: string; fieldName: string } | null {
+    const match = fieldKey.match(/^virtualField_(.+)_(.+)$/);
+
+    return match ? { objectName: match[1], fieldName: match[2] } : null;
+  }
+
+  private async getObjectMetadataByName(
+    objectName: string,
+    workspaceId: string,
+  ) {
+    const objectMetadataMaps =
+      await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(
+        workspaceId,
+      );
+    const objectMetadataId = objectMetadataMaps.idByNameSingular[objectName];
+
+    return objectMetadataId ? objectMetadataMaps.byId[objectMetadataId] : null;
   }
 
   private async bulkProcessVirtualFields(
