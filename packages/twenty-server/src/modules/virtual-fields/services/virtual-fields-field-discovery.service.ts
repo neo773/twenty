@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
 import { metadataArgsStorage } from 'src/engine/twenty-orm/storage/metadata-args.storage';
-import { PreComputedFieldDependencies } from 'src/engine/twenty-orm/types/pre-computed-field-dependencies.enum';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
 import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-ids';
 import { standardObjectMetadataDefinitions } from 'src/engine/workspace-manager/workspace-sync-metadata/standard-objects';
@@ -135,17 +134,6 @@ export class VirtualFieldsFieldDiscoveryService {
     } catch {
       return [];
     }
-  }
-
-  fieldNeedsProcessing(
-    field: PreComputedFieldMetadata,
-    eventTypes: PreComputedFieldDependencies[],
-  ): boolean {
-    return (
-      field.virtualField.dependencies?.some((dep) =>
-        eventTypes.includes(dep),
-      ) ?? false
-    );
   }
 
   getEntityNameFromTarget(objectMetadataId: string): string {

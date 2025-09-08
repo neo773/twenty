@@ -1,5 +1,4 @@
 import { type AggregateOperations } from 'src/engine/api/graphql/graphql-query-runner/constants/aggregate-operations.constant';
-import { type PreComputedFieldDependencies } from 'src/engine/twenty-orm/types/pre-computed-field-dependencies.enum';
 import { type AllStandardFieldIds } from 'src/modules/computed-fields/types/AllStandardFieldIds';
 import { type AllStandardObjectIds } from 'src/modules/computed-fields/types/AllStandardObjectIds';
 import { type Direction } from 'src/modules/computed-fields/types/Direction';
@@ -46,5 +45,4 @@ export type PathBasedField = {
 export type VirtualField = {
   objectMetadataId: AllStandardObjectIds;
   fieldMetadataId: AllStandardFieldIds;
-  dependencies?: PreComputedFieldDependencies[];
 } & (ConditionalField | PathBasedField);

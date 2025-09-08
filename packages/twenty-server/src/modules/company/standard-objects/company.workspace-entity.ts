@@ -25,7 +25,7 @@ import { WorkspaceIsSystem } from 'src/engine/twenty-orm/decorators/workspace-is
 import { WorkspaceIsUnique } from 'src/engine/twenty-orm/decorators/workspace-is-unique.decorator';
 import { WorkspaceJoinColumn } from 'src/engine/twenty-orm/decorators/workspace-join-column.decorator';
 import { WorkspaceRelation } from 'src/engine/twenty-orm/decorators/workspace-relation.decorator';
-import { PreComputedFieldDependencies } from 'src/engine/twenty-orm/types/pre-computed-field-dependencies.enum';
+
 import {
   COMPANY_STANDARD_FIELD_IDS,
   STANDARD_OBJECT_FIELD_IDS,
@@ -67,7 +67,6 @@ const connectionStrength: VirtualField = {
     STANDARD_OBJECT_FIELD_IDS.calendarEvent.title,
   ],
   calculation: AggregateOperations.COUNT,
-  dependencies: [PreComputedFieldDependencies.CalendarEvent],
 };
 
 const customerTier: VirtualField = {
@@ -125,10 +124,6 @@ const strongestConnection: VirtualField = {
     direction: Direction.DESC,
     limit: 1,
   },
-  dependencies: [
-    PreComputedFieldDependencies.CalendarEvent,
-    PreComputedFieldDependencies.Message,
-  ],
 };
 
 const lastCalendarEventDate: VirtualField = {
@@ -146,7 +141,6 @@ const lastCalendarEventDate: VirtualField = {
     operator: Operator.EQ,
     value: CalendarEventParticipantResponseStatus.ACCEPTED,
   },
-  dependencies: [PreComputedFieldDependencies.CalendarEvent],
 };
 
 @WorkspaceEntity({
