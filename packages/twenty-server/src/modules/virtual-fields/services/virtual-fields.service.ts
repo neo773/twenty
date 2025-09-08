@@ -198,13 +198,6 @@ export class VirtualFieldsService {
       return;
     }
 
-    this.logger.log('Processing virtual fields affected by object changes', {
-      objectMetadataId,
-      eventObjectName,
-      affectedVirtualFields: affectedVirtualFields.length,
-      eventCount: events.length,
-    });
-
     const fieldsToProcessByObject =
       await this.groupAffectedFieldsByTargetObject(
         affectedVirtualFields,

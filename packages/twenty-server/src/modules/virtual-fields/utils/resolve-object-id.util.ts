@@ -7,5 +7,15 @@ export const resolveObjectId = (
 ): string | null => {
   const objectMetadata = objectMetadataMaps.byId[objectId];
 
+  if (!objectMetadata) {
+    const objectByStandardId = Object.values(objectMetadataMaps.byId).find(
+      (obj) => obj?.standardId === objectId,
+    );
+
+    if (objectByStandardId) {
+      return objectByStandardId.nameSingular;
+    }
+  }
+
   return objectMetadata?.nameSingular || null;
 };
