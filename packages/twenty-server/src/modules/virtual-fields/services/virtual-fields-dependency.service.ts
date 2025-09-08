@@ -19,8 +19,8 @@ export type VirtualFieldDependencyMap = Record<
 >;
 
 @Injectable()
-export class VirtualFieldsDependencyService {
-  private readonly logger = new Logger(VirtualFieldsDependencyService.name);
+export class VirtualFieldsDependencyMapService {
+  private readonly logger = new Logger(VirtualFieldsDependencyMapService.name);
 
   constructor() {}
 
@@ -120,7 +120,7 @@ export class VirtualFieldsDependencyService {
     return dependencyMap;
   }
 
-  buildCompleteDependencyMap(
+  buildDependencyMap(
     objectMetadataMaps: ObjectMetadataMaps,
   ): VirtualFieldDependencyMap {
     const systemFieldsMap =
@@ -128,29 +128,12 @@ export class VirtualFieldsDependencyService {
     const customFieldsMap =
       this.buildDependencyMapFromCustomFields(objectMetadataMaps);
 
-    const completeDependencyMap = {
+    return {
       ...systemFieldsMap,
       ...customFieldsMap,
     };
-    return completeDependencyMap;
   }
 
-  getVirtualFieldsAffectedByObject(
-    objectNameSingular: string,
-    dependencyMap: VirtualFieldDependencyMap,
-  ): string[] {
-    const affectedFields: string[] = [];
-
-    for (const [fieldKey, dependencies] of Object.entries(dependencyMap)) {
-      if (
-        dependencies.dependenciesObjectNameSingular.includes(objectNameSingular)
-      ) {
-        affectedFields.push(fieldKey);
-      }
-    }
-
-    return affectedFields;
-  }
 
   private extractDependenciesFromVirtualField(
     virtualField: VirtualField,

@@ -3,20 +3,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
 import {
-  VirtualFieldsDependencyService,
+  VirtualFieldsDependencyMapService,
   type VirtualFieldDependencyMap,
 } from 'src/modules/virtual-fields/services/virtual-fields-dependency.service';
 
 @Injectable()
-export class VirtualFieldsCacheService {
-  private readonly logger = new Logger(VirtualFieldsCacheService.name);
+export class VirtualFieldsDependencyManager {
+  private readonly logger = new Logger(VirtualFieldsDependencyManager.name);
 
   constructor(
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
-    private readonly virtualFieldsDependencyService: VirtualFieldsDependencyService,
+    private readonly dependencyMapService: VirtualFieldsDependencyMapService,
   ) {}
 
-  async getDependencyMapForWorkspace(
+  async getDependencyMap(
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<VirtualFieldDependencyMap> {
@@ -64,7 +64,7 @@ export class VirtualFieldsCacheService {
     );
   }
 
-  async rebuildDependencyMapForWorkspace(
+  async rebuildDependencyMap(
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<VirtualFieldDependencyMap> {
@@ -84,14 +84,21 @@ export class VirtualFieldsCacheService {
     );
   }
 
-  getVirtualFieldsAffectedByObjectChange(
+  getAffectedVirtualFields(
     objectNameSingular: string,
     dependencyMap: VirtualFieldDependencyMap,
   ): string[] {
-    return this.virtualFieldsDependencyService.getVirtualFieldsAffectedByObject(
-      objectNameSingular,
-      dependencyMap,
-    );
+    const affectedFields: string[] = [];
+
+    for (const [fieldKey, dependencies] of Object.entries(dependencyMap)) {
+      if (
+        dependencies.dependenciesObjectNameSingular.includes(objectNameSingular)
+      ) {
+        affectedFields.push(fieldKey);
+      }
+    }
+
+    return affectedFields;
   }
 
   private async buildAndCacheDependencyMap(
@@ -105,10 +112,9 @@ export class VirtualFieldsCacheService {
     });
 
     try {
-      const dependencyMap =
-        this.virtualFieldsDependencyService.buildCompleteDependencyMap(
-          objectMetadataMaps,
-        );
+      const dependencyMap = this.dependencyMapService.buildDependencyMap(
+        objectMetadataMaps,
+      );
 
       this.logger.log('Built complete dependency map', {
         workspaceId,
@@ -136,7 +142,7 @@ export class VirtualFieldsCacheService {
         error,
       });
 
-      return this.virtualFieldsDependencyService.buildCompleteDependencyMap(
+      return this.dependencyMapService.buildDependencyMap(
         objectMetadataMaps,
       );
     }
