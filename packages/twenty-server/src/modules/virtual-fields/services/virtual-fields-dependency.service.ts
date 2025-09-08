@@ -6,11 +6,8 @@ import { standardObjectMetadataDefinitions } from 'src/engine/workspace-manager/
 import { AllStandardFieldIds } from 'src/modules/computed-fields/types/AllStandardFieldIds';
 import {
   type Condition,
-  type ConditionalField,
-  type PathBasedField,
   type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
 import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondition';
 import { isLogicalCondition } from 'src/modules/virtual-fields/utils/isLogicalCondition';
 import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
@@ -25,9 +22,7 @@ export type VirtualFieldDependencyMap = Record<
 export class VirtualFieldsDependencyService {
   private readonly logger = new Logger(VirtualFieldsDependencyService.name);
 
-  constructor(
-    private readonly virtualFieldsFieldDiscoveryService: VirtualFieldsFieldDiscoveryService,
-  ) {}
+  constructor() {}
 
   buildDependencyMapFromSystemFields(
     objectMetadataMaps: ObjectMetadataMaps,
@@ -147,25 +142,34 @@ export class VirtualFieldsDependencyService {
   ): string[] {
     const dependencies = new Set<string>();
 
-    if (this.isPathBasedField(virtualField)) {
+    const sourceObjectName = this.getObjectNameFromMetadataId(
+      virtualField.objectMetadataId,
+      objectMetadataMaps,
+    );
+
+    if (sourceObjectName) {
+      dependencies.add(sourceObjectName);
+    }
+
+    if ('path' in virtualField) {
       const pathDependencies = this.extractDependenciesFromPath(
         virtualField.path,
         objectMetadataMaps,
       );
 
       pathDependencies.forEach((dep) => dependencies.add(dep));
-
-      if (virtualField.where) {
-        const whereDependencies = this.extractDependenciesFromCondition(
-          virtualField.where,
-          objectMetadataMaps,
-        );
-
-        whereDependencies.forEach((dep) => dependencies.add(dep));
-      }
     }
 
-    if (this.isConditionalField(virtualField)) {
+    if ('where' in virtualField && virtualField.where) {
+      const whereDependencies = this.extractDependenciesFromCondition(
+        virtualField.where,
+        objectMetadataMaps,
+      );
+
+      whereDependencies.forEach((dep) => dependencies.add(dep));
+    }
+
+    if ('when' in virtualField) {
       for (const whenClause of virtualField.when) {
         const conditionDependencies = this.extractDependenciesFromCondition(
           whenClause.condition,
@@ -173,15 +177,6 @@ export class VirtualFieldsDependencyService {
         );
 
         conditionDependencies.forEach((dep) => dependencies.add(dep));
-      }
-
-      const sourceObjectName = this.getObjectNameFromMetadataId(
-        virtualField.objectMetadataId,
-        objectMetadataMaps,
-      );
-
-      if (sourceObjectName) {
-        dependencies.add(sourceObjectName);
       }
     }
 
@@ -261,17 +256,5 @@ export class VirtualFieldsDependencyService {
 
   private buildFieldKey(objectName: string, fieldName: string): string {
     return `virtualField_${objectName}_${fieldName}`;
-  }
-
-  private isPathBasedField(
-    virtualField: VirtualField,
-  ): virtualField is VirtualField & PathBasedField {
-    return 'path' in virtualField && 'calculation' in virtualField;
-  }
-
-  private isConditionalField(
-    virtualField: VirtualField,
-  ): virtualField is VirtualField & ConditionalField {
-    return 'when' in virtualField && 'default' in virtualField;
   }
 }
