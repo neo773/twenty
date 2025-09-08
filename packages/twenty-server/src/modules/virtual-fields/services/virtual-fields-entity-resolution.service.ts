@@ -8,7 +8,7 @@ import { resolveObjectId } from 'src/modules/virtual-fields/utils/resolve-object
 
 const VIRTUAL_FIELD_KEY_PREFIX = 'virtualField_' as const;
 
-type PreComputedFieldMetadata = {
+type VirtualFieldMetadata = {
   fieldName: string;
   virtualField: VirtualField;
   objectMetadataId: string;
@@ -26,10 +26,10 @@ export class VirtualFieldsEntityResolutionService {
     affectedFieldKeys: string[],
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
-  ): Promise<Map<string, PreComputedFieldMetadata[]>> {
+  ): Promise<Map<string, VirtualFieldMetadata[]>> {
     const fieldsToProcessByObject = new Map<
       string,
-      PreComputedFieldMetadata[]
+      VirtualFieldMetadata[]
     >();
 
     for (const fieldKey of affectedFieldKeys) {
@@ -79,7 +79,7 @@ export class VirtualFieldsEntityResolutionService {
 
   async getAffectedEntityIds(
     event: ObjectRecordNonDestructiveEvent,
-    virtualFields: PreComputedFieldMetadata[],
+    virtualFields: VirtualFieldMetadata[],
     objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<string[]> {
     const affectedEntityIds = new Set<string>();

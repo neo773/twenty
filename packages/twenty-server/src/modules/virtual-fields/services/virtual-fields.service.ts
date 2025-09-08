@@ -19,13 +19,13 @@ export type ProcessEventsParams = {
   workspaceId: string;
 };
 
-type PreComputedFieldMetadata = {
+type VirtualFieldMetadata = {
   fieldName: string;
   virtualField: VirtualField;
   objectMetadataId: string;
 };
 
-type BulkUpdateOperation = {
+type BatchUpdateOperation = {
   entityId: string;
   fieldName: string;
   value: PrimitiveValue;
@@ -206,7 +206,7 @@ export class VirtualFieldsService {
 
   private async bulkProcessVirtualFields(
     events: ObjectRecordNonDestructiveEvent[],
-    virtualFields: PreComputedFieldMetadata[],
+    virtualFields: VirtualFieldMetadata[],
     objectMetadataMaps: ObjectMetadataMaps,
     workspaceId: string,
   ): Promise<void> {
@@ -222,7 +222,7 @@ export class VirtualFieldsService {
         { shouldBypassPermissionChecks: true },
       );
 
-    const bulkUpdateOperations: BulkUpdateOperation[] = [];
+    const batchUpdateOperations: BatchUpdateOperation[] = [];
 
     for (const event of events) {
       try {
@@ -247,7 +247,7 @@ export class VirtualFieldsService {
               const valueToStore =
                 this.computationService.extractStorableValue(computedResult);
 
-              bulkUpdateOperations.push({
+              batchUpdateOperations.push({
                 entityId,
                 fieldName: field.fieldName,
                 value: valueToStore,
@@ -270,10 +270,10 @@ export class VirtualFieldsService {
       }
     }
 
-    if (bulkUpdateOperations.length > 0) {
+    if (batchUpdateOperations.length > 0) {
       await this.bulkUpdateService.executeBatchUpdates(
         repository,
-        bulkUpdateOperations,
+        batchUpdateOperations,
       );
     }
   }

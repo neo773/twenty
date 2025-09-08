@@ -34,7 +34,7 @@ import { FavoriteModule } from 'src/modules/favorite/favorite.module';
 import { MessagingModule } from 'src/modules/messaging/messaging.module';
 import { TimelineJobModule } from 'src/modules/timeline/jobs/timeline-job.module';
 import { TimelineActivityModule } from 'src/modules/timeline/timeline-activity.module';
-import { PreComputedFieldsModule } from 'src/modules/virtual-fields/virtual-fields.module';
+import { VirtualFieldsModule } from 'src/modules/virtual-fields/virtual-fields.module';
 import { WorkflowModule } from 'src/modules/workflow/workflow.module';
 
 @Module({
@@ -65,7 +65,7 @@ import { WorkflowModule } from 'src/modules/workflow/workflow.module';
     AuditJobModule,
     TriggerModule,
     ServerlessFunctionModule,
-    PreComputedFieldsModule,
+    VirtualFieldsModule,
   ],
   providers: [
     CleanSuspendedWorkspacesJob,

@@ -6,7 +6,7 @@ import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync
 import { standardObjectMetadataDefinitions } from 'src/engine/workspace-manager/workspace-sync-metadata/standard-objects';
 import { type VirtualField } from 'src/modules/computed-fields/types/VirtualField';
 
-type PreComputedFieldMetadata = {
+type VirtualFieldMetadata = {
   fieldName: string;
   virtualField: VirtualField;
   objectMetadataId: string;
@@ -68,7 +68,7 @@ export class VirtualFieldsFieldDiscoveryService {
   async getVirtualFieldsForObjectMetadata(
     objectMetadataId: string,
     workspaceId?: string,
-  ): Promise<PreComputedFieldMetadata[]> {
+  ): Promise<VirtualFieldMetadata[]> {
     const decoratorFields =
       this.getDecoratorBasedVirtualFields(objectMetadataId);
 
@@ -86,7 +86,7 @@ export class VirtualFieldsFieldDiscoveryService {
 
   private getDecoratorBasedVirtualFields(
     objectMetadataId: string,
-  ): PreComputedFieldMetadata[] {
+  ): VirtualFieldMetadata[] {
     const entityTarget =
       this.findEntityTargetByObjectMetadataId(objectMetadataId);
 
@@ -108,7 +108,7 @@ export class VirtualFieldsFieldDiscoveryService {
   async getCustomVirtualFields(
     objectMetadataId: string,
     workspaceId: string,
-  ): Promise<PreComputedFieldMetadata[]> {
+  ): Promise<VirtualFieldMetadata[]> {
     try {
       const objectMetadataMaps =
         await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(

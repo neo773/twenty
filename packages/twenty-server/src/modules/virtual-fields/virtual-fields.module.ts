@@ -43,4 +43,4 @@ import { VirtualFieldsService } from './services/virtual-fields.service';
     VirtualFieldsComputationService,
   ],
 })
-export class PreComputedFieldsModule {}
+export class VirtualFieldsModule {}
