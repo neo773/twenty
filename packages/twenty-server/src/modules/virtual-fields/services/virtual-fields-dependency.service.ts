@@ -29,17 +29,37 @@ export class VirtualFieldsDependencyService {
   ): VirtualFieldDependencyMap {
     const dependencyMap: VirtualFieldDependencyMap = {};
 
+    this.logger.debug('Building dependency map from system fields', {
+      totalEntityTargets: standardObjectMetadataDefinitions.length,
+    });
+
     for (const entityTarget of standardObjectMetadataDefinitions) {
       try {
         const fieldMetadataArray =
           metadataArgsStorage.filterFields(entityTarget);
 
+        this.logger.debug('Processing entity for virtual fields', {
+          entityName: entityTarget.name,
+          totalFields: fieldMetadataArray.length,
+        });
+
         for (const fieldMetadata of fieldMetadataArray) {
           if (fieldMetadata.virtualField) {
+            this.logger.debug('Found virtual field', {
+              entityName: entityTarget.name,
+              fieldName: fieldMetadata.name,
+              objectMetadataId: fieldMetadata.virtualField.objectMetadataId,
+            });
+
             const objectName = this.getObjectNameFromMetadataId(
               fieldMetadata.virtualField.objectMetadataId,
               objectMetadataMaps,
             );
+
+            this.logger.debug('Resolved object name', {
+              objectMetadataId: fieldMetadata.virtualField.objectMetadataId,
+              objectName,
+            });
 
             if (objectName) {
               const fieldKey = this.buildFieldKey(
@@ -51,6 +71,11 @@ export class VirtualFieldsDependencyService {
                 fieldMetadata.virtualField,
                 objectMetadataMaps,
               );
+
+              this.logger.debug('Extracted dependencies', {
+                fieldKey,
+                dependencies,
+              });
 
               dependencyMap[fieldKey] = {
                 dependenciesObjectNameSingular: dependencies,
@@ -65,6 +90,10 @@ export class VirtualFieldsDependencyService {
         });
       }
     }
+
+    this.logger.log('Completed building dependency map from system fields', {
+      totalDependencies: Object.keys(dependencyMap).length,
+    });
 
     return dependencyMap;
   }

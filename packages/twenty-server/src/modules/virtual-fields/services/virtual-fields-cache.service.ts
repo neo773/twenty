@@ -99,11 +99,22 @@ export class VirtualFieldsCacheService {
     objectMetadataMaps: ObjectMetadataMaps,
     metadataVersion: number,
   ): Promise<VirtualFieldDependencyMap> {
+    this.logger.log('Starting to build and cache dependency map', {
+      workspaceId,
+      metadataVersion,
+    });
+
     try {
       const dependencyMap =
         this.virtualFieldsDependencyService.buildCompleteDependencyMap(
           objectMetadataMaps,
         );
+
+      this.logger.log('Built complete dependency map', {
+        workspaceId,
+        metadataVersion,
+        fieldCount: Object.keys(dependencyMap).length,
+      });
 
       await this.workspaceCacheStorageService.setVirtualFieldDependencyMap(
         workspaceId,
@@ -111,7 +122,7 @@ export class VirtualFieldsCacheService {
         dependencyMap,
       );
 
-      this.logger.debug('Cached virtual field dependency map', {
+      this.logger.log('Successfully cached virtual field dependency map', {
         workspaceId,
         metadataVersion,
         fieldCount: Object.keys(dependencyMap).length,

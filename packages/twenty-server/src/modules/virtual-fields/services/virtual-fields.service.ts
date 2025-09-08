@@ -60,6 +60,11 @@ export class VirtualFieldsService {
   ): Promise<void> {
     const { events, workspaceId } = params;
 
+    this.logger.debug('Processing events for computed fields - entry point', {
+      workspaceId,
+      eventCount: events.length,
+    });
+
     if (events.length === 0) {
       return;
     }
@@ -69,11 +74,21 @@ export class VirtualFieldsService {
         workspaceId,
       );
 
+    this.logger.log('Retrieved object metadata maps', {
+      workspaceId,
+      objectCount: Object.keys(objectMetadataMaps.byId).length,
+    });
+
     const dependencyMap =
       await this.virtualFieldsCacheService.getDependencyMapForWorkspace(
         workspaceId,
         objectMetadataMaps,
       );
+
+    this.logger.log('Retrieved dependency map', {
+      workspaceId,
+      dependencyCount: Object.keys(dependencyMap).length,
+    });
 
     const eventsWithAffectedVirtualFields =
       this.filterEventsWithAffectedVirtualFields(events, dependencyMap);
