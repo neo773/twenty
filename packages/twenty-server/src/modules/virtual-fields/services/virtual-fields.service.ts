@@ -11,7 +11,8 @@ import {
   type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
 import { VirtualFieldsBatchUpdateService } from 'src/modules/virtual-fields/services/virtual-fields-batch-update.service';
-import { VirtualFieldsCacheService } from 'src/modules/virtual-fields/services/virtual-fields-cache.service';
+import { VirtualFieldsDependencyManager } from 'src/modules/virtual-fields/services/virtual-fields-cache.service';
+import { type VirtualFieldDependencyMap } from 'src/modules/virtual-fields/services/virtual-fields-dependency.service';
 import { VirtualFieldsExpressionEvaluatorService } from 'src/modules/virtual-fields/services/virtual-fields-expression-evaluator.service';
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
 import {
@@ -41,6 +42,8 @@ type EntityRecord = Record<string, PrimitiveValue>;
 
 type FieldComputationResult = PathEvaluatorResult;
 
+const VIRTUAL_FIELD_KEY_PREFIX = 'virtualField_' as const;
+
 @Injectable()
 export class VirtualFieldsService {
   private readonly logger = new Logger(VirtualFieldsService.name);
@@ -49,7 +52,7 @@ export class VirtualFieldsService {
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
     private readonly virtualFieldDiscoveryService: VirtualFieldsFieldDiscoveryService,
-    private readonly virtualFieldsCacheService: VirtualFieldsCacheService,
+    private readonly dependencyManager: VirtualFieldsDependencyManager,
     private readonly bulkUpdateService: VirtualFieldsBatchUpdateService,
     private readonly expressionEvaluatorService: VirtualFieldsExpressionEvaluatorService,
     private readonly pathEvaluatorService: VirtualFieldsPathEvaluatorService,
@@ -79,11 +82,10 @@ export class VirtualFieldsService {
       objectCount: Object.keys(objectMetadataMaps.byId).length,
     });
 
-    const dependencyMap =
-      await this.virtualFieldsCacheService.getDependencyMapForWorkspace(
-        workspaceId,
-        objectMetadataMaps,
-      );
+    const dependencyMap = await this.dependencyManager.getDependencyMap(
+      workspaceId,
+      objectMetadataMaps,
+    );
 
     this.logger.log('Retrieved dependency map', {
       workspaceId,
@@ -118,14 +120,13 @@ export class VirtualFieldsService {
 
   private filterEventsWithAffectedVirtualFields(
     events: ObjectRecordNonDestructiveEvent[],
-    dependencyMap: Record<string, { dependenciesObjectNameSingular: string[] }>,
+    dependencyMap: VirtualFieldDependencyMap,
   ): ObjectRecordNonDestructiveEvent[] {
     return events.filter((event) => {
-      const affectedFields =
-        this.virtualFieldsCacheService.getVirtualFieldsAffectedByObjectChange(
-          event.objectMetadata.nameSingular,
-          dependencyMap,
-        );
+      const affectedFields = this.dependencyManager.getAffectedVirtualFields(
+        event.objectMetadata.nameSingular,
+        dependencyMap,
+      );
 
       return affectedFields.length > 0;
     });
@@ -133,7 +134,7 @@ export class VirtualFieldsService {
 
   private async processBatchWithDependencyFiltering(
     events: ObjectRecordNonDestructiveEvent[],
-    dependencyMap: Record<string, { dependenciesObjectNameSingular: string[] }>,
+    dependencyMap: VirtualFieldDependencyMap,
     objectMetadataMaps: ObjectMetadataMaps,
     workspaceId: string,
   ): Promise<void> {
@@ -173,7 +174,7 @@ export class VirtualFieldsService {
   private async processEventsForObjectTypeWithDependencies(
     events: ObjectRecordNonDestructiveEvent[],
     objectMetadataId: string,
-    dependencyMap: Record<string, { dependenciesObjectNameSingular: string[] }>,
+    dependencyMap: VirtualFieldDependencyMap,
     objectMetadataMaps: ObjectMetadataMaps,
     workspaceId: string,
   ): Promise<void> {
@@ -183,11 +184,10 @@ export class VirtualFieldsService {
       return;
     }
 
-    const affectedVirtualFields =
-      this.virtualFieldsCacheService.getVirtualFieldsAffectedByObjectChange(
-        eventObjectName,
-        dependencyMap,
-      );
+    const affectedVirtualFields = this.dependencyManager.getAffectedVirtualFields(
+      eventObjectName,
+      dependencyMap,
+    );
 
     if (affectedVirtualFields.length === 0) {
       this.logger.debug('No virtual fields affected by object changes', {
@@ -202,6 +202,7 @@ export class VirtualFieldsService {
       await this.groupAffectedFieldsByTargetObject(
         affectedVirtualFields,
         workspaceId,
+        objectMetadataMaps,
       );
 
     for (const [
@@ -228,6 +229,7 @@ export class VirtualFieldsService {
   private async groupAffectedFieldsByTargetObject(
     affectedFieldKeys: string[],
     workspaceId: string,
+    objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<Map<string, PreComputedFieldMetadata[]>> {
     const fieldsToProcessByObject = new Map<
       string,
@@ -243,9 +245,9 @@ export class VirtualFieldsService {
         }
 
         const { objectName, fieldName } = parsedField;
-        const objectMetadata = await this.getObjectMetadataByName(
+        const objectMetadata = this.getObjectMetadataByName(
           objectName,
-          workspaceId,
+          objectMetadataMaps,
         );
 
         if (!objectMetadata) {
@@ -282,19 +284,16 @@ export class VirtualFieldsService {
   private parseVirtualFieldKey(
     fieldKey: string,
   ): { objectName: string; fieldName: string } | null {
-    const match = fieldKey.match(/^virtualField_(.+)_(.+)$/);
+    const pattern = new RegExp(`^${VIRTUAL_FIELD_KEY_PREFIX}(.+)_(.+)$`);
+    const match = fieldKey.match(pattern);
 
     return match ? { objectName: match[1], fieldName: match[2] } : null;
   }
 
-  private async getObjectMetadataByName(
+  private getObjectMetadataByName(
     objectName: string,
-    workspaceId: string,
+    objectMetadataMaps: ObjectMetadataMaps,
   ) {
-    const objectMetadataMaps =
-      await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(
-        workspaceId,
-      );
     const objectMetadataId = objectMetadataMaps.idByNameSingular[objectName];
 
     return objectMetadataId ? objectMetadataMaps.byId[objectMetadataId] : null;
