@@ -177,10 +177,6 @@ export class VirtualFieldsExpressionEvaluatorService {
     operator: Operator.GT | Operator.GTE | Operator.LT | Operator.LTE,
   ): boolean {
     if (!this.areComparableValues(fieldValue, conditionValue)) {
-      this.logger.warn(
-        `Cannot compare ${fieldValue} (${typeof fieldValue}) with ${conditionValue} (${typeof conditionValue})`,
-      );
-
       return false;
     }
 
