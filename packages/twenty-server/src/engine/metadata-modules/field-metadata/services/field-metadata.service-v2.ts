@@ -28,6 +28,7 @@ import { replaceFlatFieldMetadataInFlatObjectMetadataMapsOrThrow } from 'src/eng
 import { WorkspaceMetadataCacheService } from 'src/engine/metadata-modules/workspace-metadata-cache/services/workspace-metadata-cache.service';
 import { WorkspaceMigrationBuilderExceptionV2 } from 'src/engine/workspace-manager/workspace-migration-v2/exceptions/workspace-migration-builder-exception-v2';
 import { WorkspaceMigrationValidateBuildAndRunService } from 'src/engine/workspace-manager/workspace-migration-v2/services/workspace-migration-validate-build-and-run-service';
+import { VirtualFieldsService } from 'src/modules/virtual-fields/services/virtual-fields.service';
 
 @Injectable()
 export class FieldMetadataServiceV2 {
@@ -36,6 +37,7 @@ export class FieldMetadataServiceV2 {
     private readonly fieldMetadataRepository: Repository<FieldMetadataEntity>,
     private readonly workspaceMetadataCacheService: WorkspaceMetadataCacheService,
     private readonly workspaceMigrationValidateBuildAndRunService: WorkspaceMigrationValidateBuildAndRunService,
+    private readonly virtualFieldsService: VirtualFieldsService,
   ) {}
 
   async createOne({
@@ -286,7 +288,7 @@ export class FieldMetadataServiceV2 {
       );
     }
 
-    return this.fieldMetadataRepository.find({
+    const createdFields = await this.fieldMetadataRepository.find({
       where: {
         name: In(
           fieldMetadataInputs.map((flatFieldMetadata) =>
@@ -298,5 +300,21 @@ export class FieldMetadataServiceV2 {
         workspaceId,
       },
     });
+
+    const virtualFields = createdFields.filter((field) => field.virtualField);
+    if (virtualFields.length > 0) {
+      const objectMetadataIds = [
+        ...new Set(virtualFields.map((field) => field.objectMetadataId)),
+      ];
+
+      for (const objectMetadataId of objectMetadataIds) {
+        await this.virtualFieldsService.processAllRecordsForEntity(
+          objectMetadataId,
+          workspaceId,
+        );
+      }
+    }
+
+    return createdFields;
   }
 }

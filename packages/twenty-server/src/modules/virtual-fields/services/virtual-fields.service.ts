@@ -277,4 +277,98 @@ export class VirtualFieldsService {
       );
     }
   }
+
+  async processAllRecordsForEntity(
+    objectMetadataId: string,
+    workspaceId: string,
+  ): Promise<void> {
+    this.logger.log('Processing all records for entity virtual fields', {
+      objectMetadataId,
+      workspaceId,
+    });
+
+    const objectMetadataMaps =
+      await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(
+        workspaceId,
+      );
+
+    const virtualFields =
+      await this.virtualFieldDiscoveryService.getVirtualFieldsForObjectMetadata(
+        objectMetadataId,
+        workspaceId,
+      );
+
+    if (virtualFields.length === 0) {
+      this.logger.debug('No virtual fields found for object', {
+        objectMetadataId,
+      });
+      return;
+    }
+
+    const entityName =
+      this.virtualFieldDiscoveryService.getEntityNameFromTarget(
+        objectMetadataId,
+      );
+
+    const repository =
+      await this.twentyORMGlobalManager.getRepositoryForWorkspace(
+        workspaceId,
+        entityName,
+        { shouldBypassPermissionChecks: true },
+      );
+
+    const allRecords = await repository.find({
+      select: ['id'],
+    });
+
+    this.logger.log('Processing virtual fields for all entity records', {
+      objectMetadataId,
+      recordCount: allRecords.length,
+      virtualFieldCount: virtualFields.length,
+    });
+
+    const batchUpdateOperations: BatchUpdateOperation[] = [];
+
+    for (const record of allRecords) {
+      for (const field of virtualFields) {
+        try {
+          const computedResult =
+            await this.computationService.computeFieldValue({
+              virtualField: field.virtualField,
+              entityId: record.id,
+              workspaceId,
+              objectMetadataMaps,
+            });
+
+          const valueToStore =
+            this.computationService.extractStorableValue(computedResult);
+
+          batchUpdateOperations.push({
+            entityId: record.id,
+            fieldName: field.fieldName,
+            value: valueToStore,
+          });
+        } catch (error) {
+          this.logger.error('Error computing initial field value', {
+            entityId: record.id,
+            fieldName: field.fieldName,
+            error,
+          });
+        }
+      }
+    }
+
+    if (batchUpdateOperations.length > 0) {
+      await this.bulkUpdateService.executeBatchUpdates(
+        repository,
+        batchUpdateOperations,
+      );
+
+      this.logger.log('Completed initial virtual field calculations', {
+        objectMetadataId,
+        processedRecords: allRecords.length,
+        updatedFields: batchUpdateOperations.length,
+      });
+    }
+  }
 }
