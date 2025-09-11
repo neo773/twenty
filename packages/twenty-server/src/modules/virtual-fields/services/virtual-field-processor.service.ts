@@ -59,11 +59,11 @@ export class VirtualFieldProcessor {
 
     const objectMetadataMaps = await this.getObjectMetadataMaps(workspaceId);
     const allVirtualFields = await this.virtualFieldDiscoveryService.getAllVirtualFields(workspaceId);
+    const dependencyIndex = this.buildDependencyIndex(allVirtualFields, objectMetadataMaps);
 
     const eventsWithAffectedVirtualFields = this.filterEventsWithVirtualFields(
       events,
-      allVirtualFields,
-      objectMetadataMaps,
+      dependencyIndex,
     );
 
     if (eventsWithAffectedVirtualFields.length === 0) {
@@ -83,7 +83,7 @@ export class VirtualFieldProcessor {
 
     await this.processEventBatch(
       eventsWithAffectedVirtualFields,
-      allVirtualFields,
+      dependencyIndex,
       objectMetadataMaps,
       workspaceId,
     );
@@ -162,36 +162,44 @@ export class VirtualFieldProcessor {
   }
 
 
-
-  private filterEventsWithVirtualFields(
-    events: ObjectRecordNonDestructiveEvent[],
+  private buildDependencyIndex(
     allVirtualFields: VirtualFieldMetadata[],
     objectMetadataMaps: ObjectMetadataMaps,
-  ): ObjectRecordNonDestructiveEvent[] {
-    return events.filter((event) => {
-      const affectedFields = this.getAffectedVirtualFieldsForEvent(
-        event,
-        allVirtualFields,
+  ): Map<string, VirtualFieldMetadata[]> {
+    const dependencyIndex = new Map<string, VirtualFieldMetadata[]>();
+
+    for (const virtualField of allVirtualFields) {
+      const dependencies = extractVirtualFieldDependencies(
+        virtualField.virtualField,
         objectMetadataMaps,
       );
 
+      for (const dependency of dependencies) {
+        if (!dependencyIndex.has(dependency)) {
+          dependencyIndex.set(dependency, []);
+        }
+        dependencyIndex.get(dependency)!.push(virtualField);
+      }
+    }
+
+    return dependencyIndex;
+  }
+
+  private filterEventsWithVirtualFields(
+    events: ObjectRecordNonDestructiveEvent[],
+    dependencyIndex: Map<string, VirtualFieldMetadata[]>,
+  ): ObjectRecordNonDestructiveEvent[] {
+    return events.filter((event) => {
+      const affectedFields = dependencyIndex.get(event.objectMetadata.nameSingular) || [];
       return affectedFields.length > 0;
     });
   }
 
   private getAffectedVirtualFieldsForEvent(
     event: ObjectRecordNonDestructiveEvent,
-    allVirtualFields: VirtualFieldMetadata[],
-    objectMetadataMaps: ObjectMetadataMaps,
+    dependencyIndex: Map<string, VirtualFieldMetadata[]>,
   ): VirtualFieldMetadata[] {
-    return allVirtualFields.filter((virtualFieldMetadata) => {
-      const dependencies = extractVirtualFieldDependencies(
-        virtualFieldMetadata.virtualField,
-        objectMetadataMaps,
-      );
-
-      return dependencies.includes(event.objectMetadata.nameSingular);
-    });
+    return dependencyIndex.get(event.objectMetadata.nameSingular) || [];
   }
 
   private groupVirtualFieldsByTargetObject(
@@ -213,7 +221,7 @@ export class VirtualFieldProcessor {
 
   private async processEventBatch(
     events: ObjectRecordNonDestructiveEvent[],
-    allVirtualFields: VirtualFieldMetadata[],
+    dependencyIndex: Map<string, VirtualFieldMetadata[]>,
     objectMetadataMaps: ObjectMetadataMaps,
     workspaceId: string,
   ): Promise<void> {
@@ -224,7 +232,7 @@ export class VirtualFieldProcessor {
         await this.processEventsForObjectType(
           objectEvents,
           objectId,
-          allVirtualFields,
+          dependencyIndex,
           objectMetadataMaps,
           workspaceId,
         );
@@ -261,7 +269,7 @@ export class VirtualFieldProcessor {
   private async processEventsForObjectType(
     events: ObjectRecordNonDestructiveEvent[],
     objectMetadataId: string,
-    allVirtualFields: VirtualFieldMetadata[],
+    dependencyIndex: Map<string, VirtualFieldMetadata[]>,
     objectMetadataMaps: ObjectMetadataMaps,
     workspaceId: string,
   ): Promise<void> {
@@ -273,8 +281,7 @@ export class VirtualFieldProcessor {
 
     const affectedVirtualFields = this.getAffectedVirtualFieldsForEvent(
       events[0],
-      allVirtualFields,
-      objectMetadataMaps,
+      dependencyIndex,
     );
 
     if (affectedVirtualFields.length === 0) {
