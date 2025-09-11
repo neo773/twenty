@@ -31,11 +31,7 @@ export function evaluateConditionalField(
     }
 
     return conditionalField.default;
-  } catch (error) {
-    console.warn(
-      `Failed to evaluate conditional field: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    );
-
+  } catch {
     return conditionalField.default;
   }
 }
@@ -59,11 +55,7 @@ function evaluateCondition(
     }
 
     throw new Error(`Unknown condition type: ${JSON.stringify(condition)}`);
-  } catch (error) {
-    console.warn(
-      `Condition evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    );
-
+  } catch {
     return false;
   }
 }
