@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { type ObjectLiteral } from 'typeorm';
+import { In, type FindOptionsWhere, type ObjectLiteral } from 'typeorm';
 
 import { type WorkspaceRepository } from 'src/engine/twenty-orm/repository/workspace.repository';
 import { PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
@@ -33,27 +33,35 @@ export class VirtualFieldsBatchUpdateService {
         operation.value;
     }
 
-    for (const [entityId, updates] of updatesByEntity.entries()) {
-      try {
-        await repository.update(entityId, updates as Partial<T>);
+    const entityIds = Array.from(updatesByEntity.keys());
+    const existingEntities = await repository.findBy({
+      id: In(entityIds),
+    } as unknown as FindOptionsWhere<T>);
 
-        this.logger.debug('Updated computed fields for entity', {
-          entityId,
-          fields: Object.keys(updates),
-          values: Object.values(updates),
-        });
-      } catch (error) {
-        this.logger.error('Error updating virtual fields for entity', {
-          entityId,
-          updates,
-          error,
-        });
-      }
-    }
+    const existingEntitiesMap = new Map(
+      existingEntities.map((entity) => [entity.id, entity]),
+    );
+
+    const entityUpdateCollection = Array.from(updatesByEntity.entries()).map(
+      ([entityId, updates]) => {
+        const existingEntity = existingEntitiesMap.get(entityId);
+
+        if (!existingEntity) {
+          throw new Error(`Entity ${entityId} not found in existing entities`);
+        }
+
+        return {
+          ...existingEntity,
+          ...updates,
+        };
+      },
+    );
+
+    const updatedEntities = await repository.save(entityUpdateCollection);
 
     this.logger.log('Completed bulk updates', {
       operationsProcessed: updateOperations.length,
-      entitiesUpdated: updatesByEntity.size,
+      entitiesUpdated: updatedEntities.length,
     });
   }
 }

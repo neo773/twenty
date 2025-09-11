@@ -1,7 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
-import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
 import { VirtualFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-field-discovery.service';
 import {
   VirtualFieldPathEvaluator,
@@ -21,34 +20,31 @@ type EntityRecord = Record<string, PrimitiveValue>;
 
 @Injectable()
 export class VirtualFieldComputationService {
-  private readonly logger = new Logger(VirtualFieldComputationService.name);
-
   constructor(
-    private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
     private readonly virtualFieldDiscoveryService: VirtualFieldDiscoveryService,
     private readonly pathEvaluatorService: VirtualFieldPathEvaluator,
   ) {}
 
   async computeFieldValue(params: {
     virtualField: VirtualField;
-    entityId: string;
+    entityData: EntityRecord;
     workspaceId: string;
     objectMetadataMaps: ObjectMetadataMaps;
   }): Promise<FieldComputationResult> {
-    const { virtualField, entityId, workspaceId, objectMetadataMaps } = params;
+    const { virtualField, entityData, workspaceId, objectMetadataMaps } =
+      params;
 
     if ('when' in virtualField && 'default' in virtualField) {
-      return await this.computeConditionalField(
-        virtualField,
-        entityId,
-        workspaceId,
+      return this.computeConditionalField(
+        virtualField as ConditionalField,
+        entityData,
         objectMetadataMaps,
       );
     }
 
     return await this.computePathBasedField(
       virtualField,
-      entityId,
+      entityData.id as string,
       workspaceId,
       objectMetadataMaps,
     );
@@ -66,36 +62,14 @@ export class VirtualFieldComputationService {
     return computedResult.value as PrimitiveValue;
   }
 
-  private async computeConditionalField(
-    virtualField: VirtualField,
-    entityId: string,
-    workspaceId: string,
+  private computeConditionalField(
+    virtualField: ConditionalField,
+    entityData: EntityRecord,
     objectMetadataMaps: ObjectMetadataMaps,
-  ): Promise<FieldComputationResult> {
-    const entityName =
-      this.virtualFieldDiscoveryService.getEntityNameFromTarget(
-        virtualField.objectMetadataId,
-      );
-
-    const repository =
-      await this.twentyORMGlobalManager.getRepositoryForWorkspace(
-        workspaceId,
-        entityName,
-        { shouldBypassPermissionChecks: true },
-      );
-
-    const record = await repository.findOne({ where: { id: entityId } });
-
-    if (!record) {
-      return {
-        value: (virtualField as ConditionalField).default,
-        isEntityResult: false,
-      };
-    }
-
+  ): FieldComputationResult {
     const value = evaluateConditionalField(
-      virtualField as ConditionalField,
-      record,
+      virtualField,
+      entityData,
       objectMetadataMaps,
     );
 

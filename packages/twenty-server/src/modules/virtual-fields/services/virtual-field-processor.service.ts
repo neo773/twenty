@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { ObjectLiteral } from 'typeorm';
+import { In, ObjectLiteral, type FindOptionsWhere } from 'typeorm';
 
 import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/event-emitter/types/object-record-non-destructive-event';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
@@ -374,13 +374,41 @@ export class VirtualFieldProcessor {
   ): Promise<BatchUpdateOperation[]> {
     const batchUpdateOperations: BatchUpdateOperation[] = [];
 
-    const affectedEntityIds = await this.entityResolver.getAffectedEntityIds(
+    const affectedEntityIds = this.entityResolver.getAffectedEntityIds(
       event,
       virtualFields,
       objectMetadataMaps,
     );
 
+    if (affectedEntityIds.length === 0) {
+      return batchUpdateOperations;
+    }
+    const entityName = this.getEntityNameForVirtualFields(virtualFields);
+    const repository = await this.getRepositoryForEntityName(
+      entityName,
+      workspaceId,
+    );
+
+    const affectedEntities = await repository.findBy({
+      id: In(affectedEntityIds),
+    } as unknown as FindOptionsWhere<ObjectLiteral>);
+
+    const entitiesMap = new Map<string, ObjectLiteral>();
+
+    for (const entity of affectedEntities) {
+      entitiesMap.set(entity.id, entity);
+    }
+
     for (const entityId of affectedEntityIds) {
+      const entityData = entitiesMap.get(entityId);
+
+      if (!entityData) {
+        this.logger.warn('Entity not found for virtual field computation', {
+          entityId,
+        });
+        continue;
+      }
+
       for (const field of virtualFields) {
         try {
           const operation = await this.computeFieldValueForEntity(
@@ -388,6 +416,7 @@ export class VirtualFieldProcessor {
             entityId,
             workspaceId,
             objectMetadataMaps,
+            entityData,
           );
 
           if (operation) {
@@ -411,10 +440,11 @@ export class VirtualFieldProcessor {
     entityId: string,
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
+    entityData: ObjectLiteral,
   ): Promise<BatchUpdateOperation | null> {
     const computedResult = await this.computationService.computeFieldValue({
       virtualField: field.virtualField,
-      entityId,
+      entityData,
       workspaceId,
       objectMetadataMaps,
     });
@@ -478,6 +508,12 @@ export class VirtualFieldProcessor {
   ): Promise<BatchUpdateOperation[]> {
     const batchUpdateOperations: BatchUpdateOperation[] = [];
 
+    const entitiesMap = new Map<string, ObjectLiteral>();
+
+    for (const record of allRecords) {
+      entitiesMap.set(record.id, record);
+    }
+
     for (const record of allRecords) {
       for (const field of virtualFields) {
         try {
@@ -486,6 +522,7 @@ export class VirtualFieldProcessor {
             record.id,
             workspaceId,
             objectMetadataMaps,
+            record,
           );
 
           if (operation) {
