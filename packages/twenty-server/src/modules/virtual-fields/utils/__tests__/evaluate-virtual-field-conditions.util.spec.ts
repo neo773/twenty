@@ -1,23 +1,13 @@
-import { Test } from '@nestjs/testing';
-
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { COMPANY_STANDARD_FIELD_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-field-ids';
 import { Operator } from 'src/modules/computed-fields/types/Operator';
 import { type ConditionalField } from 'src/modules/computed-fields/types/VirtualField';
-import { VirtualFieldsExpressionEvaluatorService } from 'src/modules/virtual-fields/services/virtual-fields-expression-evaluator.service';
+import { evaluateConditionalField, evaluateFieldCondition } from 'src/modules/virtual-fields/utils/evaluate-virtual-field-conditions.util';
 
-describe('VirtualFieldsExpressionEvaluatorService', () => {
-  let service: VirtualFieldsExpressionEvaluatorService;
+describe('evaluate-virtual-field-conditions.util', () => {
   let objectMetadataMaps: ObjectMetadataMaps;
 
   beforeEach(async () => {
-    const module = await Test.createTestingModule({
-      providers: [VirtualFieldsExpressionEvaluatorService],
-    }).compile();
-
-    service = module.get<VirtualFieldsExpressionEvaluatorService>(
-      VirtualFieldsExpressionEvaluatorService,
-    );
 
     objectMetadataMaps = {
       byId: {
@@ -144,7 +134,7 @@ describe('VirtualFieldsExpressionEvaluatorService', () => {
         connectionStrength: 75,
       };
 
-      const result = service.evaluateConditionalField(
+      const result = evaluateConditionalField(
         conditionalField,
         recordData,
         objectMetadataMaps,
@@ -199,7 +189,7 @@ describe('VirtualFieldsExpressionEvaluatorService', () => {
         connectionStrength: 20,
       };
 
-      const result = service.evaluateConditionalField(
+      const result = evaluateConditionalField(
         conditionalField,
         recordData,
         objectMetadataMaps,
@@ -254,7 +244,7 @@ describe('VirtualFieldsExpressionEvaluatorService', () => {
         connectionStrength: 5,
       };
 
-      const result = service.evaluateConditionalField(
+      const result = evaluateConditionalField(
         conditionalField,
         recordData,
         objectMetadataMaps,
@@ -282,7 +272,7 @@ describe('VirtualFieldsExpressionEvaluatorService', () => {
         connectionStrength: 75,
       };
 
-      const result = service.evaluateConditionalField(
+      const result = evaluateConditionalField(
         conditionalField,
         recordData,
         objectMetadataMaps,
@@ -302,7 +292,7 @@ describe('VirtualFieldsExpressionEvaluatorService', () => {
 
       const recordData = { connectionStrength: 50 };
 
-      const result = service.evaluateFieldCondition(
+      const result = evaluateFieldCondition(
         condition,
         recordData,
         objectMetadataMaps,
@@ -320,7 +310,7 @@ describe('VirtualFieldsExpressionEvaluatorService', () => {
 
       const recordData = { connectionStrength: 25 };
 
-      const result = service.evaluateFieldCondition(
+      const result = evaluateFieldCondition(
         condition,
         recordData,
         objectMetadataMaps,
@@ -338,7 +328,7 @@ describe('VirtualFieldsExpressionEvaluatorService', () => {
 
       const recordData = { connectionStrength: 75 };
 
-      const result = service.evaluateFieldCondition(
+      const result = evaluateFieldCondition(
         condition,
         recordData,
         objectMetadataMaps,
@@ -356,7 +346,7 @@ describe('VirtualFieldsExpressionEvaluatorService', () => {
 
       const recordData = { connectionStrength: 25 };
 
-      const result = service.evaluateFieldCondition(
+      const result = evaluateFieldCondition(
         condition,
         recordData,
         objectMetadataMaps,

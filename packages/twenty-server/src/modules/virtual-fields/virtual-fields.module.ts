@@ -10,7 +10,6 @@ import { VirtualFieldsDependencyManager } from './services/virtual-fields-depend
 import { VirtualFieldsDependencyMapService } from './services/virtual-fields-dependency-map.service';
 import { VirtualFieldsEntityResolutionService } from './services/virtual-fields-entity-resolution.service';
 import { VirtualFieldsEventFilterService } from './services/virtual-fields-event-filter.service';
-import { VirtualFieldsExpressionEvaluatorService } from './services/virtual-fields-expression-evaluator.service';
 import { VirtualFieldsFieldDiscoveryService } from './services/virtual-fields-field-discovery.service';
 import { VirtualFieldsPathEvaluatorService } from './services/virtual-fields-path-evaluator.service';
 import { VirtualFieldsService } from './services/virtual-fields.service';
@@ -23,7 +22,6 @@ import { VirtualFieldsService } from './services/virtual-fields.service';
     VirtualFieldsDependencyMapService,
     VirtualFieldsDependencyManager,
     VirtualFieldsBatchUpdateService,
-    VirtualFieldsExpressionEvaluatorService,
     VirtualFieldsPathEvaluatorService,
     VirtualFieldsEventFilterService,
     VirtualFieldsEntityResolutionService,
@@ -36,7 +34,6 @@ import { VirtualFieldsService } from './services/virtual-fields.service';
     VirtualFieldsDependencyMapService,
     VirtualFieldsDependencyManager,
     VirtualFieldsBatchUpdateService,
-    VirtualFieldsExpressionEvaluatorService,
     VirtualFieldsPathEvaluatorService,
     VirtualFieldsEventFilterService,
     VirtualFieldsEntityResolutionService,

@@ -8,7 +8,7 @@ import {
   type PathBasedField,
   type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { VirtualFieldsExpressionEvaluatorService } from 'src/modules/virtual-fields/services/virtual-fields-expression-evaluator.service';
+import { evaluateConditionalField } from 'src/modules/virtual-fields/utils/evaluate-virtual-field-conditions.util';
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
 import {
   VirtualFieldsPathEvaluatorService,
@@ -25,7 +25,6 @@ export class VirtualFieldsComputationService {
   constructor(
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
     private readonly virtualFieldDiscoveryService: VirtualFieldsFieldDiscoveryService,
-    private readonly expressionEvaluatorService: VirtualFieldsExpressionEvaluatorService,
     private readonly pathEvaluatorService: VirtualFieldsPathEvaluatorService,
   ) {}
 
@@ -93,7 +92,7 @@ export class VirtualFieldsComputationService {
       };
     }
 
-    const value = this.expressionEvaluatorService.evaluateConditionalField(
+    const value = evaluateConditionalField(
       virtualField as ConditionalField,
       record,
       objectMetadataMaps,
