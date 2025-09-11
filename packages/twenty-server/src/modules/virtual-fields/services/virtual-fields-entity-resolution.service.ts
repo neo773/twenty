@@ -4,9 +4,10 @@ import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/ev
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { type VirtualField } from 'src/modules/computed-fields/types/VirtualField';
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
+import { getObjectMetadataByName } from 'src/modules/virtual-fields/utils/get-object-metadata-by-name.util';
+import { parseVirtualFieldKey } from 'src/modules/virtual-fields/utils/parse-virtual-field-key.util';
 import { resolveObjectId } from 'src/modules/virtual-fields/utils/resolve-object-id.util';
 
-const VIRTUAL_FIELD_KEY_PREFIX = 'virtualField_' as const;
 
 type VirtualFieldMetadata = {
   fieldName: string;
@@ -34,14 +35,14 @@ export class VirtualFieldsEntityResolutionService {
 
     for (const fieldKey of affectedFieldKeys) {
       try {
-        const parsedField = this.parseVirtualFieldKey(fieldKey);
+        const parsedField = parseVirtualFieldKey(fieldKey);
 
         if (!parsedField) {
           continue;
         }
 
         const { objectName, fieldName } = parsedField;
-        const objectMetadata = this.getObjectMetadataByName(
+        const objectMetadata = getObjectMetadataByName(
           objectName,
           objectMetadataMaps,
         );
@@ -106,23 +107,6 @@ export class VirtualFieldsEntityResolutionService {
     return Array.from(affectedEntityIds);
   }
 
-  private parseVirtualFieldKey(
-    fieldKey: string,
-  ): { objectName: string; fieldName: string } | null {
-    const pattern = new RegExp(`^${VIRTUAL_FIELD_KEY_PREFIX}(.+)_(.+)$`);
-    const match = fieldKey.match(pattern);
-
-    return match ? { objectName: match[1], fieldName: match[2] } : null;
-  }
-
-  private getObjectMetadataByName(
-    objectName: string,
-    objectMetadataMaps: ObjectMetadataMaps,
-  ) {
-    const objectMetadataId = objectMetadataMaps.idByNameSingular[objectName];
-
-    return objectMetadataId ? objectMetadataMaps.byId[objectMetadataId] : null;
-  }
 
   private async findAffectedEntitiesByPath(
     eventObjectName: string,

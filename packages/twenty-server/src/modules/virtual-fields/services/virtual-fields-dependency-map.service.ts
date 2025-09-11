@@ -10,6 +10,7 @@ import {
 } from 'src/modules/computed-fields/types/VirtualField';
 import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondition';
 import { isLogicalCondition } from 'src/modules/virtual-fields/utils/isLogicalCondition';
+import { buildVirtualFieldKey } from 'src/modules/virtual-fields/utils/build-virtual-field-key.util';
 import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
 import { resolveFieldForCondition } from 'src/modules/virtual-fields/utils/resolveFieldForCondition';
 
@@ -48,7 +49,7 @@ export class VirtualFieldsDependencyMapService {
             );
 
             if (objectName) {
-              const fieldKey = this.buildFieldKey(
+              const fieldKey = buildVirtualFieldKey(
                 objectName,
                 fieldMetadata.name,
               );
@@ -99,7 +100,7 @@ export class VirtualFieldsDependencyMapService {
             );
 
             if (objectName) {
-              const fieldKey = this.buildFieldKey(objectName, field.name);
+              const fieldKey = buildVirtualFieldKey(objectName, field.name);
 
               const dependencies = this.extractDependenciesFromVirtualField(
                 field.virtualField,
@@ -263,7 +264,4 @@ export class VirtualFieldsDependencyMapService {
     return objectMetadata?.nameSingular ?? null;
   }
 
-  private buildFieldKey(objectName: string, fieldName: string): string {
-    return `virtualField_${objectName}_${fieldName}`;
-  }
 }
