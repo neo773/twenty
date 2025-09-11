@@ -1,9 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { SelectQueryBuilder } from 'typeorm';
+import { isDefined } from 'twenty-shared/utils';
+import { type ObjectLiteral } from 'typeorm';
 
-import { computeWhereConditionParts } from 'src/engine/api/graphql/graphql-query-runner/utils/compute-where-condition-parts';
+import { GraphqlQueryFilterConditionParser } from 'src/engine/api/graphql/graphql-query-runner/graphql-query-parsers/graphql-query-filter/graphql-query-filter-condition.parser';
+import { buildColumnsToSelect } from 'src/engine/api/graphql/graphql-query-runner/utils/build-columns-to-select';
+import { type ObjectMetadataItemWithFieldMaps } from 'src/engine/metadata-modules/types/object-metadata-item-with-field-maps';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
+import { getObjectMetadataMapItemByNameSingular } from 'src/engine/metadata-modules/utils/get-object-metadata-map-item-by-name-singular.util';
+import { type WorkspaceSelectQueryBuilder } from 'src/engine/twenty-orm/repository/workspace-select-query-builder';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
 import { type PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue';
 import {
@@ -18,10 +23,14 @@ type ResolvedPathStep = {
   fieldName: string;
 };
 
-type EntityRecord = Record<string, PrimitiveValue>;
+type PathEvaluationContext = {
+  workspaceId: string;
+  objectMetadataMaps: ObjectMetadataMaps;
+  entityId: string;
+};
 
 export type PathEvaluatorResult = {
-  value: PrimitiveValue | EntityRecord;
+  value: PrimitiveValue | ObjectLiteral;
   isEntityResult: boolean;
 };
 
@@ -40,176 +49,138 @@ export class VirtualFieldsPathEvaluatorService {
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<PathEvaluatorResult> {
-    const repository =
-      await this.twentyORMGlobalManager.getRepositoryForWorkspace(
-        workspaceId,
-        targetObjectName,
-        { shouldBypassPermissionChecks: true },
-      );
+    const context: PathEvaluationContext = {
+      workspaceId,
+      objectMetadataMaps,
+      entityId,
+    };
+
+    const resolvedPath = this.resolveFieldPath(
+      pathField.path,
+      objectMetadataMaps,
+    );
+
+    const repository = await this.getRepositoryForObject(
+      targetObjectName,
+      workspaceId,
+    );
 
     const queryBuilder = repository.createQueryBuilder('root');
-    // Replace resolveFieldPath with inline mapping
-    const resolvedPath = pathField.path
-      .map(fieldId => resolveField(fieldId, objectMetadataMaps))
-      .filter(Boolean) as ResolvedPathStep[];
+    const pathAlias = this.buildPathJoins(queryBuilder, resolvedPath);
 
-    if (resolvedPath.length !== pathField.path.length) {
-      throw new Error(
-        `Could not resolve field path: ${pathField.path.join(' -> ')}`,
+    const isEntityResult = this.isEntityReturn(resolvedPath);
+
+    if (isEntityResult) {
+      return this.evaluateEntityResult(
+        pathField,
+        queryBuilder,
+        pathAlias,
+        context,
       );
     }
 
+    return this.evaluateAggregateResult(
+      pathField,
+      queryBuilder,
+      resolvedPath,
+      pathAlias,
+      context,
+    );
+  }
+
+  private resolveFieldPath(
+    fieldPath: string[],
+    objectMetadataMaps: ObjectMetadataMaps,
+  ): ResolvedPathStep[] {
+    const resolvedPath = fieldPath
+      .map((fieldId) => resolveField(fieldId, objectMetadataMaps))
+      .filter(isDefined);
+
+    if (resolvedPath.length !== fieldPath.length) {
+      throw new Error(
+        `Could not resolve field path: ${fieldPath.join(' -> ')}`,
+      );
+    }
+
+    return resolvedPath;
+  }
+
+  private async getRepositoryForObject(
+    objectName: string,
+    workspaceId: string,
+  ) {
+    return this.twentyORMGlobalManager.getRepositoryForWorkspace(
+      workspaceId,
+      objectName,
+      { shouldBypassPermissionChecks: true },
+    );
+  }
+
+  private buildPathJoins(
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
+    resolvedPath: ResolvedPathStep[],
+  ): string {
     let currentAlias = 'root';
 
     for (let i = 0; i < resolvedPath.length - 1; i++) {
       const step = resolvedPath[i];
-      const nextAlias = `${step.objectName}_${i + 1}`;
+      const nextAlias = this.buildTableAlias(step.objectName, i + 1);
 
       queryBuilder.leftJoin(`${currentAlias}.${step.fieldName}`, nextAlias);
       currentAlias = nextAlias;
     }
 
-    const isEntityResult = this.isEntityReturn(resolvedPath);
+    return currentAlias;
+  }
 
-    if (isEntityResult) {
-      if (pathField.rankBy && !pathField.rankBy.field) {
-        return await this.evaluateEntityResultWithCalculationRanking(
-          pathField,
-          entityId,
-          workspaceId,
-          objectMetadataMaps,
-          resolvedPath,
-        );
-      }
-
-      queryBuilder.select(`${currentAlias}.*`);
-
-      if (pathField.where) {
-        this.applyConditionToQuery(
-          queryBuilder,
-          pathField.where,
-          resolvedPath,
-          objectMetadataMaps,
-        );
-      }
-
-      if (pathField.rankBy) {
-        this.applyRanking(
-          queryBuilder,
-          pathField.rankBy,
-          currentAlias,
-          objectMetadataMaps,
-        );
-      }
-
-      queryBuilder.andWhere('root.id = :entityId', { entityId });
-      const entities = await queryBuilder.getMany();
-
-      return {
-        value: entities.length > 0 ? entities[0] : null,
-        isEntityResult: true,
-      };
-    }
-
-    const targetField = resolvedPath[resolvedPath.length - 1];
-    const targetColumnRef = `${currentAlias}.${targetField.fieldName}`;
-
-    if (pathField.where) {
-      this.applyConditionToQuery(
-        queryBuilder,
-        pathField.where,
-        resolvedPath,
-        objectMetadataMaps,
-      );
-    }
-
-    queryBuilder
-      .select(
-        `${pathField.calculation}(${targetColumnRef})`,
-        'aggregate_result',
-      )
-      .andWhere('root.id = :entityId', { entityId });
-
-    const result = await queryBuilder.getRawOne();
-
-    return {
-      value: result?.aggregate_result || null,
-      isEntityResult: false,
-    };
+  private buildTableAlias(objectName: string, index: number): string {
+    return `${objectName}_${index}`;
   }
 
   private isEntityReturn(resolvedPath: ResolvedPathStep[]): boolean {
     return resolvedPath.length === 1;
   }
 
-  private applyRanking(
-    queryBuilder: SelectQueryBuilder<EntityRecord>,
-    ranking: RankingClause,
-    tableAlias: string,
-    objectMetadataMaps?: ObjectMetadataMaps,
-  ): void {
-    if (ranking.field && objectMetadataMaps) {
-      queryBuilder.orderBy(
-        `"${tableAlias}"."${ranking.field}"`,
-        ranking.direction,
-      );
-    } else {
-      queryBuilder.orderBy(`${tableAlias}.id`, ranking.direction);
-    }
-
-    queryBuilder.limit(ranking.limit);
-  }
-
-  private async evaluateEntityResultWithCalculationRanking(
+  private async evaluateEntityResult(
     pathField: PathBasedField,
-    entityId: string,
-    workspaceId: string,
-    objectMetadataMaps: ObjectMetadataMaps,
-    resolvedPath: ResolvedPathStep[],
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
+    pathAlias: string,
+    context: PathEvaluationContext,
   ): Promise<PathEvaluatorResult> {
-    // Use database-level ORDER BY + LIMIT instead of manual JavaScript sorting
-    const targetObjectName = resolvedPath[0].objectName;
-    const repository =
-      await this.twentyORMGlobalManager.getRepositoryForWorkspace(
-        workspaceId,
-        targetObjectName,
-        { shouldBypassPermissionChecks: true },
-      );
+    const targetObjectMetadata = this.getTargetObjectMetadata(
+      pathAlias,
+      context.objectMetadataMaps,
+    );
 
-    const queryBuilder = repository.createQueryBuilder('root');
+    const columnsToSelect = this.buildEntityColumnsToSelect(
+      targetObjectMetadata,
+      context.objectMetadataMaps,
+    );
 
-    queryBuilder.andWhere('root.id = :entityId', { entityId });
-
-    let currentAlias = 'root';
-
-    for (let i = 0; i < resolvedPath.length - 1; i++) {
-      const step = resolvedPath[i];
-      const nextAlias = `${step.objectName}_${i + 1}`;
-
-      queryBuilder.leftJoin(`${currentAlias}.${step.fieldName}`, nextAlias);
-      currentAlias = nextAlias;
-    }
-
-    queryBuilder.select(`${currentAlias}.*`);
+    queryBuilder.setFindOptions({ select: columnsToSelect });
 
     if (pathField.where) {
-      this.applyConditionToQuery(
+      this.applyConditionFilter(
         queryBuilder,
         pathField.where,
-        resolvedPath,
-        objectMetadataMaps,
+        pathAlias,
+        targetObjectMetadata,
+        context.objectMetadataMaps,
       );
     }
 
-    // Apply ranking at database level - much more efficient
     if (pathField.rankBy) {
-      this.applyRanking(
+      this.applyRankingToQuery(
         queryBuilder,
         pathField.rankBy,
-        currentAlias,
-        objectMetadataMaps,
+        pathAlias,
+        targetObjectMetadata,
       );
     }
+
+    queryBuilder.andWhere('root.id = :entityId', {
+      entityId: context.entityId,
+    });
 
     const entities = await queryBuilder.getMany();
 
@@ -219,53 +190,188 @@ export class VirtualFieldsPathEvaluatorService {
     };
   }
 
-  private applyConditionToQuery(
-    queryBuilder: SelectQueryBuilder<EntityRecord>,
-    condition: Condition,
+  private async evaluateAggregateResult(
+    pathField: PathBasedField,
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
     resolvedPath: ResolvedPathStep[],
+    pathAlias: string,
+    context: PathEvaluationContext,
+  ): Promise<PathEvaluatorResult> {
+    const targetField = resolvedPath[resolvedPath.length - 1];
+    const targetColumnRef = `${pathAlias}.${targetField.fieldName}`;
+
+    if (pathField.where) {
+      const targetObjectMetadata = this.getTargetObjectMetadata(
+        pathAlias,
+        context.objectMetadataMaps,
+      );
+
+      this.applyConditionFilter(
+        queryBuilder,
+        pathField.where,
+        pathAlias,
+        targetObjectMetadata,
+        context.objectMetadataMaps,
+      );
+    }
+
+    queryBuilder
+      .select(
+        `${pathField.calculation}(${targetColumnRef})`,
+        'aggregate_result',
+      )
+      .andWhere('root.id = :entityId', { entityId: context.entityId });
+
+    const result = await queryBuilder.getRawOne();
+
+    return {
+      value: result?.aggregate_result || null,
+      isEntityResult: false,
+    };
+  }
+
+  private getTargetObjectMetadata(
+    pathAlias: string,
+    objectMetadataMaps: ObjectMetadataMaps,
+  ): ObjectMetadataItemWithFieldMaps | null {
+    const objectName = pathAlias === 'root' ? 'root' : pathAlias.split('_')[0];
+
+    return (
+      getObjectMetadataMapItemByNameSingular(objectMetadataMaps, objectName) ||
+      null
+    );
+  }
+
+  private buildEntityColumnsToSelect(
+    objectMetadata: ObjectMetadataItemWithFieldMaps | null,
+    objectMetadataMaps: ObjectMetadataMaps,
+  ): Record<string, boolean> {
+    if (!objectMetadata) {
+      return { id: true };
+    }
+
+    return buildColumnsToSelect({
+      select: {},
+      relations: {},
+      objectMetadataItemWithFieldMaps: objectMetadata,
+      objectMetadataMaps,
+    });
+  }
+
+  private applyConditionFilter(
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
+    condition: Condition,
+    tableAlias: string,
+    objectMetadata: ObjectMetadataItemWithFieldMaps | null,
     objectMetadataMaps: ObjectMetadataMaps,
   ): void {
-    // Simplified: Only handle basic field conditions for now
-    // Complex logical conditions (and/or/not) should be handled by Twenty's GraphqlQueryFilterFieldParser
-    if ('field' in condition) {
-      const resolvedField = resolveField(
-        condition.field,
+    if (!objectMetadata) {
+      this.logger.warn(
+        `Cannot apply condition filter: object metadata not found for alias ${tableAlias}`,
+      );
+      return;
+    }
+
+    try {
+      const filterParser = new GraphqlQueryFilterConditionParser(
+        objectMetadata,
+      );
+
+      const mockFilter = this.convertConditionToGraphQLFilter(
+        condition,
         objectMetadataMaps,
       );
 
-      if (resolvedField) {
-        // Find the correct table alias: we need to find which step creates a JOIN TO our field's object
-        let tableAlias = 'root'; // Default to root
-
-        // Special case: if it's the root object
-        if (resolvedPath[0]?.objectName === resolvedField.objectName) {
-          tableAlias = 'root';
-        } else {
-          // Find which step creates a JOIN TO our field's object
-          // Step i creates alias buildTableAlias(step.objectName, i+1) that points to the TARGET of that step
-          for (let i = 0; i < resolvedPath.length - 1; i++) {
-            const step = resolvedPath[i];
-            // We need to check what object this step's field points to
-            // For now, use a simple heuristic: the step AFTER this one should be our target
-            const nextStep = resolvedPath[i + 1];
-
-            if (nextStep && nextStep.objectName === resolvedField.objectName) {
-              tableAlias = `${step.objectName}_${i + 1}`;
-              break;
-            }
-          }
-        }
-
-        const { sql, params } = computeWhereConditionParts({
-          operator: condition.operator,
-          objectNameSingular: tableAlias,
-          key: resolvedField.fieldName,
-          value: condition.value,
-        });
-
-        queryBuilder.andWhere(sql, params);
-      }
+      filterParser.parse(queryBuilder, tableAlias, mockFilter);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to apply condition filter: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        {
+          tableAlias,
+          condition,
+        },
+      );
     }
-    // TODO: For complex logical conditions, use Twenty's existing GraphQL filter infrastructure
+  }
+
+  private convertConditionToGraphQLFilter(
+    condition: Condition,
+    objectMetadataMaps: ObjectMetadataMaps,
+  ): Record<string, unknown> {
+    if ('field' in condition) {
+      const resolvedField = resolveField(condition.field, objectMetadataMaps);
+
+      if (!resolvedField) {
+        throw new Error(`Cannot resolve field: ${condition.field}`);
+      }
+
+      return {
+        [resolvedField.fieldName]: {
+          [condition.operator]: condition.value,
+        },
+      };
+    }
+
+    if ('and' in condition && condition.and) {
+      return {
+        and: condition.and.map((subCondition) =>
+          this.convertConditionToGraphQLFilter(
+            subCondition,
+            objectMetadataMaps,
+          ),
+        ),
+      };
+    }
+
+    if ('or' in condition && condition.or) {
+      return {
+        or: condition.or.map((subCondition) =>
+          this.convertConditionToGraphQLFilter(
+            subCondition,
+            objectMetadataMaps,
+          ),
+        ),
+      };
+    }
+
+    if ('not' in condition && condition.not) {
+      return {
+        not: this.convertConditionToGraphQLFilter(
+          condition.not,
+          objectMetadataMaps,
+        ),
+      };
+    }
+
+    throw new Error(`Unsupported condition type: ${JSON.stringify(condition)}`);
+  }
+
+  private applyRankingToQuery(
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
+    ranking: RankingClause,
+    tableAlias: string,
+    objectMetadata: ObjectMetadataItemWithFieldMaps | null,
+  ): void {
+    if (ranking.field && objectMetadata) {
+      const fieldMetadata = objectMetadata.fieldIdByName[ranking.field];
+
+      if (fieldMetadata) {
+        queryBuilder.orderBy(
+          `"${tableAlias}"."${ranking.field}"`,
+          ranking.direction,
+        );
+      } else {
+        this.logger.warn(
+          `Ranking field '${ranking.field}' not found in object metadata, falling back to ID`,
+        );
+        queryBuilder.orderBy(`${tableAlias}.id`, ranking.direction);
+      }
+    } else {
+      queryBuilder.orderBy(`${tableAlias}.id`, ranking.direction);
+    }
+
+    if (ranking.limit) {
+      queryBuilder.limit(ranking.limit);
+    }
   }
 }
