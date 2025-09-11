@@ -7,4 +7,5 @@ export interface WorkspaceInternalContext {
   objectMetadataMaps: ObjectMetadataMaps;
   featureFlagsMap: Record<FeatureFlagKey, boolean>;
   eventEmitterService: WorkspaceEventEmitter;
+  isVirtualFieldUpdate?: boolean;
 }

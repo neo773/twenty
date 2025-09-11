@@ -159,6 +159,7 @@ export class WorkspaceUpdateQueryBuilder<
         entities: formattedAfter,
         beforeEntities: formattedBefore,
         authContext: this.authContext,
+        isVirtualFieldUpdate: this.internalContext.isVirtualFieldUpdate,
       });
 
       const formattedResult = formatResult<T[]>(
@@ -291,6 +292,7 @@ export class WorkspaceUpdateQueryBuilder<
         entities: formattedAfter,
         beforeEntities: formattedBefore,
         authContext: this.authContext,
+        isVirtualFieldUpdate: this.internalContext.isVirtualFieldUpdate,
       });
 
       const formattedResults = formatResult<T[]>(

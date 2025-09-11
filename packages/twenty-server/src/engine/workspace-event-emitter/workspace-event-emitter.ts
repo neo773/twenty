@@ -15,8 +15,8 @@ import { ObjectRecordUpdateEvent } from 'src/engine/core-modules/event-emitter/t
 import { objectRecordChangedValues } from 'src/engine/core-modules/event-emitter/utils/object-record-changed-values';
 import { type ObjectMetadataItemWithFieldMaps } from 'src/engine/metadata-modules/types/object-metadata-item-with-field-maps';
 import { type CustomEventName } from 'src/engine/workspace-event-emitter/types/custom-event-name.type';
-import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-ids';
 import { computeEventName } from 'src/engine/workspace-event-emitter/utils/compute-event-name';
+import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-ids';
 
 type ActionEventMap<T> = {
   [DatabaseEventAction.CREATED]: ObjectRecordCreateEvent<T>;
@@ -37,6 +37,7 @@ export class WorkspaceEventEmitter {
     authContext,
     entities,
     beforeEntities,
+    isVirtualFieldUpdate,
   }: {
     action: DatabaseEventAction;
     objectMetadataItem: ObjectMetadataItemWithFieldMaps;
@@ -44,6 +45,7 @@ export class WorkspaceEventEmitter {
     authContext?: AuthContext;
     entities: T | T[];
     beforeEntities?: T | T[];
+    isVirtualFieldUpdate?: boolean;
   }) {
     if (
       objectMetadataItem.standardId === STANDARD_OBJECT_IDS.timelineActivity
@@ -154,6 +156,7 @@ export class WorkspaceEventEmitter {
       name: eventName,
       workspaceId,
       events,
+      isVirtualFieldUpdate,
     });
   }
 
