@@ -3,9 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
 import {
-    VirtualFieldsDependencyMapService,
+  VirtualFieldsDependencyMapService,
 } from 'src/modules/virtual-fields/services/virtual-fields-dependency-map.service';
-import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/virtual-fields-dependency.types';
+import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/DependencyMap';
 
 @Injectable()
 export class VirtualFieldsDependencyManagerService {

@@ -2,18 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
-import { type PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue';
-import {
-  type ConditionalField,
-  type PathBasedField,
-  type VirtualField,
-} from 'src/modules/computed-fields/types/VirtualField';
-import { evaluateConditionalField } from 'src/modules/virtual-fields/utils/evaluate-virtual-field-conditions.util';
+
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
 import {
   VirtualFieldsPathEvaluatorService,
   type PathEvaluatorResult,
 } from 'src/modules/virtual-fields/services/virtual-fields-path-evaluator.service';
+import { PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
+import { ConditionalField, PathBasedField, VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
+import { evaluateConditionalField } from 'src/modules/virtual-fields/utils/evaluate-virtual-field-conditions.util';
 
 type FieldComputationResult = PathEvaluatorResult;
 type EntityRecord = Record<string, PrimitiveValue>;

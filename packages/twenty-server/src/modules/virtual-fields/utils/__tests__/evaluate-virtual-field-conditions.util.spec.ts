@@ -1,7 +1,7 @@
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { COMPANY_STANDARD_FIELD_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-field-ids';
-import { Operator } from 'src/modules/computed-fields/types/Operator';
-import { type ConditionalField } from 'src/modules/computed-fields/types/VirtualField';
+import { Operator } from 'src/modules/virtual-fields/types/Operator';
+import { type ConditionalField } from 'src/modules/virtual-fields/types/VirtualField';
 import { evaluateConditionalField, evaluateFieldCondition } from 'src/modules/virtual-fields/utils/evaluate-virtual-field-conditions.util';
 
 describe('evaluate-virtual-field-conditions.util', () => {

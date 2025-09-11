@@ -4,15 +4,15 @@ import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/ev
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
-import { PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue';
-import { type VirtualField } from 'src/modules/computed-fields/types/VirtualField';
 import { VirtualFieldsBatchUpdateService } from 'src/modules/virtual-fields/services/virtual-fields-batch-update.service';
 import { VirtualFieldsComputationService } from 'src/modules/virtual-fields/services/virtual-fields-computation.service';
 import { VirtualFieldsDependencyManagerService } from 'src/modules/virtual-fields/services/virtual-fields-dependency-manager.service';
 import { VirtualFieldsEntityResolutionService } from 'src/modules/virtual-fields/services/virtual-fields-entity-resolution.service';
 import { VirtualFieldsEventFilterService } from 'src/modules/virtual-fields/services/virtual-fields-event-filter.service';
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
-import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/virtual-fields-dependency.types';
+import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/DependencyMap';
+import { PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
+import { type VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
 
 export type ProcessEventsParams = {
   events: ObjectRecordNonDestructiveEvent[];

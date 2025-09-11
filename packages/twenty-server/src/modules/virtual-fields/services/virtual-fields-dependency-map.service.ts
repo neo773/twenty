@@ -3,12 +3,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { metadataArgsStorage } from 'src/engine/twenty-orm/storage/metadata-args.storage';
 import { standardObjectMetadataDefinitions } from 'src/engine/workspace-manager/workspace-sync-metadata/standard-objects';
-import { AllStandardFieldIds } from 'src/modules/computed-fields/types/AllStandardFieldIds';
+import { AllStandardFieldIds } from 'src/modules/virtual-fields/types/AllStandardFieldIds';
+import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/DependencyMap';
 import {
   type Condition,
   type VirtualField,
-} from 'src/modules/computed-fields/types/VirtualField';
-import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/virtual-fields-dependency.types';
+} from 'src/modules/virtual-fields/types/VirtualField';
 import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 import { buildVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
 

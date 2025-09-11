@@ -1,14 +1,14 @@
 import { FieldMetadataType } from 'twenty-shared/types';
 
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
-import { Operator } from 'src/modules/computed-fields/types/Operator';
-import { type PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue';
+import { Operator } from 'src/modules/virtual-fields/types/Operator';
+import { type PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
 import {
   type Condition,
   type ConditionalField,
   type FieldCondition,
   type LogicalCondition,
-} from 'src/modules/computed-fields/types/VirtualField';
+} from 'src/modules/virtual-fields/types/VirtualField';
 import { getFieldMetadata, resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 type RecordData = Record<string, PrimitiveValue | PrimitiveValue[]>;

@@ -1,7 +1,7 @@
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { getObjectMetadataMapItemByNameSingular } from 'src/engine/metadata-modules/utils/get-object-metadata-map-item-by-name-singular.util';
-import { type AllStandardFieldIds } from 'src/modules/computed-fields/types/AllStandardFieldIds';
-import { type AllStandardObjectIds } from 'src/modules/computed-fields/types/AllStandardObjectIds';
+import { type AllStandardFieldIds } from 'src/modules/virtual-fields/types/AllStandardFieldIds';
+import { type AllStandardObjectIds } from 'src/modules/virtual-fields/types/AllStandardObjectIds';
 
 export type FieldResolution = {
   objectName: string;

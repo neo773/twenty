@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/event-emitter/types/object-record-non-destructive-event';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
-import { type VirtualField } from 'src/modules/computed-fields/types/VirtualField';
+
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
-import { getObjectMetadataByName } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
+import { VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
+import { getObjectMetadataByName, resolveObjectById } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 import { parseVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
-import { resolveObjectById } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 
 type VirtualFieldMetadata = {

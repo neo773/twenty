@@ -3,7 +3,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { type ObjectLiteral } from 'typeorm';
 
 import { type WorkspaceRepository } from 'src/engine/twenty-orm/repository/workspace.repository';
-import { type PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue';
+import { PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
+
 
 type BulkUpdateOperation = {
   entityId: string;

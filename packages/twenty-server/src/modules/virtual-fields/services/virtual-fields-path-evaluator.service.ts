@@ -10,12 +10,12 @@ import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/objec
 import { getObjectMetadataMapItemByNameSingular } from 'src/engine/metadata-modules/utils/get-object-metadata-map-item-by-name-singular.util';
 import { type WorkspaceSelectQueryBuilder } from 'src/engine/twenty-orm/repository/workspace-select-query-builder';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
-import { type PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue';
+import { type PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
 import {
   type Condition,
   type PathBasedField,
   type RankingClause,
-} from 'src/modules/computed-fields/types/VirtualField';
+} from 'src/modules/virtual-fields/types/VirtualField';
 import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 type ResolvedPathStep = {
@@ -237,8 +237,10 @@ export class VirtualFieldsPathEvaluatorService {
     const objectName = pathAlias === 'root' ? 'root' : pathAlias.split('_')[0];
 
     return (
-      getObjectMetadataMapItemByNameSingular(objectMetadataMaps, objectName) ||
-      null
+      getObjectMetadataMapItemByNameSingular(
+        objectMetadataMaps,
+        objectName,
+      ) || null
     );
   }
 
@@ -315,10 +317,7 @@ export class VirtualFieldsPathEvaluatorService {
     if ('and' in condition && condition.and) {
       return {
         and: condition.and.map((subCondition) =>
-          this.convertConditionToGraphQLFilter(
-            subCondition,
-            objectMetadataMaps,
-          ),
+          this.convertConditionToGraphQLFilter(subCondition, objectMetadataMaps),
         ),
       };
     }
@@ -326,10 +325,7 @@ export class VirtualFieldsPathEvaluatorService {
     if ('or' in condition && condition.or) {
       return {
         or: condition.or.map((subCondition) =>
-          this.convertConditionToGraphQLFilter(
-            subCondition,
-            objectMetadataMaps,
-          ),
+          this.convertConditionToGraphQLFilter(subCondition, objectMetadataMaps),
         ),
       };
     }
@@ -354,7 +350,7 @@ export class VirtualFieldsPathEvaluatorService {
   ): void {
     if (ranking.field && objectMetadata) {
       const fieldMetadata = objectMetadata.fieldIdByName[ranking.field];
-
+      
       if (fieldMetadata) {
         queryBuilder.orderBy(
           `"${tableAlias}"."${ranking.field}"`,

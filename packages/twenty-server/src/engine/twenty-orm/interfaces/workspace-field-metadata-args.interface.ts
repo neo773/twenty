@@ -6,7 +6,7 @@ import { type FieldMetadataSettings } from 'src/engine/metadata-modules/field-me
 import { type Gate } from 'src/engine/twenty-orm/interfaces/gate.interface';
 
 import { type ObjectMetadataEntity } from 'src/engine/metadata-modules/object-metadata/object-metadata.entity';
-import { type VirtualField } from 'src/modules/computed-fields/types/VirtualField';
+import { type VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
 
 export interface WorkspaceFieldMetadataArgs {
   /**

@@ -4,7 +4,8 @@ import { metadataArgsStorage } from 'src/engine/twenty-orm/storage/metadata-args
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
 import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-ids';
 import { standardObjectMetadataDefinitions } from 'src/engine/workspace-manager/workspace-sync-metadata/standard-objects';
-import { type VirtualField } from 'src/modules/computed-fields/types/VirtualField';
+import { VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
+
 
 type VirtualFieldMetadata = {
   fieldName: string;

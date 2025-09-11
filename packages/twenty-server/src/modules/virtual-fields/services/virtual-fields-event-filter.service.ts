@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/event-emitter/types/object-record-non-destructive-event';
 import { VirtualFieldsDependencyManagerService } from 'src/modules/virtual-fields/services/virtual-fields-dependency-manager.service';
-import { type VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/virtual-fields-dependency.types';
+import { type VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/DependencyMap';
 
 @Injectable()
 export class VirtualFieldsEventFilterService {
