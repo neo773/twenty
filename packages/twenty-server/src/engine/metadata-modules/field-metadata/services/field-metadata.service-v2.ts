@@ -28,7 +28,7 @@ import { replaceFlatFieldMetadataInFlatObjectMetadataMapsOrThrow } from 'src/eng
 import { WorkspaceMetadataCacheService } from 'src/engine/metadata-modules/workspace-metadata-cache/services/workspace-metadata-cache.service';
 import { WorkspaceMigrationBuilderExceptionV2 } from 'src/engine/workspace-manager/workspace-migration-v2/exceptions/workspace-migration-builder-exception-v2';
 import { WorkspaceMigrationValidateBuildAndRunService } from 'src/engine/workspace-manager/workspace-migration-v2/services/workspace-migration-validate-build-and-run-service';
-import { VirtualFieldsService } from 'src/modules/virtual-fields/services/virtual-fields.service';
+import { VirtualFieldProcessor } from 'src/modules/virtual-fields/services/virtual-field-processor.service';
 
 @Injectable()
 export class FieldMetadataServiceV2 {
@@ -37,7 +37,7 @@ export class FieldMetadataServiceV2 {
     private readonly fieldMetadataRepository: Repository<FieldMetadataEntity>,
     private readonly workspaceMetadataCacheService: WorkspaceMetadataCacheService,
     private readonly workspaceMigrationValidateBuildAndRunService: WorkspaceMigrationValidateBuildAndRunService,
-    private readonly virtualFieldsService: VirtualFieldsService,
+    private readonly virtualFieldProcessor: VirtualFieldProcessor,
   ) {}
 
   async createOne({
@@ -308,7 +308,7 @@ export class FieldMetadataServiceV2 {
       ];
 
       for (const objectMetadataId of objectMetadataIds) {
-        await this.virtualFieldsService.processAllRecordsForEntity(
+        await this.virtualFieldProcessor.processAllRecordsForEntity(
           objectMetadataId,
           workspaceId,
         );

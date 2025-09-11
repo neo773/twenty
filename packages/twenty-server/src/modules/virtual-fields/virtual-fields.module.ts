@@ -4,40 +4,40 @@ import { TwentyORMModule } from 'src/engine/twenty-orm/twenty-orm.module';
 import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/workspace-cache-storage.module';
 
 import { ProcessVirtualFieldsJob } from './jobs/process-virtual-fields.job';
+import { VirtualFieldComputationService } from './services/virtual-field-computation.service';
+import { VirtualFieldDependencyManager } from './services/virtual-field-dependency-manager.service';
+import { VirtualFieldDependencyMapBuilder } from './services/virtual-field-dependency-map-builder.service';
+import { VirtualFieldDiscoveryService } from './services/virtual-field-discovery.service';
+import { VirtualFieldEntityResolver } from './services/virtual-field-entity-resolver.service';
+import { VirtualFieldEventFilter } from './services/virtual-field-event-filter.service';
+import { VirtualFieldPathEvaluator } from './services/virtual-field-path-evaluator.service';
+import { VirtualFieldProcessor } from './services/virtual-field-processor.service';
 import { VirtualFieldsBatchUpdateService } from './services/virtual-fields-batch-update.service';
-import { VirtualFieldsComputationService } from './services/virtual-fields-computation.service';
-import { VirtualFieldsDependencyManagerService } from './services/virtual-fields-dependency-manager.service';
-import { VirtualFieldsDependencyMapService } from './services/virtual-fields-dependency-map.service';
-import { VirtualFieldsEntityResolutionService } from './services/virtual-fields-entity-resolution.service';
-import { VirtualFieldsEventFilterService } from './services/virtual-fields-event-filter.service';
-import { VirtualFieldsFieldDiscoveryService } from './services/virtual-fields-field-discovery.service';
-import { VirtualFieldsPathEvaluatorService } from './services/virtual-fields-path-evaluator.service';
-import { VirtualFieldsService } from './services/virtual-fields.service';
 
 @Module({
   imports: [TwentyORMModule, WorkspaceCacheStorageModule],
   providers: [
-    VirtualFieldsService,
-    VirtualFieldsFieldDiscoveryService,
-    VirtualFieldsDependencyMapService,
-    VirtualFieldsDependencyManagerService,
+    VirtualFieldProcessor,
+    VirtualFieldDiscoveryService,
+    VirtualFieldDependencyMapBuilder,
+    VirtualFieldDependencyManager,
     VirtualFieldsBatchUpdateService,
-    VirtualFieldsPathEvaluatorService,
-    VirtualFieldsEventFilterService,
-    VirtualFieldsEntityResolutionService,
-    VirtualFieldsComputationService,
+    VirtualFieldPathEvaluator,
+    VirtualFieldEventFilter,
+    VirtualFieldEntityResolver,
+    VirtualFieldComputationService,
     ProcessVirtualFieldsJob,
   ],
   exports: [
-    VirtualFieldsService,
-    VirtualFieldsFieldDiscoveryService,
-    VirtualFieldsDependencyMapService,
-    VirtualFieldsDependencyManagerService,
+    VirtualFieldProcessor,
+    VirtualFieldDiscoveryService,
+    VirtualFieldDependencyMapBuilder,
+    VirtualFieldDependencyManager,
     VirtualFieldsBatchUpdateService,
-    VirtualFieldsPathEvaluatorService,
-    VirtualFieldsEventFilterService,
-    VirtualFieldsEntityResolutionService,
-    VirtualFieldsComputationService,
+    VirtualFieldPathEvaluator,
+    VirtualFieldEventFilter,
+    VirtualFieldEntityResolver,
+    VirtualFieldComputationService,
   ],
 })
 export class VirtualFieldsModule {}

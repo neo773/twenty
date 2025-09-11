@@ -35,8 +35,8 @@ export type PathEvaluatorResult = {
 };
 
 @Injectable()
-export class VirtualFieldsPathEvaluatorService {
-  private readonly logger = new Logger(VirtualFieldsPathEvaluatorService.name);
+export class VirtualFieldPathEvaluator {
+  private readonly logger = new Logger(VirtualFieldPathEvaluator.name);
 
   constructor(
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
@@ -68,7 +68,7 @@ export class VirtualFieldsPathEvaluatorService {
     const queryBuilder = repository.createQueryBuilder('root');
     const pathAlias = this.buildPathJoins(queryBuilder, resolvedPath);
 
-    const isEntityResult = this.isEntityReturn(resolvedPath);
+    const isEntityResult = this.isEntityReturnType(resolvedPath);
 
     if (isEntityResult) {
       return this.evaluateEntityResult(
@@ -124,7 +124,7 @@ export class VirtualFieldsPathEvaluatorService {
 
     for (let i = 0; i < resolvedPath.length - 1; i++) {
       const step = resolvedPath[i];
-      const nextAlias = this.buildTableAlias(step.objectName, i + 1);
+      const nextAlias = this.createTableAlias(step.objectName, i + 1);
 
       queryBuilder.leftJoin(`${currentAlias}.${step.fieldName}`, nextAlias);
       currentAlias = nextAlias;
@@ -133,11 +133,11 @@ export class VirtualFieldsPathEvaluatorService {
     return currentAlias;
   }
 
-  private buildTableAlias(objectName: string, index: number): string {
+  private createTableAlias(objectName: string, index: number): string {
     return `${objectName}_${index}`;
   }
 
-  private isEntityReturn(resolvedPath: ResolvedPathStep[]): boolean {
+  private isEntityReturnType(resolvedPath: ResolvedPathStep[]): boolean {
     return resolvedPath.length === 1;
   }
 
@@ -152,35 +152,21 @@ export class VirtualFieldsPathEvaluatorService {
       context.objectMetadataMaps,
     );
 
-    const columnsToSelect = this.buildEntityColumnsToSelect(
+    this.configureEntitySelectFields(
+      queryBuilder,
       targetObjectMetadata,
       context.objectMetadataMaps,
     );
 
-    queryBuilder.setFindOptions({ select: columnsToSelect });
+    this.applyFieldConditions(
+      queryBuilder,
+      pathField,
+      pathAlias,
+      targetObjectMetadata,
+      context.objectMetadataMaps,
+    );
 
-    if (pathField.where) {
-      this.applyConditionFilter(
-        queryBuilder,
-        pathField.where,
-        pathAlias,
-        targetObjectMetadata,
-        context.objectMetadataMaps,
-      );
-    }
-
-    if (pathField.rankBy) {
-      this.applyRankingToQuery(
-        queryBuilder,
-        pathField.rankBy,
-        pathAlias,
-        targetObjectMetadata,
-      );
-    }
-
-    queryBuilder.andWhere('root.id = :entityId', {
-      entityId: context.entityId,
-    });
+    this.applyEntityFilter(queryBuilder, context.entityId);
 
     const entities = await queryBuilder.getMany();
 
@@ -200,27 +186,19 @@ export class VirtualFieldsPathEvaluatorService {
     const targetField = resolvedPath[resolvedPath.length - 1];
     const targetColumnRef = `${pathAlias}.${targetField.fieldName}`;
 
-    if (pathField.where) {
-      const targetObjectMetadata = this.getTargetObjectMetadata(
-        pathAlias,
-        context.objectMetadataMaps,
-      );
+    this.applyAggregateConditions(
+      queryBuilder,
+      pathField,
+      pathAlias,
+      context.objectMetadataMaps,
+    );
 
-      this.applyConditionFilter(
-        queryBuilder,
-        pathField.where,
-        pathAlias,
-        targetObjectMetadata,
-        context.objectMetadataMaps,
-      );
-    }
-
-    queryBuilder
-      .select(
-        `${pathField.calculation}(${targetColumnRef})`,
-        'aggregate_result',
-      )
-      .andWhere('root.id = :entityId', { entityId: context.entityId });
+    this.configureAggregateQuery(
+      queryBuilder,
+      pathField.calculation,
+      targetColumnRef,
+      context.entityId,
+    );
 
     const result = await queryBuilder.getRawOne();
 
@@ -228,6 +206,89 @@ export class VirtualFieldsPathEvaluatorService {
       value: result?.aggregate_result || null,
       isEntityResult: false,
     };
+  }
+
+  private configureEntitySelectFields(
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
+    targetObjectMetadata: ObjectMetadataItemWithFieldMaps | null,
+    objectMetadataMaps: ObjectMetadataMaps,
+  ): void {
+    const columnsToSelect = this.buildEntityColumnsToSelect(
+      targetObjectMetadata,
+      objectMetadataMaps,
+    );
+
+    queryBuilder.setFindOptions({ select: columnsToSelect });
+  }
+
+  private applyFieldConditions(
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
+    pathField: PathBasedField,
+    pathAlias: string,
+    targetObjectMetadata: ObjectMetadataItemWithFieldMaps | null,
+    objectMetadataMaps: ObjectMetadataMaps,
+  ): void {
+    if (pathField.where) {
+      this.applyConditionFilter(
+        queryBuilder,
+        pathField.where,
+        pathAlias,
+        targetObjectMetadata,
+        objectMetadataMaps,
+      );
+    }
+
+    if (pathField.rankBy) {
+      this.applyRankingToQuery(
+        queryBuilder,
+        pathField.rankBy,
+        pathAlias,
+        targetObjectMetadata,
+      );
+    }
+  }
+
+  private applyAggregateConditions(
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
+    pathField: PathBasedField,
+    pathAlias: string,
+    objectMetadataMaps: ObjectMetadataMaps,
+  ): void {
+    if (pathField.where) {
+      const targetObjectMetadata = this.getTargetObjectMetadata(
+        pathAlias,
+        objectMetadataMaps,
+      );
+
+      this.applyConditionFilter(
+        queryBuilder,
+        pathField.where,
+        pathAlias,
+        targetObjectMetadata,
+        objectMetadataMaps,
+      );
+    }
+  }
+
+  private configureAggregateQuery(
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
+    calculation: string,
+    targetColumnRef: string,
+    entityId: string,
+  ): void {
+    queryBuilder
+      .select(
+        `${calculation}(${targetColumnRef})`,
+        'aggregate_result',
+      )
+      .andWhere('root.id = :entityId', { entityId });
+  }
+
+  private applyEntityFilter(
+    queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
+    entityId: string,
+  ): void {
+    queryBuilder.andWhere('root.id = :entityId', { entityId });
   }
 
   private getTargetObjectMetadata(
@@ -370,4 +431,4 @@ export class VirtualFieldsPathEvaluatorService {
       queryBuilder.limit(ranking.limit);
     }
   }
-}
+} 

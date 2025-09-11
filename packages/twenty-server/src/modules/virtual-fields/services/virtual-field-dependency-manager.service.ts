@@ -2,18 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
-import {
-  VirtualFieldsDependencyMapService,
-} from 'src/modules/virtual-fields/services/virtual-fields-dependency-map.service';
+import { VirtualFieldDependencyMapBuilder } from 'src/modules/virtual-fields/services/virtual-field-dependency-map-builder.service';
 import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/DependencyMap';
 
 @Injectable()
-export class VirtualFieldsDependencyManagerService {
-  private readonly logger = new Logger(VirtualFieldsDependencyManagerService.name);
+export class VirtualFieldDependencyManager {
+  private readonly logger = new Logger(VirtualFieldDependencyManager.name);
 
   constructor(
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
-    private readonly dependencyMapService: VirtualFieldsDependencyMapService,
+    private readonly dependencyMapBuilder: VirtualFieldDependencyMapBuilder,
   ) {}
 
   async getDependencyMap(
@@ -78,7 +76,7 @@ export class VirtualFieldsDependencyManagerService {
     });
 
     try {
-      const dependencyMap = this.dependencyMapService.buildDependencyMap(
+      const dependencyMap = this.dependencyMapBuilder.buildDependencyMap(
         objectMetadataMaps,
       );
 
@@ -104,9 +102,9 @@ export class VirtualFieldsDependencyManagerService {
         error,
       });
 
-      return this.dependencyMapService.buildDependencyMap(
+      return this.dependencyMapBuilder.buildDependencyMap(
         objectMetadataMaps,
       );
     }
   }
-}
+} 

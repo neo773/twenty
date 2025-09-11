@@ -13,16 +13,14 @@ import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver
 import { buildVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
 
 @Injectable()
-export class VirtualFieldsDependencyMapService {
-  private readonly logger = new Logger(VirtualFieldsDependencyMapService.name);
+export class VirtualFieldDependencyMapBuilder {
+  private readonly logger = new Logger(VirtualFieldDependencyMapBuilder.name);
 
   buildDependencyMap(
     objectMetadataMaps: ObjectMetadataMaps,
   ): VirtualFieldDependencyMap {
-    const systemFieldsMap =
-      this.buildDependencyMapFromSystemFields(objectMetadataMaps);
-    const customFieldsMap =
-      this.buildDependencyMapFromCustomFields(objectMetadataMaps);
+    const systemFieldsMap = this.buildSystemFieldDependencies(objectMetadataMaps);
+    const customFieldsMap = this.buildCustomFieldDependencies(objectMetadataMaps);
 
     return {
       ...systemFieldsMap,
@@ -30,15 +28,14 @@ export class VirtualFieldsDependencyMapService {
     };
   }
 
-  private buildDependencyMapFromSystemFields(
+  private buildSystemFieldDependencies(
     objectMetadataMaps: ObjectMetadataMaps,
   ): VirtualFieldDependencyMap {
     const dependencyMap: VirtualFieldDependencyMap = {};
 
     for (const entityTarget of standardObjectMetadataDefinitions) {
       try {
-        const fieldMetadataArray =
-          metadataArgsStorage.filterFields(entityTarget);
+        const fieldMetadataArray = metadataArgsStorage.filterFields(entityTarget);
 
         for (const fieldMetadata of fieldMetadataArray) {
           if (fieldMetadata.virtualField) {
@@ -59,7 +56,7 @@ export class VirtualFieldsDependencyMapService {
                 fieldMetadata.name,
               );
 
-              const dependencies = this.extractDependenciesFromVirtualField(
+              const dependencies = this.extractFieldDependencies(
                 fieldMetadata.virtualField,
                 objectMetadataMaps,
               );
@@ -90,7 +87,7 @@ export class VirtualFieldsDependencyMapService {
     return dependencyMap;
   }
 
-  private buildDependencyMapFromCustomFields(
+  private buildCustomFieldDependencies(
     objectMetadataMaps: ObjectMetadataMaps,
   ): VirtualFieldDependencyMap {
     const dependencyMap: VirtualFieldDependencyMap = {};
@@ -107,7 +104,7 @@ export class VirtualFieldsDependencyMapService {
             if (objectName) {
               const fieldKey = buildVirtualFieldKey(objectName, field.name);
 
-              const dependencies = this.extractDependenciesFromVirtualField(
+              const dependencies = this.extractFieldDependencies(
                 field.virtualField,
                 objectMetadataMaps,
               );
@@ -126,7 +123,7 @@ export class VirtualFieldsDependencyMapService {
     return dependencyMap;
   }
 
-  private extractDependenciesFromVirtualField(
+  private extractFieldDependencies(
     virtualField: VirtualField,
     objectMetadataMaps: ObjectMetadataMaps,
   ): string[] {
@@ -142,7 +139,7 @@ export class VirtualFieldsDependencyMapService {
     }
 
     if ('path' in virtualField) {
-      const pathDependencies = this.extractDependenciesFromPath(
+      const pathDependencies = this.extractPathDependencies(
         virtualField.path,
         objectMetadataMaps,
       );
@@ -151,7 +148,7 @@ export class VirtualFieldsDependencyMapService {
     }
 
     if ('where' in virtualField && virtualField.where) {
-      const whereDependencies = this.extractDependenciesFromCondition(
+      const whereDependencies = this.extractConditionDependencies(
         virtualField.where,
         objectMetadataMaps,
       );
@@ -161,7 +158,7 @@ export class VirtualFieldsDependencyMapService {
 
     if ('when' in virtualField) {
       for (const whenClause of virtualField.when) {
-        const conditionDependencies = this.extractDependenciesFromCondition(
+        const conditionDependencies = this.extractConditionDependencies(
           whenClause.condition,
           objectMetadataMaps,
         );
@@ -173,7 +170,7 @@ export class VirtualFieldsDependencyMapService {
     return Array.from(dependencies);
   }
 
-  private extractDependenciesFromPath(
+  private extractPathDependencies(
     path: AllStandardFieldIds[],
     objectMetadataMaps: ObjectMetadataMaps,
   ): string[] {
@@ -188,7 +185,7 @@ export class VirtualFieldsDependencyMapService {
     return resolvedPath.map((step) => step!.objectName);
   }
 
-  private extractDependenciesFromCondition(
+  private extractConditionDependencies(
     condition: Condition,
     objectMetadataMaps: ObjectMetadataMaps,
   ): string[] {
@@ -206,7 +203,7 @@ export class VirtualFieldsDependencyMapService {
     } else if ('and' in condition || 'or' in condition || 'not' in condition) {
       if (condition.and) {
         for (const subCondition of condition.and) {
-          const subDependencies = this.extractDependenciesFromCondition(
+          const subDependencies = this.extractConditionDependencies(
             subCondition,
             objectMetadataMaps,
           );
@@ -216,7 +213,7 @@ export class VirtualFieldsDependencyMapService {
       }
       if (condition.or) {
         for (const subCondition of condition.or) {
-          const subDependencies = this.extractDependenciesFromCondition(
+          const subDependencies = this.extractConditionDependencies(
             subCondition,
             objectMetadataMaps,
           );
@@ -225,7 +222,7 @@ export class VirtualFieldsDependencyMapService {
         }
       }
       if (condition.not) {
-        const subDependencies = this.extractDependenciesFromCondition(
+        const subDependencies = this.extractConditionDependencies(
           condition.not,
           objectMetadataMaps,
         );
@@ -255,4 +252,4 @@ export class VirtualFieldsDependencyMapService {
 
     return objectMetadata?.nameSingular ?? null;
   }
-}
+} 

@@ -20,7 +20,7 @@ import { WorkspaceSyncObjectMetadataIdentifiersService } from 'src/engine/worksp
 import { WorkspaceSyncObjectMetadataService } from 'src/engine/workspace-manager/workspace-sync-metadata/services/workspace-sync-object-metadata.service';
 import { WorkspaceSyncRoleService } from 'src/engine/workspace-manager/workspace-sync-metadata/services/workspace-sync-role.service';
 import { WorkspaceSyncStorage } from 'src/engine/workspace-manager/workspace-sync-metadata/storage/workspace-sync.storage';
-import { VirtualFieldsService } from 'src/modules/virtual-fields/services/virtual-fields.service';
+import { VirtualFieldProcessor } from 'src/modules/virtual-fields/services/virtual-field-processor.service';
 
 interface SynchronizeOptions {
   applyChanges?: boolean;
@@ -42,7 +42,7 @@ export class WorkspaceSyncMetadataService {
     private readonly workspaceMetadataVersionService: WorkspaceMetadataVersionService,
     private readonly workspaceSyncRoleService: WorkspaceSyncRoleService,
     private readonly workspaceSyncAgentService: WorkspaceSyncAgentService,
-    private readonly virtualFieldsService: VirtualFieldsService,
+    private readonly virtualFieldProcessor: VirtualFieldProcessor,
   ) {}
 
   /**
@@ -271,7 +271,7 @@ export class WorkspaceSyncMetadataService {
       const initVirtualFieldsStart = performance.now();
 
       try {
-        await this.virtualFieldsService.processAllRecordsForEntity(
+        await this.virtualFieldProcessor.processAllRecordsForEntity(
           STANDARD_OBJECT_IDS.company,
           context.workspaceId,
         );

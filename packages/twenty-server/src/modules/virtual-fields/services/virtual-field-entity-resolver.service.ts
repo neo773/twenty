@@ -3,11 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/event-emitter/types/object-record-non-destructive-event';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 
-import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
+import { VirtualFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-field-discovery.service';
 import { VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
 import { getObjectMetadataByName, resolveObjectById } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 import { parseVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
-
 
 type VirtualFieldMetadata = {
   fieldName: string;
@@ -16,11 +15,11 @@ type VirtualFieldMetadata = {
 };
 
 @Injectable()
-export class VirtualFieldsEntityResolutionService {
-  private readonly logger = new Logger(VirtualFieldsEntityResolutionService.name);
+export class VirtualFieldEntityResolver {
+  private readonly logger = new Logger(VirtualFieldEntityResolver.name);
 
   constructor(
-    private readonly virtualFieldDiscoveryService: VirtualFieldsFieldDiscoveryService,
+    private readonly virtualFieldDiscoveryService: VirtualFieldDiscoveryService,
   ) {}
 
   async groupAffectedFieldsByTargetObject(
@@ -28,10 +27,7 @@ export class VirtualFieldsEntityResolutionService {
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<Map<string, VirtualFieldMetadata[]>> {
-    const fieldsToProcessByObject = new Map<
-      string,
-      VirtualFieldMetadata[]
-    >();
+    const fieldsToProcessByObject = new Map<string, VirtualFieldMetadata[]>();
 
     for (const fieldKey of affectedFieldKeys) {
       try {
@@ -107,7 +103,6 @@ export class VirtualFieldsEntityResolutionService {
     return Array.from(affectedEntityIds);
   }
 
-
   private async findAffectedEntitiesByPath(
     eventObjectName: string,
     eventEntityId: string,
@@ -129,4 +124,4 @@ export class VirtualFieldsEntityResolutionService {
 
     return [];
   }
-}
+} 

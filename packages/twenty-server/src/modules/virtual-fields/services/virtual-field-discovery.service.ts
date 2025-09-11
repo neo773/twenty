@@ -6,7 +6,6 @@ import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync
 import { standardObjectMetadataDefinitions } from 'src/engine/workspace-manager/workspace-sync-metadata/standard-objects';
 import { VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
 
-
 type VirtualFieldMetadata = {
   fieldName: string;
   virtualField: VirtualField;
@@ -14,7 +13,7 @@ type VirtualFieldMetadata = {
 };
 
 @Injectable()
-export class VirtualFieldsFieldDiscoveryService {
+export class VirtualFieldDiscoveryService {
   constructor(
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
   ) {}
@@ -23,8 +22,7 @@ export class VirtualFieldsFieldDiscoveryService {
     objectMetadataId: string,
     workspaceId?: string,
   ): Promise<boolean> {
-    const entityTarget =
-      this.findEntityTargetByObjectMetadataId(objectMetadataId);
+    const entityTarget = this.findEntityTargetByObjectMetadataId(objectMetadataId);
 
     if (entityTarget) {
       const fieldMetadataArray = metadataArgsStorage.filterFields(entityTarget);
@@ -70,8 +68,7 @@ export class VirtualFieldsFieldDiscoveryService {
     objectMetadataId: string,
     workspaceId?: string,
   ): Promise<VirtualFieldMetadata[]> {
-    const decoratorFields =
-      this.getDecoratorBasedVirtualFields(objectMetadataId);
+    const decoratorFields = this.getDecoratorBasedVirtualFields(objectMetadataId);
 
     if (!workspaceId) {
       return decoratorFields;
@@ -85,11 +82,20 @@ export class VirtualFieldsFieldDiscoveryService {
     return [...decoratorFields, ...customFields];
   }
 
+  getEntityNameFromTarget(objectMetadataId: string): string {
+    for (const [key, value] of Object.entries(STANDARD_OBJECT_IDS)) {
+      if (value === objectMetadataId) {
+        return key;
+      }
+    }
+
+    return 'unknown';
+  }
+
   private getDecoratorBasedVirtualFields(
     objectMetadataId: string,
   ): VirtualFieldMetadata[] {
-    const entityTarget =
-      this.findEntityTargetByObjectMetadataId(objectMetadataId);
+    const entityTarget = this.findEntityTargetByObjectMetadataId(objectMetadataId);
 
     if (!entityTarget) {
       return [];
@@ -106,7 +112,7 @@ export class VirtualFieldsFieldDiscoveryService {
       }));
   }
 
-  async getCustomVirtualFields(
+  private async getCustomVirtualFields(
     objectMetadataId: string,
     workspaceId: string,
   ): Promise<VirtualFieldMetadata[]> {
@@ -137,16 +143,6 @@ export class VirtualFieldsFieldDiscoveryService {
     }
   }
 
-  getEntityNameFromTarget(objectMetadataId: string): string {
-    for (const [key, value] of Object.entries(STANDARD_OBJECT_IDS)) {
-      if (value === objectMetadataId) {
-        return key;
-      }
-    }
-
-    return 'unknown';
-  }
-
   private findEntityTargetByObjectMetadataId(
     objectMetadataId: string,
   ): Function | null {
@@ -162,4 +158,4 @@ export class VirtualFieldsFieldDiscoveryService {
 
     return null;
   }
-}
+} 
