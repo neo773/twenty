@@ -4,9 +4,9 @@ import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/ev
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { type VirtualField } from 'src/modules/computed-fields/types/VirtualField';
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
-import { getObjectMetadataByName } from 'src/modules/virtual-fields/utils/get-object-metadata-by-name.util';
+import { getObjectMetadataByName } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 import { parseVirtualFieldKey } from 'src/modules/virtual-fields/utils/parse-virtual-field-key.util';
-import { resolveObjectId } from 'src/modules/virtual-fields/utils/resolve-object-id.util';
+import { resolveObjectById } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 
 type VirtualFieldMetadata = {
@@ -114,7 +114,7 @@ export class VirtualFieldsEntityResolutionService {
     virtualField: VirtualField,
     objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<string[]> {
-    const targetObjectName = resolveObjectId(
+    const targetObjectName = resolveObjectById(
       virtualField.objectMetadataId,
       objectMetadataMaps,
     );

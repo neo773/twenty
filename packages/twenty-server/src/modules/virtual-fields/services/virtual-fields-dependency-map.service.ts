@@ -12,7 +12,7 @@ import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondit
 import { isLogicalCondition } from 'src/modules/virtual-fields/utils/isLogicalCondition';
 import { buildVirtualFieldKey } from 'src/modules/virtual-fields/utils/build-virtual-field-key.util';
 import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
-import { resolveFieldForCondition } from 'src/modules/virtual-fields/utils/resolveFieldForCondition';
+import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 export type VirtualFieldDependencyMap = Record<
   string,
@@ -203,7 +203,7 @@ export class VirtualFieldsDependencyMapService {
     const dependencies = new Set<string>();
 
     if (isFieldCondition(condition)) {
-      const resolvedField = resolveFieldForCondition(
+      const resolvedField = resolveField(
         condition.field,
         objectMetadataMaps,
       );

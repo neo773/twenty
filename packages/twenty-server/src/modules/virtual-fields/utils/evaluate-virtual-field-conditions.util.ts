@@ -9,10 +9,9 @@ import {
   type FieldCondition,
   type LogicalCondition,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { getFieldMetadata } from 'src/modules/virtual-fields/utils/getFieldMetadata';
 import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondition';
 import { isLogicalCondition } from 'src/modules/virtual-fields/utils/isLogicalCondition';
-import { resolveFieldForCondition } from 'src/modules/virtual-fields/utils/resolveFieldForCondition';
+import { getFieldMetadata, resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 type RecordData = Record<string, PrimitiveValue | PrimitiveValue[]>;
 
@@ -81,7 +80,7 @@ export function evaluateFieldCondition(
   recordData: RecordData,
   objectMetadataMaps: ObjectMetadataMaps,
 ): boolean {
-  const resolvedField = resolveFieldForCondition(
+  const resolvedField = resolveField(
     condition.field,
     objectMetadataMaps,
     { shouldThrowOnError: true },

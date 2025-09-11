@@ -15,7 +15,7 @@ import { buildColumnReference } from 'src/modules/virtual-fields/utils/build-col
 import { buildTableAlias } from 'src/modules/virtual-fields/utils/build-table-alias.util';
 import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondition';
 import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
-import { resolveFieldForCondition } from 'src/modules/virtual-fields/utils/resolveFieldForCondition';
+import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 type ResolvedPathStep = {
   objectName: string;
@@ -232,7 +232,7 @@ export class VirtualFieldsPathEvaluatorService {
     // Simplified: Only handle basic field conditions for now
     // Complex logical conditions (and/or/not) should be handled by Twenty's GraphqlQueryFilterFieldParser
     if (isFieldCondition(condition)) {
-      const resolvedField = resolveFieldForCondition(
+      const resolvedField = resolveField(
         condition.field,
         objectMetadataMaps,
       );
