@@ -22,7 +22,8 @@ export class VirtualFieldDiscoveryService {
     objectMetadataId: string,
     workspaceId?: string,
   ): Promise<boolean> {
-    const entityTarget = this.findEntityTargetByObjectMetadataId(objectMetadataId);
+    const entityTarget =
+      this.findEntityTargetByObjectMetadataId(objectMetadataId);
 
     if (entityTarget) {
       const fieldMetadataArray = metadataArgsStorage.filterFields(entityTarget);
@@ -68,7 +69,8 @@ export class VirtualFieldDiscoveryService {
     objectMetadataId: string,
     workspaceId?: string,
   ): Promise<VirtualFieldMetadata[]> {
-    const decoratorFields = this.getDecoratorBasedVirtualFields(objectMetadataId);
+    const decoratorFields =
+      this.getDecoratorBasedVirtualFields(objectMetadataId);
 
     if (!workspaceId) {
       return decoratorFields;
@@ -82,7 +84,9 @@ export class VirtualFieldDiscoveryService {
     return [...decoratorFields, ...customFields];
   }
 
-  async getAllVirtualFields(workspaceId: string): Promise<VirtualFieldMetadata[]> {
+  async getAllVirtualFields(
+    workspaceId: string,
+  ): Promise<VirtualFieldMetadata[]> {
     const allVirtualFields: VirtualFieldMetadata[] = [];
 
     const objectMetadataMaps =
@@ -95,10 +99,11 @@ export class VirtualFieldDiscoveryService {
         continue;
       }
 
-      const virtualFieldsForObject = await this.getVirtualFieldsForObjectMetadata(
-        objectMetadata.id,
-        workspaceId,
-      );
+      const virtualFieldsForObject =
+        await this.getVirtualFieldsForObjectMetadata(
+          objectMetadata.id,
+          workspaceId,
+        );
 
       allVirtualFields.push(...virtualFieldsForObject);
     }
@@ -119,7 +124,8 @@ export class VirtualFieldDiscoveryService {
   private getDecoratorBasedVirtualFields(
     objectMetadataId: string,
   ): VirtualFieldMetadata[] {
-    const entityTarget = this.findEntityTargetByObjectMetadataId(objectMetadataId);
+    const entityTarget =
+      this.findEntityTargetByObjectMetadataId(objectMetadataId);
 
     if (!entityTarget) {
       return [];
@@ -182,4 +188,4 @@ export class VirtualFieldDiscoveryService {
 
     return null;
   }
-} 
+}

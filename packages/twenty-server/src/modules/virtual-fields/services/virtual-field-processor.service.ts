@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { ObjectLiteral } from 'typeorm';
+
 import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/event-emitter/types/object-record-non-destructive-event';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
@@ -11,7 +13,6 @@ import { VirtualFieldsBatchUpdateService } from 'src/modules/virtual-fields/serv
 import { PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
 import { type VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
 import { extractVirtualFieldDependencies } from 'src/modules/virtual-fields/utils/extract-virtual-field-dependencies.util';
-import { ObjectLiteral } from 'typeorm';
 
 export type ProcessEventsParams = {
   events: ObjectRecordNonDestructiveEvent[];
@@ -58,8 +59,12 @@ export class VirtualFieldProcessor {
     }
 
     const objectMetadataMaps = await this.getObjectMetadataMaps(workspaceId);
-    const allVirtualFields = await this.virtualFieldDiscoveryService.getAllVirtualFields(workspaceId);
-    const dependencyIndex = this.buildDependencyIndex(allVirtualFields, objectMetadataMaps);
+    const allVirtualFields =
+      await this.virtualFieldDiscoveryService.getAllVirtualFields(workspaceId);
+    const dependencyIndex = this.buildDependencyIndex(
+      allVirtualFields,
+      objectMetadataMaps,
+    );
 
     const eventsWithAffectedVirtualFields = this.filterEventsWithVirtualFields(
       events,
@@ -108,6 +113,7 @@ export class VirtualFieldProcessor {
       this.logger.debug('No virtual fields found for object', {
         objectMetadataId,
       });
+
       return;
     }
 
@@ -161,7 +167,6 @@ export class VirtualFieldProcessor {
     return objectMetadataMaps;
   }
 
-
   private buildDependencyIndex(
     allVirtualFields: VirtualFieldMetadata[],
     objectMetadataMaps: ObjectMetadataMaps,
@@ -190,7 +195,9 @@ export class VirtualFieldProcessor {
     dependencyIndex: Map<string, VirtualFieldMetadata[]>,
   ): ObjectRecordNonDestructiveEvent[] {
     return events.filter((event) => {
-      const affectedFields = dependencyIndex.get(event.objectMetadata.nameSingular) || [];
+      const affectedFields =
+        dependencyIndex.get(event.objectMetadata.nameSingular) || [];
+
       return affectedFields.length > 0;
     });
   }
@@ -317,10 +324,6 @@ export class VirtualFieldProcessor {
       }
     }
   }
-
-
-
-
 
   private async processVirtualFieldsForEvents(
     events: ObjectRecordNonDestructiveEvent[],
@@ -500,4 +503,4 @@ export class VirtualFieldProcessor {
 
     return batchUpdateOperations;
   }
-} 
+}

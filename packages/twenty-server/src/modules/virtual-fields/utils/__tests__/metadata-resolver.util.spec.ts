@@ -100,7 +100,10 @@ describe('metadata-resolver.util', () => {
     });
 
     it('should return null for non-existent field ID', () => {
-      const result = resolveFieldById('non-existent-id', mockObjectMetadataMaps);
+      const result = resolveFieldById(
+        'non-existent-id',
+        mockObjectMetadataMaps,
+      );
 
       expect(result).toBeNull();
     });
@@ -147,7 +150,10 @@ describe('metadata-resolver.util', () => {
 
   describe('resolveObjectById', () => {
     it('should resolve object by direct ID', () => {
-      const result = resolveObjectById(STANDARD_OBJECT_IDS.company, mockObjectMetadataMaps);
+      const result = resolveObjectById(
+        STANDARD_OBJECT_IDS.company,
+        mockObjectMetadataMaps,
+      );
 
       expect(result).toBe('company');
     });
@@ -170,7 +176,9 @@ describe('metadata-resolver.util', () => {
       );
 
       expect(result).toEqual(
-        mockObjectMetadataMaps.byId[STANDARD_OBJECT_IDS.company]!.fieldsById['name-field-id'],
+        mockObjectMetadataMaps.byId[STANDARD_OBJECT_IDS.company]!.fieldsById[
+          'name-field-id'
+        ],
       );
     });
 
@@ -178,7 +186,9 @@ describe('metadata-resolver.util', () => {
       const result = getFieldMetadata('name-field-id', mockObjectMetadataMaps);
 
       expect(result).toEqual(
-        mockObjectMetadataMaps.byId[STANDARD_OBJECT_IDS.company]!.fieldsById['name-field-id'],
+        mockObjectMetadataMaps.byId[STANDARD_OBJECT_IDS.company]!.fieldsById[
+          'name-field-id'
+        ],
       );
     });
 
@@ -196,7 +206,9 @@ describe('metadata-resolver.util', () => {
     it('should get object metadata by name', () => {
       const result = getObjectMetadataByName('company', mockObjectMetadataMaps);
 
-      expect(result).toEqual(mockObjectMetadataMaps.byId[STANDARD_OBJECT_IDS.company]);
+      expect(result).toEqual(
+        mockObjectMetadataMaps.byId[STANDARD_OBJECT_IDS.company],
+      );
     });
 
     it('should return undefined for non-existent object name', () => {

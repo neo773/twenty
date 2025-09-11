@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/event-emitter/types/object-record-non-destructive-event';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
-
 import { VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
 import { resolveObjectById } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
@@ -16,8 +15,7 @@ type VirtualFieldMetadata = {
 export class VirtualFieldEntityResolver {
   private readonly logger = new Logger(VirtualFieldEntityResolver.name);
 
-  constructor(
-  ) {}
+  constructor() {}
 
   getAffectedEntityIds(
     event: ObjectRecordNonDestructiveEvent,
@@ -32,7 +30,7 @@ export class VirtualFieldEntityResolver {
           event.objectMetadata.nameSingular,
           event.recordId,
           field.virtualField,
-          objectMetadataMaps
+          objectMetadataMaps,
         );
 
         entityIds.forEach((id) => affectedEntityIds.add(id));
@@ -69,4 +67,4 @@ export class VirtualFieldEntityResolver {
 
     return [];
   }
-} 
+}

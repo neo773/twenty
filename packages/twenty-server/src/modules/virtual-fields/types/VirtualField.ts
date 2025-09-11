@@ -1,10 +1,9 @@
-
 import { type AggregateOperations } from 'src/engine/api/graphql/graphql-query-runner/constants/aggregate-operations.constant';
-import { AllStandardFieldIds } from 'src/modules/virtual-fields/types/AllStandardFieldIds';
-import { AllStandardObjectIds } from 'src/modules/virtual-fields/types/AllStandardObjectIds';
-import { Direction } from 'src/modules/virtual-fields/types/Direction';
-import { Operator } from 'src/modules/virtual-fields/types/Operator';
-import { PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
+import { type AllStandardFieldIds } from 'src/modules/virtual-fields/types/AllStandardFieldIds';
+import { type AllStandardObjectIds } from 'src/modules/virtual-fields/types/AllStandardObjectIds';
+import { type Direction } from 'src/modules/virtual-fields/types/Direction';
+import { type Operator } from 'src/modules/virtual-fields/types/Operator';
+import { type PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
 
 export type FieldCondition = {
   field: AllStandardFieldIds;

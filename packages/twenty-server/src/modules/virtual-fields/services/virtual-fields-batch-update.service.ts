@@ -5,7 +5,6 @@ import { type ObjectLiteral } from 'typeorm';
 import { type WorkspaceRepository } from 'src/engine/twenty-orm/repository/workspace.repository';
 import { PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
 
-
 type BatchUpdateOperation = {
   entityId: string;
   fieldName: string;

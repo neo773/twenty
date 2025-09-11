@@ -48,6 +48,7 @@ export function resolveFieldById(
     if (!objectMetadata) continue;
 
     const fieldMetadata = objectMetadata.fieldsById[fieldId];
+
     if (fieldMetadata) {
       return {
         objectName: objectMetadata.nameSingular,
@@ -129,7 +130,7 @@ export function getFieldMetadata(
 ) {
   // First try to resolve the field to get the object context
   const fieldResolution = resolveField(fieldId, objectMetadataMaps);
-  
+
   if (!fieldResolution) {
     return null;
   }
@@ -145,8 +146,9 @@ export function getFieldMetadata(
   }
 
   // Look up by field name in the object's fieldIdByName map, then get metadata
-  const resolvedFieldId = objectMetadata.fieldIdByName[fieldResolution.fieldName];
-  
+  const resolvedFieldId =
+    objectMetadata.fieldIdByName[fieldResolution.fieldName];
+
   return resolvedFieldId ? objectMetadata.fieldsById[resolvedFieldId] : null;
 }
 

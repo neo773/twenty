@@ -277,10 +277,7 @@ export class VirtualFieldPathEvaluator {
     entityId: string,
   ): void {
     queryBuilder
-      .select(
-        `${calculation}(${targetColumnRef})`,
-        'aggregate_result',
-      )
+      .select(`${calculation}(${targetColumnRef})`, 'aggregate_result')
       .andWhere('root.id = :entityId', { entityId });
   }
 
@@ -298,10 +295,8 @@ export class VirtualFieldPathEvaluator {
     const objectName = pathAlias === 'root' ? 'root' : pathAlias.split('_')[0];
 
     return (
-      getObjectMetadataMapItemByNameSingular(
-        objectMetadataMaps,
-        objectName,
-      ) || null
+      getObjectMetadataMapItemByNameSingular(objectMetadataMaps, objectName) ||
+      null
     );
   }
 
@@ -332,6 +327,7 @@ export class VirtualFieldPathEvaluator {
       this.logger.warn(
         `Cannot apply condition filter: object metadata not found for alias ${tableAlias}`,
       );
+
       return;
     }
 
@@ -378,7 +374,10 @@ export class VirtualFieldPathEvaluator {
     if ('and' in condition && condition.and) {
       return {
         and: condition.and.map((subCondition) =>
-          this.convertConditionToGraphQLFilter(subCondition, objectMetadataMaps),
+          this.convertConditionToGraphQLFilter(
+            subCondition,
+            objectMetadataMaps,
+          ),
         ),
       };
     }
@@ -386,7 +385,10 @@ export class VirtualFieldPathEvaluator {
     if ('or' in condition && condition.or) {
       return {
         or: condition.or.map((subCondition) =>
-          this.convertConditionToGraphQLFilter(subCondition, objectMetadataMaps),
+          this.convertConditionToGraphQLFilter(
+            subCondition,
+            objectMetadataMaps,
+          ),
         ),
       };
     }
@@ -411,7 +413,7 @@ export class VirtualFieldPathEvaluator {
   ): void {
     if (ranking.field && objectMetadata) {
       const fieldMetadata = objectMetadata.fieldIdByName[ranking.field];
-      
+
       if (fieldMetadata) {
         queryBuilder.orderBy(
           `"${tableAlias}"."${ranking.field}"`,
@@ -431,4 +433,4 @@ export class VirtualFieldPathEvaluator {
       queryBuilder.limit(ranking.limit);
     }
   }
-} 
+}

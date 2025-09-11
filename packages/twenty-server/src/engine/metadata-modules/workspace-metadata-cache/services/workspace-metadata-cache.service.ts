@@ -160,8 +160,6 @@ export class WorkspaceMetadataCacheService {
       currentDatabaseVersion,
     );
 
-
-
     return {
       objectMetadataMaps: freshObjectMetadataMaps,
       metadataVersion: currentDatabaseVersion,

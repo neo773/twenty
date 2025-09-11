@@ -1,8 +1,8 @@
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
-import { AllStandardFieldIds } from 'src/modules/virtual-fields/types/AllStandardFieldIds';
+import { type AllStandardFieldIds } from 'src/modules/virtual-fields/types/AllStandardFieldIds';
 import {
-  type Condition,
-  type VirtualField,
+    type Condition,
+    type VirtualField,
 } from 'src/modules/virtual-fields/types/VirtualField';
 import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
@@ -58,7 +58,7 @@ function extractPathDependencies(
   objectMetadataMaps: ObjectMetadataMaps,
 ): string[] {
   const resolvedPath = path
-    .map(fieldId => resolveField(fieldId, objectMetadataMaps))
+    .map((fieldId) => resolveField(fieldId, objectMetadataMaps))
     .filter(Boolean);
 
   if (resolvedPath.length !== path.length) {
@@ -75,10 +75,7 @@ function extractConditionDependencies(
   const dependencies = new Set<string>();
 
   if ('field' in condition) {
-    const resolvedField = resolveField(
-      condition.field,
-      objectMetadataMaps,
-    );
+    const resolvedField = resolveField(condition.field, objectMetadataMaps);
 
     if (resolvedField) {
       dependencies.add(resolvedField.objectName);
@@ -134,4 +131,4 @@ function getObjectNameFromMetadataId(
   }
 
   return objectMetadata?.nameSingular ?? null;
-} 
+}

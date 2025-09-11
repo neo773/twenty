@@ -302,6 +302,7 @@ export class FieldMetadataServiceV2 {
     });
 
     const virtualFields = createdFields.filter((field) => field.virtualField);
+
     if (virtualFields.length > 0) {
       const objectMetadataIds = [
         ...new Set(virtualFields.map((field) => field.objectMetadataId)),

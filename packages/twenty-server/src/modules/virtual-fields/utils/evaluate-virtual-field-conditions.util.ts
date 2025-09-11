@@ -9,7 +9,10 @@ import {
   type FieldCondition,
   type LogicalCondition,
 } from 'src/modules/virtual-fields/types/VirtualField';
-import { getFieldMetadata, resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
+import {
+  getFieldMetadata,
+  resolveField,
+} from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 type RecordData = Record<string, PrimitiveValue | PrimitiveValue[]>;
 
@@ -21,11 +24,7 @@ export function evaluateConditionalField(
   try {
     for (const whenClause of conditionalField.when) {
       if (
-        evaluateCondition(
-          whenClause.condition,
-          recordData,
-          objectMetadataMaps,
-        )
+        evaluateCondition(whenClause.condition, recordData, objectMetadataMaps)
       ) {
         return whenClause.value;
       }
@@ -48,11 +47,7 @@ function evaluateCondition(
 ): boolean {
   try {
     if ('field' in condition) {
-      return evaluateFieldCondition(
-        condition,
-        recordData,
-        objectMetadataMaps,
-      );
+      return evaluateFieldCondition(condition, recordData, objectMetadataMaps);
     }
 
     if ('and' in condition || 'or' in condition || 'not' in condition) {
@@ -78,11 +73,9 @@ export function evaluateFieldCondition(
   recordData: RecordData,
   objectMetadataMaps: ObjectMetadataMaps,
 ): boolean {
-  const resolvedField = resolveField(
-    condition.field,
-    objectMetadataMaps,
-    { shouldThrowOnError: true },
-  )!;
+  const resolvedField = resolveField(condition.field, objectMetadataMaps, {
+    shouldThrowOnError: true,
+  })!;
   const rawFieldValue = recordData[resolvedField.fieldName];
 
   // Handle composite fields like currency for in-memory evaluation
@@ -149,11 +142,7 @@ function evaluateLogicalCondition(
   }
 
   if (condition.not) {
-    return !evaluateCondition(
-      condition.not,
-      recordData,
-      objectMetadataMaps,
-    );
+    return !evaluateCondition(condition.not, recordData, objectMetadataMaps);
   }
 
   throw new Error('Logical condition must have and, or, or not property');

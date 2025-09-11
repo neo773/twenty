@@ -2,17 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { TwentyORMGlobalManager } from 'src/engine/twenty-orm/twenty-orm-global.manager';
-
 import { VirtualFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-field-discovery.service';
 import {
   VirtualFieldPathEvaluator,
   type PathEvaluatorResult,
 } from 'src/modules/virtual-fields/services/virtual-field-path-evaluator.service';
 import { PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
-import { ConditionalField, PathBasedField, VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
+import {
+  ConditionalField,
+  PathBasedField,
+  VirtualField,
+} from 'src/modules/virtual-fields/types/VirtualField';
 import { evaluateConditionalField } from 'src/modules/virtual-fields/utils/evaluate-virtual-field-conditions.util';
 
 type FieldComputationResult = PathEvaluatorResult;
+
 type EntityRecord = Record<string, PrimitiveValue>;
 
 @Injectable()
@@ -117,4 +121,4 @@ export class VirtualFieldComputationService {
       objectMetadataMaps,
     );
   }
-} 
+}

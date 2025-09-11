@@ -6,7 +6,6 @@ import { IndexMetadataEntity } from 'src/engine/metadata-modules/index-metadata/
 import { ObjectMetadataEntity } from 'src/engine/metadata-modules/object-metadata/object-metadata.entity';
 import { WorkspaceMetadataCacheService } from 'src/engine/metadata-modules/workspace-metadata-cache/services/workspace-metadata-cache.service';
 import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/workspace-cache-storage.module';
-import { VirtualFieldsDependencyModule } from 'src/modules/virtual-fields/virtual-fields-dependency.module';
 
 @Module({
   imports: [
@@ -16,7 +15,6 @@ import { VirtualFieldsDependencyModule } from 'src/modules/virtual-fields/virtua
       IndexMetadataEntity,
     ]),
     WorkspaceCacheStorageModule,
-    VirtualFieldsDependencyModule,
   ],
   exports: [WorkspaceMetadataCacheService],
   providers: [WorkspaceMetadataCacheService],
