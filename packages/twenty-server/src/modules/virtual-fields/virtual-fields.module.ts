@@ -5,11 +5,8 @@ import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/
 
 import { ProcessVirtualFieldsJob } from './jobs/process-virtual-fields.job';
 import { VirtualFieldComputationService } from './services/virtual-field-computation.service';
-import { VirtualFieldDependencyManager } from './services/virtual-field-dependency-manager.service';
-import { VirtualFieldDependencyMapBuilder } from './services/virtual-field-dependency-map-builder.service';
 import { VirtualFieldDiscoveryService } from './services/virtual-field-discovery.service';
 import { VirtualFieldEntityResolver } from './services/virtual-field-entity-resolver.service';
-import { VirtualFieldEventFilter } from './services/virtual-field-event-filter.service';
 import { VirtualFieldPathEvaluator } from './services/virtual-field-path-evaluator.service';
 import { VirtualFieldProcessor } from './services/virtual-field-processor.service';
 import { VirtualFieldsBatchUpdateService } from './services/virtual-fields-batch-update.service';
@@ -19,11 +16,8 @@ import { VirtualFieldsBatchUpdateService } from './services/virtual-fields-batch
   providers: [
     VirtualFieldProcessor,
     VirtualFieldDiscoveryService,
-    VirtualFieldDependencyMapBuilder,
-    VirtualFieldDependencyManager,
     VirtualFieldsBatchUpdateService,
     VirtualFieldPathEvaluator,
-    VirtualFieldEventFilter,
     VirtualFieldEntityResolver,
     VirtualFieldComputationService,
     ProcessVirtualFieldsJob,
@@ -31,11 +25,8 @@ import { VirtualFieldsBatchUpdateService } from './services/virtual-fields-batch
   exports: [
     VirtualFieldProcessor,
     VirtualFieldDiscoveryService,
-    VirtualFieldDependencyMapBuilder,
-    VirtualFieldDependencyManager,
     VirtualFieldsBatchUpdateService,
     VirtualFieldPathEvaluator,
-    VirtualFieldEventFilter,
     VirtualFieldEntityResolver,
     VirtualFieldComputationService,
   ],

@@ -82,6 +82,30 @@ export class VirtualFieldDiscoveryService {
     return [...decoratorFields, ...customFields];
   }
 
+  async getAllVirtualFields(workspaceId: string): Promise<VirtualFieldMetadata[]> {
+    const allVirtualFields: VirtualFieldMetadata[] = [];
+
+    const objectMetadataMaps =
+      await this.workspaceCacheStorageService.getObjectMetadataMapsOrThrow(
+        workspaceId,
+      );
+
+    for (const objectMetadata of Object.values(objectMetadataMaps.byId)) {
+      if (!objectMetadata) {
+        continue;
+      }
+
+      const virtualFieldsForObject = await this.getVirtualFieldsForObjectMetadata(
+        objectMetadata.id,
+        workspaceId,
+      );
+
+      allVirtualFields.push(...virtualFieldsForObject);
+    }
+
+    return allVirtualFields;
+  }
+
   getEntityNameFromTarget(objectMetadataId: string): string {
     for (const [key, value] of Object.entries(STANDARD_OBJECT_IDS)) {
       if (value === objectMetadataId) {

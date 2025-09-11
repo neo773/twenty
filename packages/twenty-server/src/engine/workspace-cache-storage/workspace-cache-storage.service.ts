@@ -19,7 +19,6 @@ import {
   WorkspaceMetadataVersionException,
   WorkspaceMetadataVersionExceptionCode,
 } from 'src/engine/metadata-modules/workspace-metadata-version/exceptions/workspace-metadata-version.exception';
-import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/DependencyMap';
 
 export enum WorkspaceCacheKeys {
   GraphQLTypeDefs = 'graphql:type-defs',
@@ -37,7 +36,6 @@ export enum WorkspaceCacheKeys {
   MetadataPermissionsUserWorkspaceRoleMapVersion = 'metadata:permissions:user-workspace-role-map-version',
   MetadataPermissionsApiKeyRoleMap = 'metadata:permissions:api-key-role-map',
   MetadataPermissionsApiKeyRoleMapVersion = 'metadata:permissions:api-key-role-map-version',
-  VirtualFieldDependencyMap = 'virtual-field:dependency-map',
 }
 
 const TTL_ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
@@ -223,24 +221,7 @@ export class WorkspaceCacheStorageService {
     );
   }
 
-  setVirtualFieldDependencyMap(
-    workspaceId: string,
-    dependencyMap: VirtualFieldDependencyMap,
-  ): Promise<void> {
-    return this.cacheStorageService.set(
-      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}`,
-      dependencyMap,
-      TTL_ONE_WEEK,
-    );
-  }
 
-  getVirtualFieldDependencyMap(
-    workspaceId: string,
-  ): Promise<VirtualFieldDependencyMap | undefined> {
-    return this.cacheStorageService.get(
-      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}`,
-    );
-  }
 
   async flushVersionedMetadata(
     workspaceId: string,
@@ -265,16 +246,9 @@ export class WorkspaceCacheStorageService {
     await this.cacheStorageService.del(
       `${WorkspaceCacheKeys.ORMEntitySchemas}:${workspaceId}:${metadataVersionSuffix}`,
     );
-    await this.cacheStorageService.del(
-      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}`,
-    );
   }
 
-  async flushVirtualFieldDependencyMap(workspaceId: string): Promise<void> {
-    await this.cacheStorageService.del(
-      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}`,
-    );
-  }
+
 
   async flush(workspaceId: string, metadataVersion?: number): Promise<void> {
     await this.flushVersionedMetadata(workspaceId, metadataVersion);

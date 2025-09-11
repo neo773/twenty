@@ -5,8 +5,7 @@ import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/objec
 
 import { VirtualFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-field-discovery.service';
 import { VirtualField } from 'src/modules/virtual-fields/types/VirtualField';
-import { getObjectMetadataByName, resolveObjectById } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
-import { parseVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
+import { resolveObjectById } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 type VirtualFieldMetadata = {
   fieldName: string;
@@ -22,57 +21,7 @@ export class VirtualFieldEntityResolver {
     private readonly virtualFieldDiscoveryService: VirtualFieldDiscoveryService,
   ) {}
 
-  async groupAffectedFieldsByTargetObject(
-    affectedFieldKeys: string[],
-    workspaceId: string,
-    objectMetadataMaps: ObjectMetadataMaps,
-  ): Promise<Map<string, VirtualFieldMetadata[]>> {
-    const fieldsToProcessByObject = new Map<string, VirtualFieldMetadata[]>();
 
-    for (const fieldKey of affectedFieldKeys) {
-      try {
-        const parsedField = parseVirtualFieldKey(fieldKey);
-
-        if (!parsedField) {
-          continue;
-        }
-
-        const { objectName, fieldName } = parsedField;
-        const objectMetadata = getObjectMetadataByName(
-          objectName,
-          objectMetadataMaps,
-        );
-
-        if (!objectMetadata) {
-          continue;
-        }
-
-        const virtualFields =
-          await this.virtualFieldDiscoveryService.getVirtualFieldsForObjectMetadata(
-            objectMetadata.id,
-            workspaceId,
-          );
-
-        const matchingField = virtualFields.find(
-          (vf) => vf.fieldName === fieldName,
-        );
-
-        if (matchingField) {
-          if (!fieldsToProcessByObject.has(objectMetadata.id)) {
-            fieldsToProcessByObject.set(objectMetadata.id, []);
-          }
-          fieldsToProcessByObject.get(objectMetadata.id)!.push(matchingField);
-        }
-      } catch (error) {
-        this.logger.error('Error processing affected field', {
-          fieldKey,
-          error,
-        });
-      }
-    }
-
-    return fieldsToProcessByObject;
-  }
 
   async getAffectedEntityIds(
     event: ObjectRecordNonDestructiveEvent,

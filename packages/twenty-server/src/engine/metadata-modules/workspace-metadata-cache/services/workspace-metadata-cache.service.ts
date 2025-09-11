@@ -16,7 +16,6 @@ import {
   WorkspaceMetadataVersionExceptionCode,
 } from 'src/engine/metadata-modules/workspace-metadata-version/exceptions/workspace-metadata-version.exception';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
-import { VirtualFieldDependencyManager } from 'src/modules/virtual-fields/services/virtual-field-dependency-manager.service';
 
 type GetExistingOrRecomputeMetadataMapsResult = {
   objectMetadataMaps: ObjectMetadataMaps;
@@ -40,7 +39,6 @@ export class WorkspaceMetadataCacheService {
     private readonly objectMetadataRepository: Repository<ObjectMetadataEntity>,
     @InjectRepository(IndexMetadataEntity)
     private readonly indexMetadataRepository: Repository<IndexMetadataEntity>,
-    private readonly virtualFieldDependencyManager: VirtualFieldDependencyManager,
   ) {}
 
   async getExistingOrRecomputeFlatObjectMetadataMaps({
@@ -162,19 +160,7 @@ export class WorkspaceMetadataCacheService {
       currentDatabaseVersion,
     );
 
-    try {
 
-      await this.virtualFieldDependencyManager.rebuildDependencyMap(
-        workspaceId,
-        freshObjectMetadataMaps,
-      );
-    } catch (error) {
-      this.logger.error('Failed to build virtual field dependency map during metadata cache recomputation', {
-        workspaceId,
-        metadataVersion: currentDatabaseVersion,
-        error,
-      });
-    }
 
     return {
       objectMetadataMaps: freshObjectMetadataMaps,
