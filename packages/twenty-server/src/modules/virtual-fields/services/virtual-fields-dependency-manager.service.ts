@@ -3,13 +3,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
 import {
-  VirtualFieldsDependencyMapService,
-  type VirtualFieldDependencyMap,
+    VirtualFieldsDependencyMapService,
 } from 'src/modules/virtual-fields/services/virtual-fields-dependency-map.service';
+import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/virtual-fields-dependency.types';
 
 @Injectable()
-export class VirtualFieldsDependencyManager {
-  private readonly logger = new Logger(VirtualFieldsDependencyManager.name);
+export class VirtualFieldsDependencyManagerService {
+  private readonly logger = new Logger(VirtualFieldsDependencyManagerService.name);
 
   constructor(
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
@@ -20,32 +20,14 @@ export class VirtualFieldsDependencyManager {
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
   ): Promise<VirtualFieldDependencyMap> {
-    const metadataVersion =
-      await this.workspaceCacheStorageService.getMetadataVersion(workspaceId);
-
-    if (!metadataVersion) {
-      this.logger.debug(
-        'No metadata version found, building dependency map without cache',
-        { workspaceId },
-      );
-
-      return this.buildAndCacheDependencyMap(
-        workspaceId,
-        objectMetadataMaps,
-        1,
-      );
-    }
-
     const cachedDependencyMap =
       await this.workspaceCacheStorageService.getVirtualFieldDependencyMap(
         workspaceId,
-        metadataVersion,
       );
 
     if (cachedDependencyMap) {
       this.logger.debug('Using cached virtual field dependency map', {
         workspaceId,
-        metadataVersion,
         fieldCount: Object.keys(cachedDependencyMap).length,
       });
 
@@ -54,14 +36,9 @@ export class VirtualFieldsDependencyManager {
 
     this.logger.log('Building new virtual field dependency map', {
       workspaceId,
-      metadataVersion,
     });
 
-    return this.buildAndCacheDependencyMap(
-      workspaceId,
-      objectMetadataMaps,
-      metadataVersion,
-    );
+    return this.buildAndCacheDependencyMap(workspaceId, objectMetadataMaps);
   }
 
   async rebuildDependencyMap(
@@ -72,16 +49,7 @@ export class VirtualFieldsDependencyManager {
       workspaceId,
     });
 
-    const metadataVersion =
-      (await this.workspaceCacheStorageService.getMetadataVersion(
-        workspaceId,
-      )) || 1;
-
-    return this.buildAndCacheDependencyMap(
-      workspaceId,
-      objectMetadataMaps,
-      metadataVersion,
-    );
+    return this.buildAndCacheDependencyMap(workspaceId, objectMetadataMaps);
   }
 
   getAffectedVirtualFields(
@@ -104,11 +72,9 @@ export class VirtualFieldsDependencyManager {
   private async buildAndCacheDependencyMap(
     workspaceId: string,
     objectMetadataMaps: ObjectMetadataMaps,
-    metadataVersion: number,
   ): Promise<VirtualFieldDependencyMap> {
     this.logger.log('Starting to build and cache dependency map', {
       workspaceId,
-      metadataVersion,
     });
 
     try {
@@ -118,19 +84,16 @@ export class VirtualFieldsDependencyManager {
 
       this.logger.log('Built complete dependency map', {
         workspaceId,
-        metadataVersion,
         fieldCount: Object.keys(dependencyMap).length,
       });
 
       await this.workspaceCacheStorageService.setVirtualFieldDependencyMap(
         workspaceId,
-        metadataVersion,
         dependencyMap,
       );
 
       this.logger.log('Successfully cached virtual field dependency map', {
         workspaceId,
-        metadataVersion,
         fieldCount: Object.keys(dependencyMap).length,
       });
 
@@ -138,7 +101,6 @@ export class VirtualFieldsDependencyManager {
     } catch (error) {
       this.logger.error('Failed to build and cache dependency map', {
         workspaceId,
-        metadataVersion,
         error,
       });
 

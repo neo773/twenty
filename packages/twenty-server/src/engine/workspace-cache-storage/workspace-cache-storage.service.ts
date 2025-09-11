@@ -12,14 +12,14 @@ import { CacheStorageService } from 'src/engine/core-modules/cache-storage/servi
 import { CacheStorageNamespace } from 'src/engine/core-modules/cache-storage/types/cache-storage-namespace.enum';
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import {
-  WorkspaceMetadataCacheException,
-  WorkspaceMetadataCacheExceptionCode,
+    WorkspaceMetadataCacheException,
+    WorkspaceMetadataCacheExceptionCode,
 } from 'src/engine/metadata-modules/workspace-metadata-cache/exceptions/workspace-metadata-cache.exception';
 import {
-  WorkspaceMetadataVersionException,
-  WorkspaceMetadataVersionExceptionCode,
+    WorkspaceMetadataVersionException,
+    WorkspaceMetadataVersionExceptionCode,
 } from 'src/engine/metadata-modules/workspace-metadata-version/exceptions/workspace-metadata-version.exception';
-import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/services/virtual-fields-dependency-map.service';
+import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/virtual-fields-dependency.types';
 
 export enum WorkspaceCacheKeys {
   GraphQLTypeDefs = 'graphql:type-defs',
@@ -225,11 +225,10 @@ export class WorkspaceCacheStorageService {
 
   setVirtualFieldDependencyMap(
     workspaceId: string,
-    metadataVersion: number,
     dependencyMap: VirtualFieldDependencyMap,
   ): Promise<void> {
     return this.cacheStorageService.set(
-      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}:${metadataVersion}`,
+      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}`,
       dependencyMap,
       TTL_ONE_WEEK,
     );
@@ -237,10 +236,9 @@ export class WorkspaceCacheStorageService {
 
   getVirtualFieldDependencyMap(
     workspaceId: string,
-    metadataVersion: number,
   ): Promise<VirtualFieldDependencyMap | undefined> {
     return this.cacheStorageService.get(
-      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}:${metadataVersion}`,
+      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}`,
     );
   }
 
@@ -268,7 +266,13 @@ export class WorkspaceCacheStorageService {
       `${WorkspaceCacheKeys.ORMEntitySchemas}:${workspaceId}:${metadataVersionSuffix}`,
     );
     await this.cacheStorageService.del(
-      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}:${metadataVersionSuffix}`,
+      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}`,
+    );
+  }
+
+  async flushVirtualFieldDependencyMap(workspaceId: string): Promise<void> {
+    await this.cacheStorageService.del(
+      `${WorkspaceCacheKeys.VirtualFieldDependencyMap}:${workspaceId}`,
     );
   }
 

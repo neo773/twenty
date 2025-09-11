@@ -8,11 +8,11 @@ import { PrimitiveValue } from 'src/modules/computed-fields/types/PrimitiveValue
 import { type VirtualField } from 'src/modules/computed-fields/types/VirtualField';
 import { VirtualFieldsBatchUpdateService } from 'src/modules/virtual-fields/services/virtual-fields-batch-update.service';
 import { VirtualFieldsComputationService } from 'src/modules/virtual-fields/services/virtual-fields-computation.service';
-import { VirtualFieldsDependencyManager } from 'src/modules/virtual-fields/services/virtual-fields-dependency-manager.service';
-import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/services/virtual-fields-dependency-map.service';
+import { VirtualFieldsDependencyManagerService } from 'src/modules/virtual-fields/services/virtual-fields-dependency-manager.service';
 import { VirtualFieldsEntityResolutionService } from 'src/modules/virtual-fields/services/virtual-fields-entity-resolution.service';
 import { VirtualFieldsEventFilterService } from 'src/modules/virtual-fields/services/virtual-fields-event-filter.service';
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
+import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/virtual-fields-dependency.types';
 
 export type ProcessEventsParams = {
   events: ObjectRecordNonDestructiveEvent[];
@@ -39,7 +39,7 @@ export class VirtualFieldsService {
     private readonly twentyORMGlobalManager: TwentyORMGlobalManager,
     private readonly workspaceCacheStorageService: WorkspaceCacheStorageService,
     private readonly virtualFieldDiscoveryService: VirtualFieldsFieldDiscoveryService,
-    private readonly dependencyManager: VirtualFieldsDependencyManager,
+    private readonly dependencyManager: VirtualFieldsDependencyManagerService,
     private readonly bulkUpdateService: VirtualFieldsBatchUpdateService,
     private readonly eventFilterService: VirtualFieldsEventFilterService,
     private readonly entityResolutionService: VirtualFieldsEntityResolutionService,

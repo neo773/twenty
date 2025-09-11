@@ -6,7 +6,7 @@ import { WorkspaceCacheStorageModule } from 'src/engine/workspace-cache-storage/
 import { ProcessVirtualFieldsJob } from './jobs/process-virtual-fields.job';
 import { VirtualFieldsBatchUpdateService } from './services/virtual-fields-batch-update.service';
 import { VirtualFieldsComputationService } from './services/virtual-fields-computation.service';
-import { VirtualFieldsDependencyManager } from './services/virtual-fields-dependency-manager.service';
+import { VirtualFieldsDependencyManagerService } from './services/virtual-fields-dependency-manager.service';
 import { VirtualFieldsDependencyMapService } from './services/virtual-fields-dependency-map.service';
 import { VirtualFieldsEntityResolutionService } from './services/virtual-fields-entity-resolution.service';
 import { VirtualFieldsEventFilterService } from './services/virtual-fields-event-filter.service';
@@ -20,7 +20,7 @@ import { VirtualFieldsService } from './services/virtual-fields.service';
     VirtualFieldsService,
     VirtualFieldsFieldDiscoveryService,
     VirtualFieldsDependencyMapService,
-    VirtualFieldsDependencyManager,
+    VirtualFieldsDependencyManagerService,
     VirtualFieldsBatchUpdateService,
     VirtualFieldsPathEvaluatorService,
     VirtualFieldsEventFilterService,
@@ -32,7 +32,7 @@ import { VirtualFieldsService } from './services/virtual-fields.service';
     VirtualFieldsService,
     VirtualFieldsFieldDiscoveryService,
     VirtualFieldsDependencyMapService,
-    VirtualFieldsDependencyManager,
+    VirtualFieldsDependencyManagerService,
     VirtualFieldsBatchUpdateService,
     VirtualFieldsPathEvaluatorService,
     VirtualFieldsEventFilterService,

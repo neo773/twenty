@@ -12,11 +12,11 @@ import { ObjectMetadataEntity } from 'src/engine/metadata-modules/object-metadat
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
 import { generateObjectMetadataMaps } from 'src/engine/metadata-modules/utils/generate-object-metadata-maps.util';
 import {
-  WorkspaceMetadataVersionException,
-  WorkspaceMetadataVersionExceptionCode,
+    WorkspaceMetadataVersionException,
+    WorkspaceMetadataVersionExceptionCode,
 } from 'src/engine/metadata-modules/workspace-metadata-version/exceptions/workspace-metadata-version.exception';
 import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
-import { VirtualFieldsDependencyManager } from 'src/modules/virtual-fields/services/virtual-fields-dependency-manager.service';
+import { VirtualFieldsDependencyManagerService } from 'src/modules/virtual-fields/services/virtual-fields-dependency-manager.service';
 
 type GetExistingOrRecomputeMetadataMapsResult = {
   objectMetadataMaps: ObjectMetadataMaps;
@@ -40,7 +40,7 @@ export class WorkspaceMetadataCacheService {
     private readonly objectMetadataRepository: Repository<ObjectMetadataEntity>,
     @InjectRepository(IndexMetadataEntity)
     private readonly indexMetadataRepository: Repository<IndexMetadataEntity>,
-    private readonly virtualFieldsDependencyManager: VirtualFieldsDependencyManager,
+    private readonly virtualFieldsDependencyManager: VirtualFieldsDependencyManagerService,
   ) {}
 
   async getExistingOrRecomputeFlatObjectMetadataMaps({

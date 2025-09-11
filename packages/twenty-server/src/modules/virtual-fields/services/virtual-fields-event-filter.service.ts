@@ -1,15 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { type ObjectRecordNonDestructiveEvent } from 'src/engine/core-modules/event-emitter/types/object-record-non-destructive-event';
-import { VirtualFieldsDependencyManager } from 'src/modules/virtual-fields/services/virtual-fields-dependency-manager.service';
-import { type VirtualFieldDependencyMap } from 'src/modules/virtual-fields/services/virtual-fields-dependency-map.service';
+import { VirtualFieldsDependencyManagerService } from 'src/modules/virtual-fields/services/virtual-fields-dependency-manager.service';
+import { type VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/virtual-fields-dependency.types';
 
 @Injectable()
 export class VirtualFieldsEventFilterService {
   private readonly logger = new Logger(VirtualFieldsEventFilterService.name);
 
   constructor(
-    private readonly dependencyManager: VirtualFieldsDependencyManager,
+    private readonly dependencyManager: VirtualFieldsDependencyManagerService,
   ) {}
 
   filterEventsWithAffectedVirtualFields(

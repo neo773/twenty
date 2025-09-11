@@ -8,21 +8,29 @@ import {
   type Condition,
   type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { buildVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
+import { VirtualFieldDependencyMap } from 'src/modules/virtual-fields/types/virtual-fields-dependency.types';
 import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
-
-export type VirtualFieldDependencyMap = Record<
-  string,
-  { dependenciesObjectNameSingular: string[] }
->;
+import { buildVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
 
 @Injectable()
 export class VirtualFieldsDependencyMapService {
   private readonly logger = new Logger(VirtualFieldsDependencyMapService.name);
 
-  constructor() {}
+  buildDependencyMap(
+    objectMetadataMaps: ObjectMetadataMaps,
+  ): VirtualFieldDependencyMap {
+    const systemFieldsMap =
+      this.buildDependencyMapFromSystemFields(objectMetadataMaps);
+    const customFieldsMap =
+      this.buildDependencyMapFromCustomFields(objectMetadataMaps);
 
-  buildDependencyMapFromSystemFields(
+    return {
+      ...systemFieldsMap,
+      ...customFieldsMap,
+    };
+  }
+
+  private buildDependencyMapFromSystemFields(
     objectMetadataMaps: ObjectMetadataMaps,
   ): VirtualFieldDependencyMap {
     const dependencyMap: VirtualFieldDependencyMap = {};
@@ -82,7 +90,7 @@ export class VirtualFieldsDependencyMapService {
     return dependencyMap;
   }
 
-  buildDependencyMapFromCustomFields(
+  private buildDependencyMapFromCustomFields(
     objectMetadataMaps: ObjectMetadataMaps,
   ): VirtualFieldDependencyMap {
     const dependencyMap: VirtualFieldDependencyMap = {};
@@ -117,21 +125,6 @@ export class VirtualFieldsDependencyMapService {
 
     return dependencyMap;
   }
-
-  buildDependencyMap(
-    objectMetadataMaps: ObjectMetadataMaps,
-  ): VirtualFieldDependencyMap {
-    const systemFieldsMap =
-      this.buildDependencyMapFromSystemFields(objectMetadataMaps);
-    const customFieldsMap =
-      this.buildDependencyMapFromCustomFields(objectMetadataMaps);
-
-    return {
-      ...systemFieldsMap,
-      ...customFieldsMap,
-    };
-  }
-
 
   private extractDependenciesFromVirtualField(
     virtualField: VirtualField,
@@ -184,7 +177,6 @@ export class VirtualFieldsDependencyMapService {
     path: AllStandardFieldIds[],
     objectMetadataMaps: ObjectMetadataMaps,
   ): string[] {
-    // Replace resolveFieldPath with inline mapping
     const resolvedPath = path
       .map(fieldId => resolveField(fieldId, objectMetadataMaps))
       .filter(Boolean);
@@ -263,5 +255,4 @@ export class VirtualFieldsDependencyMapService {
 
     return objectMetadata?.nameSingular ?? null;
   }
-
 }
