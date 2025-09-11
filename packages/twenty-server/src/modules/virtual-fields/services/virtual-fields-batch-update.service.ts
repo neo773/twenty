@@ -6,7 +6,7 @@ import { type WorkspaceRepository } from 'src/engine/twenty-orm/repository/works
 import { PrimitiveValue } from 'src/modules/virtual-fields/types/PrimitiveValue';
 
 
-type BulkUpdateOperation = {
+type BatchUpdateOperation = {
   entityId: string;
   fieldName: string;
   value: PrimitiveValue;
@@ -18,7 +18,7 @@ export class VirtualFieldsBatchUpdateService {
 
   async executeBatchUpdates<T extends ObjectLiteral>(
     repository: WorkspaceRepository<T>,
-    updateOperations: BulkUpdateOperation[],
+    updateOperations: BatchUpdateOperation[],
   ): Promise<void> {
     if (updateOperations.length === 0) {
       return;
