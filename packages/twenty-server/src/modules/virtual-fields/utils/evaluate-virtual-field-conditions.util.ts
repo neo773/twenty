@@ -70,26 +70,12 @@ export function evaluateFieldCondition(
   })!;
   const rawFieldValue = recordData[resolvedField.fieldName];
 
-  // Handle composite fields like currency for in-memory evaluation
   let fieldValue = extractComparableValue(rawFieldValue);
 
-  // For currency fields, extract amountMicros for numeric comparisons
   const fieldMetadata = getFieldMetadata(condition.field, objectMetadataMaps);
 
-  if (fieldMetadata && fieldMetadata.type === FieldMetadataType.CURRENCY) {
-    if (typeof rawFieldValue === 'number') {
-      fieldValue = rawFieldValue;
-    } else if (rawFieldValue && typeof rawFieldValue === 'object') {
-      const amountMicros = (
-        rawFieldValue as unknown as { amountMicros: string | number }
-      ).amountMicros;
-
-      // Convert to number since amountMicros might be stored as string (bigint)
-      fieldValue =
-        typeof amountMicros === 'string'
-          ? Number(amountMicros) / 1000000
-          : amountMicros;
-    }
+  if (fieldMetadata) {
+    fieldValue = extractFieldValue(rawFieldValue, fieldMetadata.type);
   }
 
   const conditionValue = condition.value;
@@ -187,4 +173,36 @@ function extractComparableValue(
   }
 
   return value;
+}
+
+function extractFieldValue(
+  rawValue: PrimitiveValue | PrimitiveValue[],
+  fieldType: FieldMetadataType,
+): PrimitiveValue {
+  switch (fieldType) {
+    case FieldMetadataType.CURRENCY:
+      return extractCurrencyValue(rawValue);
+    default:
+      return extractComparableValue(rawValue);
+  }
+}
+
+function extractCurrencyValue(
+  rawValue: PrimitiveValue | PrimitiveValue[],
+): PrimitiveValue {
+  if (typeof rawValue === 'number') {
+    return rawValue;
+  }
+
+  if (rawValue && typeof rawValue === 'object') {
+    const amountMicros = (
+      rawValue as unknown as { amountMicros: string | number }
+    ).amountMicros;
+
+    return typeof amountMicros === 'string'
+      ? Number(amountMicros) / 1000000
+      : amountMicros;
+  }
+
+  return rawValue;
 }
