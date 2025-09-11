@@ -1,19 +1,12 @@
 import { RecordTableBody } from '@/object-record/record-table/record-table-body/components/RecordTableBody';
 import { RecordTableBodyDroppableContextProvider } from '@/object-record/record-table/record-table-body/contexts/RecordTableBodyDroppableContext';
 import { recordTableHoverPositionComponentState } from '@/object-record/record-table/states/recordTableHoverPositionComponentState';
+import { isSomeCellInEditModeComponentSelector } from '@/object-record/record-table/states/selectors/isSomeCellInEditModeComponentSelector';
+import { useRecoilComponentValue } from '@/ui/utilities/state/component-state/hooks/useRecoilComponentValue';
 import { useSetRecoilComponentState } from '@/ui/utilities/state/component-state/hooks/useSetRecoilComponentState';
-import styled from '@emotion/styled';
 import { Droppable } from '@hello-pangea/dnd';
 import { type ReactNode, useState } from 'react';
 import { v4 } from 'uuid';
-
-const StyledTable = styled.table`
-  table-layout: fixed;
-
-  border-radius: ${({ theme }) => theme.border.radius.sm};
-  border-spacing: 0;
-  width: 100%;
-`;
 
 type RecordTableBodyDroppableProps = {
   children: ReactNode;
@@ -27,11 +20,20 @@ export const RecordTableBodyDroppable = ({
   isDropDisabled,
 }: RecordTableBodyDroppableProps) => {
   const [v4Persistable] = useState(v4());
-  const recordTableBodyId = `record-table-body${recordGroupId ? '-' + recordGroupId : ''}`;
 
   const setRecordTableHoverPosition = useSetRecoilComponentState(
     recordTableHoverPositionComponentState,
   );
+
+  const isSomeCellInEditMode = useRecoilComponentValue(
+    isSomeCellInEditModeComponentSelector,
+  );
+
+  const handleMouseLeave = () => {
+    if (!isSomeCellInEditMode) {
+      setRecordTableHoverPosition(null);
+    }
+  };
 
   return (
     <Droppable
@@ -39,13 +41,12 @@ export const RecordTableBodyDroppable = ({
       isDropDisabled={isDropDisabled}
     >
       {(provided) => (
-        <StyledTable>
+        <>
           <RecordTableBody
-            id={recordTableBodyId}
             ref={provided.innerRef}
             // eslint-disable-next-line react/jsx-props-no-spreading
             {...provided.droppableProps}
-            onMouseLeave={() => setRecordTableHoverPosition(null)}
+            onMouseLeave={handleMouseLeave}
           >
             <RecordTableBodyDroppableContextProvider
               value={{ droppablePlaceholder: provided.placeholder }}
@@ -53,7 +54,7 @@ export const RecordTableBodyDroppable = ({
               {children}
             </RecordTableBodyDroppableContextProvider>
           </RecordTableBody>
-        </StyledTable>
+        </>
       )}
     </Droppable>
   );

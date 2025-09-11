@@ -11,6 +11,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -36,6 +37,11 @@ import { type VirtualField } from 'src/modules/virtual-fields/types/VirtualField
 ])
 @Index('IDX_FIELD_METADATA_RELATION_TARGET_OBJECT_METADATA_ID', [
   'relationTargetObjectMetadataId',
+])
+@Unique('IDX_FIELD_METADATA_NAME_OBJECT_METADATA_ID_WORKSPACE_ID_UNIQUE', [
+  'name',
+  'objectMetadataId',
+  'workspaceId',
 ])
 @Index('IDX_FIELD_METADATA_OBJECT_METADATA_ID_WORKSPACE_ID', [
   'objectMetadataId',

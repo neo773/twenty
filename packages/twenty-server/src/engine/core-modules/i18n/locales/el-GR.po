@@ -274,6 +274,11 @@ msgstr "Ετήσιος Επαναλαμβανόμενος Τζίρος: Τα π�
 msgid "Any field filter value"
 msgstr "Οποιαδήποτε τιμή φίλτρου πεδίου"
 
+#. js-lingui-id: mU5fvk
+#: src/engine/core-modules/approved-access-domain/services/approved-access-domain.service.ts
+msgid "Approved access domain already registered."
+msgstr ""
+
 #. js-lingui-id: DGW5iN
 #: src/engine/core-modules/approved-access-domain/services/approved-access-domain.service.ts
 msgid "Approved access domain does not match email domain"
@@ -330,6 +335,11 @@ msgstr "Συγγραφέας συνημμένου"
 msgid "Attachment company"
 msgstr "Συνημμένο εταιρείας"
 
+#. js-lingui-id: wtcL/T
+#: src/modules/attachment/standard-objects/attachment.workspace-entity.ts
+msgid "Attachment dashboard"
+msgstr ""
+
 #. js-lingui-id: gfGYcl
 #: src/modules/attachment/standard-objects/attachment.workspace-entity.ts
 msgid "Attachment full path"
@@ -370,6 +380,7 @@ msgstr "Τύπος συνημμένου"
 #: src/modules/person/standard-objects/person.workspace-entity.ts
 #: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 #: src/modules/attachment/standard-objects/attachment.workspace-entity.ts
 #: src/engine/twenty-orm/custom.workspace-entity.ts
@@ -390,6 +401,11 @@ msgstr "Συνημμένα συνδεδεμένα με την εταιρεία"
 #: src/modules/person/standard-objects/person.workspace-entity.ts
 msgid "Attachments linked to the contact."
 msgstr "Συνημμένα συνδεδεμένα με την επαφή."
+
+#. js-lingui-id: 2AEUIb
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
+msgid "Attachments linked to the dashboard"
+msgstr ""
 
 #. js-lingui-id: kw0mLu
 #: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
@@ -746,6 +762,7 @@ msgstr "Λογαριασμός X/Twitter Επαφής"
 #: src/modules/person/standard-objects/person.workspace-entity.ts
 #: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 #: src/engine/twenty-orm/custom.workspace-entity.ts
 msgid "Created by"
@@ -781,7 +798,10 @@ msgid "Custom Connection Parameters"
 msgstr "Προσαρμοσμένες Παράμετροι Σύνδεσης"
 
 #. js-lingui-id: 7p5kLi
+#: src/modules/timeline/standard-objects/timeline-activity.workspace-entity.ts
+#: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
 #: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
+#: src/modules/attachment/standard-objects/attachment.workspace-entity.ts
 msgid "Dashboard"
 msgstr "Πίνακας ελέγχου"
 
@@ -789,6 +809,11 @@ msgstr "Πίνακας ελέγχου"
 #: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 msgid "Dashboard page layout"
 msgstr "Διάταξη σελίδας πίνακα ελέγχου"
+
+#. js-lingui-id: FrOkwR
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
+msgid "Dashboard record Position"
+msgstr ""
 
 #. js-lingui-id: xGgnPh
 #: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
@@ -870,6 +895,16 @@ msgstr "Προβολή των εγγραφών σε ένα πλευρικό πά
 msgid "Display Value"
 msgstr "Εμφανιζόμενη Αξία"
 
+#. js-lingui-id: IymH4t
+#: src/engine/core-modules/public-domain/public-domain.service.ts
+msgid "Domain already used for workspace custom domain"
+msgstr ""
+
+#. js-lingui-id: PfJswy
+#: src/engine/core-modules/workspace/services/workspace.service.ts
+msgid "Domain is already registered as public domain"
+msgstr ""
+
 #. js-lingui-id: wMncXq
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 msgid "Domain Name"
@@ -923,15 +958,20 @@ msgstr "Εργαζόμενοι"
 msgid "End Date"
 msgstr "Ημερομηνία Λήξης"
 
-#. js-lingui-id: hcogQc
-#: src/engine/core-modules/domain-manager/validator/cloudflare.validate.ts
-msgid "Environnement variable CLOUDFLARE_API_KEY must be defined to use this feature."
-msgstr "Η μεταβλητή περιβάλλοντος CLOUDFLARE_API_KEY πρέπει να οριστεί για να χρησιμοποιήσετε αυτήν τη δυνατότητα."
+#. js-lingui-id: EzGlkq
+#: src/engine/core-modules/dns-manager/validator/cloudflare.validate.ts
+msgid "Environment variable CLOUDFLARE_API_KEY must be defined to use this feature."
+msgstr ""
 
 #. js-lingui-id: k//6Xs
 #: src/modules/timeline/standard-objects/timeline-activity.workspace-entity.ts
 msgid "Event company"
 msgstr "Εταιρεία Συμβάντος"
+
+#. js-lingui-id: CPhvC+
+#: src/modules/timeline/standard-objects/timeline-activity.workspace-entity.ts
+msgid "Event dashboard"
+msgstr ""
 
 #. js-lingui-id: kJDmsI
 #: src/modules/timeline/standard-objects/timeline-activity.workspace-entity.ts
@@ -1058,6 +1098,11 @@ msgstr "Αγαπημένο"
 msgid "Favorite company"
 msgstr "Αγαπημένη Εταιρεία"
 
+#. js-lingui-id: Aj026i
+#: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
+msgid "Favorite dashboard"
+msgstr ""
+
 #. js-lingui-id: TDlZ/o
 #: src/modules/favorite-folder/standard-objects/favorite-folder.workspace-entity.ts
 #: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
@@ -1130,6 +1175,7 @@ msgstr "Αγαπημένο μέλος χώρου εργασίας"
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 #: src/modules/favorite-folder/standard-objects/favorite-folder.workspace-entity.ts
 #: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 #: src/engine/twenty-orm/custom.workspace-entity.ts
 msgid "Favorites"
@@ -1149,6 +1195,11 @@ msgstr "Αγαπημένα συνδεδεμένα με την εταιρεία"
 #: src/modules/person/standard-objects/person.workspace-entity.ts
 msgid "Favorites linked to the contact"
 msgstr "Αγαπημένα συνδεδεμένα με την επαφή"
+
+#. js-lingui-id: 5zuBdE
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
+msgid "Favorites linked to the dashboard"
+msgstr ""
 
 #. js-lingui-id: GOfcBt
 #: src/modules/note/standard-objects/note.workspace-entity.ts
@@ -1217,6 +1268,12 @@ msgstr "Το πεδίο που δηλώθηκε ως αναγνωριστικό 
 #: src/modules/view/standard-objects/view-field.workspace-entity.ts
 msgid "Field Metadata Id"
 msgstr "Κωδικός Μεταδεδομένων Πεδίου"
+
+#. js-lingui-id: MPt365
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+msgid "Field metadata not found"
+msgstr ""
 
 #. js-lingui-id: Ljqo/T
 #: src/engine/metadata-modules/flat-field-metadata/utils/from-update-field-input-to-flat-field-metadata.util.ts
@@ -1671,6 +1728,11 @@ msgstr "Λογικός Τελεστής"
 msgid "Logical operator for the filter group"
 msgstr "Λογικός τελεστής για την ομάδα φίλτρων"
 
+#. js-lingui-id: hw7Mwk
+#: src/engine/api/graphql/graphql-query-runner/resolvers/graphql-query-create-many-resolver.service.ts
+msgid "Maximum number of records to upsert is {QUERY_MAX_RECORDS}."
+msgstr ""
+
 #. js-lingui-id: EnfPm2
 #: src/modules/calendar/common/standard-objects/calendar-event.workspace-entity.ts
 #: src/modules/calendar/common/standard-objects/calendar-event.workspace-entity.ts
@@ -1853,6 +1915,11 @@ msgstr "Τα πεδία σχέσης μορφής είναι απενεργοπ�
 #: src/engine/metadata-modules/flat-field-metadata/validators/utils/validate-enum-flat-field-metadata.util.ts
 msgid "Multi-select field default value must be an array"
 msgstr "Η προεπιλεγμένη τιμή πεδίου πολλαπλής επιλογής πρέπει να είναι πίνακας"
+
+#. js-lingui-id: 6rLmLu
+#: src/engine/api/graphql/graphql-query-runner/resolvers/graphql-query-create-many-resolver.service.ts
+msgid "Multiple records found with the same unique field values for {conflictingFieldsValues}. Cannot determine which record to update."
+msgstr ""
 
 #. js-lingui-id: 6YtxFj
 #: src/modules/workspace-member/standard-objects/workspace-member.workspace-entity.ts
@@ -2085,6 +2152,12 @@ msgstr "Η ετικέτα αντικειμένου είναι πολύ μικρ�
 #: src/modules/view/standard-objects/view.workspace-entity.ts
 msgid "Object Metadata Id"
 msgstr "Αναγνωριστικό Μετα-δεδομένων Αντικειμένου"
+
+#. js-lingui-id: xrblgA
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-validator.service.ts
+msgid "Object metadata not found"
+msgstr ""
 
 #. js-lingui-id: lG0Qqm
 #: src/engine/metadata-modules/flat-field-metadata/services/flat-field-metadata-validator.service.ts
@@ -2359,6 +2432,7 @@ msgstr "\\\\"
 #: src/modules/note/standard-objects/note.workspace-entity.ts
 #: src/modules/favorite-folder/standard-objects/favorite-folder.workspace-entity.ts
 #: src/modules/favorite/standard-objects/favorite.workspace-entity.ts
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 #: src/engine/twenty-orm/custom.workspace-entity.ts
 #: src/engine/twenty-orm/custom.workspace-entity.ts
@@ -2420,6 +2494,11 @@ msgstr "Ο παρεχόμενος αριθμός τηλεφώνου δεν εί�
 #: src/modules/connected-account/standard-objects/connected-account.workspace-entity.ts
 msgid "provider"
 msgstr "πάροχος"
+
+#. js-lingui-id: OL88cI
+#: src/engine/core-modules/public-domain/public-domain.service.ts
+msgid "Public domain already registered"
+msgstr ""
 
 #. js-lingui-id: YfbwOB
 #: src/modules/messaging/common/standard-objects/message.workspace-entity.ts
@@ -2786,6 +2865,7 @@ msgstr "Η διεύθυνση URL της ιστοσελίδας της εται�
 #: src/modules/person/standard-objects/person.workspace-entity.ts
 #: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 #: src/engine/twenty-orm/custom.workspace-entity.ts
 msgid "The creator of the record"
@@ -2913,6 +2993,7 @@ msgstr "Ζώνη ώρας"
 #: src/modules/task/standard-objects/task.workspace-entity.ts
 #: src/modules/opportunity/standard-objects/opportunity.workspace-entity.ts
 #: src/modules/note/standard-objects/note.workspace-entity.ts
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 #: src/engine/twenty-orm/custom.workspace-entity.ts
 msgid "Timeline Activities"
@@ -2922,6 +3003,11 @@ msgstr "Δραστηριότητες Χρονοδιαγράμματος"
 #: src/modules/company/standard-objects/company.workspace-entity.ts
 msgid "Timeline Activities linked to the company"
 msgstr "Δραστηριότητες Χρονοδιαγράμματος συνδεδεμένες με την εταιρία"
+
+#. js-lingui-id: CNev+0
+#: src/modules/dashboard/standard-objects/dashboard.workspace-entity.ts
+msgid "Timeline activities linked to the dashboard"
+msgstr ""
 
 #. js-lingui-id: 4/UzU5
 #: src/modules/note/standard-objects/note.workspace-entity.ts
@@ -3108,6 +3194,14 @@ msgstr "Πεδίο Προβολής"
 msgid "View field already exists."
 msgstr "Το πεδίο προβολής ήδη υπάρχει."
 
+#. js-lingui-id: ZRfCZM
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+msgid "View field not found"
+msgstr ""
+
 #. js-lingui-id: 6jpoH4
 #: src/modules/view/standard-objects/view-group.workspace-entity.ts
 #: src/modules/view/standard-objects/view-field.workspace-entity.ts
@@ -3242,6 +3336,20 @@ msgstr "\\\\"
 #: src/modules/view/standard-objects/view.workspace-entity.ts
 msgid "View name"
 msgstr "\\\\"
+
+#. js-lingui-id: F4A9mL
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+#: src/engine/workspace-manager/workspace-migration-v2/workspace-migration-builder-v2/validators/services/flat-view-field-validator.service.ts
+msgid "View not found"
+msgstr ""
 
 #. js-lingui-id: rhO8zp
 #: src/modules/view/standard-objects/view.workspace-entity.ts

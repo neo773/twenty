@@ -20,6 +20,8 @@ import {
 import { getWorkflowDiagramColors } from '@/workflow/workflow-diagram/utils/getWorkflowDiagramColors';
 import { WorkflowDiagramBaseEdge } from '@/workflow/workflow-diagram/workflow-edges/components/WorkflowDiagramBaseEdge';
 import { WorkflowDiagramEdgeButtonGroup } from '@/workflow/workflow-diagram/workflow-edges/components/WorkflowDiagramEdgeButtonGroup';
+import { WorkflowDiagramEdgeLabel } from '@/workflow/workflow-diagram/workflow-edges/components/WorkflowDiagramEdgeLabel';
+import { WorkflowDiagramEdgeLabelContainer } from '@/workflow/workflow-diagram/workflow-edges/components/WorkflowDiagramEdgeLabelContainer';
 import { WorkflowDiagramEdgeV2Container } from '@/workflow/workflow-diagram/workflow-edges/components/WorkflowDiagramEdgeV2Container';
 import { WorkflowDiagramEdgeV2VisibilityContainer } from '@/workflow/workflow-diagram/workflow-edges/components/WorkflowDiagramEdgeV2VisibilityContainer';
 import { WORKFLOW_DIAGRAM_EDGE_OPTIONS_CLICK_OUTSIDE_ID } from '@/workflow/workflow-diagram/workflow-edges/constants/WorkflowDiagramEdgeOptionsClickOutsideId';
@@ -28,7 +30,6 @@ import { useDeleteEdge } from '@/workflow/workflow-steps/hooks/useDeleteEdge';
 import { useDeleteStep } from '@/workflow/workflow-steps/hooks/useDeleteStep';
 import { WorkflowStepFilterCounter } from '@/workflow/workflow-steps/workflow-actions/filter-action/components/WorkflowStepFilterCounter';
 import { useFilterCounter } from '@/workflow/workflow-steps/workflow-actions/filter-action/hooks/useFilterCounter';
-import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 import { css, useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { useLingui } from '@lingui/react/macro';
@@ -40,6 +41,7 @@ import {
 } from '@xyflow/react';
 import { useContext } from 'react';
 import { useSetRecoilState } from 'recoil';
+import { isDefined } from 'twenty-shared/utils';
 
 import {
   IconDotsVertical,
@@ -50,7 +52,6 @@ import {
 } from 'twenty-ui/display';
 import { IconButtonGroup } from 'twenty-ui/input';
 import { MenuItem } from 'twenty-ui/navigation';
-import { FeatureFlagKey } from '~/generated/graphql';
 
 type WorkflowDiagramFilterEdgeEditableProps = EdgeProps<WorkflowDiagramEdge>;
 
@@ -96,11 +97,9 @@ export const WorkflowDiagramFilterEdgeEditable = ({
 }: WorkflowDiagramFilterEdgeEditableProps) => {
   assertFilterEdgeDataOrThrow(data);
 
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
+
   const theme = useTheme();
-  const isWorkflowBranchEnabled = useIsFeatureEnabled(
-    FeatureFlagKey.IS_WORKFLOW_BRANCH_ENABLED,
-  );
 
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -197,6 +196,16 @@ export const WorkflowDiagramFilterEdgeEditable = ({
       />
 
       <EdgeLabelRenderer>
+        {isDefined(data?.labelOptions) && (
+          <WorkflowDiagramEdgeLabelContainer
+            sourceX={sourceX}
+            sourceY={sourceY}
+            position={data.labelOptions.position}
+          >
+            <WorkflowDiagramEdgeLabel label={i18n._(data.labelOptions.label)} />
+          </WorkflowDiagramEdgeLabelContainer>
+        )}
+
         <WorkflowDiagramEdgeV2Container
           data-click-outside-id={WORKFLOW_DIAGRAM_EDGE_OPTIONS_CLICK_OUTSIDE_ID}
           labelX={labelX}
@@ -274,13 +283,11 @@ export const WorkflowDiagramFilterEdgeEditable = ({
                       LeftIcon={IconPlus}
                       onClick={handleAddNodeButtonClick}
                     />
-                    {isWorkflowBranchEnabled && (
-                      <MenuItem
-                        text={t`Delete branch`}
-                        LeftIcon={IconTrash}
-                        onClick={handleDeleteBranchClick}
-                      />
-                    )}
+                    <MenuItem
+                      text={t`Delete branch`}
+                      LeftIcon={IconTrash}
+                      onClick={handleDeleteBranchClick}
+                    />
                   </DropdownMenuItemsContainer>
                 </DropdownContent>
               }

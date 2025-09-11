@@ -5,7 +5,7 @@ import { ThemeContext } from 'twenty-ui/theme';
 
 export const DEFAULT_RECORD_TABLE_TD_WIDTH = 32;
 
-const StyledTd = styled.td<{
+export const StyledTd = styled.div<{
   backgroundColor: string;
   borderColor: string;
   isDragging?: boolean;
@@ -32,8 +32,6 @@ const StyledTd = styled.td<{
 
   background: ${({ backgroundColor, isDragging }) =>
     isDragging ? 'transparent' : backgroundColor};
-
-  // TODO: reimplement horizontal scroll here once we have refactored body with divs
 `;
 
 export const RecordTableTd = ({
@@ -74,6 +72,7 @@ export const RecordTableTd = ({
       width={width}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...dragHandleProps}
+      className="table-cell"
     >
       {children}
     </StyledTd>

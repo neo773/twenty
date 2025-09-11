@@ -135,7 +135,7 @@ export type ApiKey = {
   id: Scalars['UUID'];
   name: Scalars['String'];
   revokedAt?: Maybe<Scalars['DateTime']>;
-  role?: Maybe<Role>;
+  role: Role;
   updatedAt: Scalars['DateTime'];
   workspace: Workspace;
   workspaceId: Scalars['UUID'];
@@ -169,6 +169,20 @@ export type AppTokenEdge = {
   cursor: Scalars['ConnectionCursor'];
   /** The node containing the AppToken */
   node: AppToken;
+};
+
+export type Application = {
+  __typename?: 'Application';
+  createdAt: Scalars['DateTime'];
+  description?: Maybe<Scalars['String']>;
+  id: Scalars['UUID'];
+  label: Scalars['String'];
+  sourcePath: Scalars['String'];
+  sourceType: Scalars['String'];
+  standardId?: Maybe<Scalars['UUID']>;
+  updatedAt: Scalars['DateTime'];
+  version?: Maybe<Scalars['String']>;
+  workspaceId: Scalars['UUID'];
 };
 
 export type ApprovedAccessDomain = {
@@ -854,22 +868,6 @@ export type CursorPaging = {
   last?: InputMaybe<Scalars['Int']>;
 };
 
-export type CustomDomainRecord = {
-  __typename?: 'CustomDomainRecord';
-  key: Scalars['String'];
-  status: Scalars['String'];
-  type: Scalars['String'];
-  validationType: Scalars['String'];
-  value: Scalars['String'];
-};
-
-export type CustomDomainValidRecords = {
-  __typename?: 'CustomDomainValidRecords';
-  customDomain: Scalars['String'];
-  id: Scalars['UUID'];
-  records: Array<CustomDomainRecord>;
-};
-
 /** Database Event Action */
 export enum DatabaseEventAction {
   CREATED = 'CREATED',
@@ -947,6 +945,27 @@ export enum DistantTableUpdate {
   TABLE_DELETED = 'TABLE_DELETED'
 }
 
+export type DomainRecord = {
+  __typename?: 'DomainRecord';
+  key: Scalars['String'];
+  status: Scalars['String'];
+  type: Scalars['String'];
+  validationType: Scalars['String'];
+  value: Scalars['String'];
+};
+
+export type DomainValidRecords = {
+  __typename?: 'DomainValidRecords';
+  domain: Scalars['String'];
+  id: Scalars['UUID'];
+  records: Array<DomainRecord>;
+};
+
+export type DuplicateWorkflowVersionStepInput = {
+  stepId: Scalars['String'];
+  workflowVersionId: Scalars['String'];
+};
+
 export type EditSsoInput = {
   id: Scalars['UUID'];
   status: SsoIdentityProviderStatus;
@@ -999,7 +1018,6 @@ export type FeatureFlagDto = {
 export enum FeatureFlagKey {
   IS_AIRTABLE_INTEGRATION_ENABLED = 'IS_AIRTABLE_INTEGRATION_ENABLED',
   IS_AI_ENABLED = 'IS_AI_ENABLED',
-  IS_API_KEY_ROLES_ENABLED = 'IS_API_KEY_ROLES_ENABLED',
   IS_CORE_VIEW_ENABLED = 'IS_CORE_VIEW_ENABLED',
   IS_CORE_VIEW_SYNCING_ENABLED = 'IS_CORE_VIEW_SYNCING_ENABLED',
   IS_DATABASE_EVENT_TRIGGER_ENABLED = 'IS_DATABASE_EVENT_TRIGGER_ENABLED',
@@ -1012,7 +1030,6 @@ export enum FeatureFlagKey {
   IS_RELATION_CONNECT_ENABLED = 'IS_RELATION_CONNECT_ENABLED',
   IS_STRIPE_INTEGRATION_ENABLED = 'IS_STRIPE_INTEGRATION_ENABLED',
   IS_UNIQUE_INDEXES_ENABLED = 'IS_UNIQUE_INDEXES_ENABLED',
-  IS_WORKFLOW_BRANCH_ENABLED = 'IS_WORKFLOW_BRANCH_ENABLED',
   IS_WORKFLOW_ITERATOR_ENABLED = 'IS_WORKFLOW_ITERATOR_ENABLED',
   IS_WORKSPACE_MIGRATION_V2_ENABLED = 'IS_WORKSPACE_MIGRATION_V2_ENABLED'
 }
@@ -1393,7 +1410,7 @@ export type Mutation = {
   assignRoleToAgent: Scalars['Boolean'];
   assignRoleToApiKey: Scalars['Boolean'];
   authorizeApp: AuthorizeApp;
-  checkCustomDomainValidRecords?: Maybe<CustomDomainValidRecords>;
+  checkCustomDomainValidRecords?: Maybe<DomainValidRecords>;
   checkoutSession: BillingSessionOutput;
   computeStepOutputSchema: Scalars['JSON'];
   createAgentChatThread: AgentChatThread;
@@ -1421,6 +1438,7 @@ export type Mutation = {
   createPageLayout: PageLayout;
   createPageLayoutTab: PageLayoutTab;
   createPageLayoutWidget: PageLayoutWidget;
+  createPublicDomain: PublicDomain;
   createSAMLIdentityProvider: SetupSsoOutput;
   createWebhook: Webhook;
   createWorkflowVersionEdge: WorkflowVersionStepChanges;
@@ -1445,6 +1463,7 @@ export type Mutation = {
   deletePageLayout: PageLayout;
   deletePageLayoutTab: Scalars['Boolean'];
   deletePageLayoutWidget: PageLayoutWidget;
+  deletePublicDomain: Scalars['Boolean'];
   deleteSSOIdentityProvider: DeleteSsoOutput;
   deleteTwoFactorAuthenticationMethod: DeleteTwoFactorAuthenticationMethodOutput;
   deleteUser: User;
@@ -1462,6 +1481,7 @@ export type Mutation = {
   destroyPageLayoutTab: Scalars['Boolean'];
   destroyPageLayoutWidget: Scalars['Boolean'];
   disablePostgresProxy: PostgresCredentials;
+  duplicateWorkflowVersionStep: WorkflowVersionStepChanges;
   editSSOIdentityProvider: EditSsoOutput;
   emailPasswordResetLink: EmailPasswordResetLink;
   enablePostgresProxy: PostgresCredentials;
@@ -1500,6 +1520,7 @@ export type Mutation = {
   submitFormStep: Scalars['Boolean'];
   switchToEnterprisePlan: BillingUpdateOutput;
   switchToYearlyInterval: BillingUpdateOutput;
+  syncApplication: Application;
   syncRemoteTable: RemoteTable;
   syncRemoteTableSchemaChanges: RemoteTable;
   trackAnalytics: Analytics;
@@ -1715,6 +1736,11 @@ export type MutationCreatePageLayoutWidgetArgs = {
 };
 
 
+export type MutationCreatePublicDomainArgs = {
+  domain: Scalars['String'];
+};
+
+
 export type MutationCreateSamlIdentityProviderArgs = {
   input: SetupSamlSsoInput;
 };
@@ -1830,6 +1856,11 @@ export type MutationDeletePageLayoutWidgetArgs = {
 };
 
 
+export type MutationDeletePublicDomainArgs = {
+  domain: Scalars['String'];
+};
+
+
 export type MutationDeleteSsoIdentityProviderArgs = {
   input: DeleteSsoInput;
 };
@@ -1902,6 +1933,11 @@ export type MutationDestroyPageLayoutTabArgs = {
 
 export type MutationDestroyPageLayoutWidgetArgs = {
   id: Scalars['String'];
+};
+
+
+export type MutationDuplicateWorkflowVersionStepArgs = {
+  input: DuplicateWorkflowVersionStepInput;
 };
 
 
@@ -2084,6 +2120,11 @@ export type MutationSignUpInWorkspaceArgs = {
 
 export type MutationSubmitFormStepArgs = {
   input: SubmitFormStepInput;
+};
+
+
+export type MutationSyncApplicationArgs = {
+  manifest: Scalars['JSON'];
 };
 
 
@@ -2562,6 +2603,14 @@ export type PostgresCredentials = {
   password: Scalars['String'];
   user: Scalars['String'];
   workspaceId: Scalars['UUID'];
+};
+
+export type PublicDomain = {
+  __typename?: 'PublicDomain';
+  createdAt: Scalars['DateTime'];
+  domain: Scalars['String'];
+  id: Scalars['UUID'];
+  isValidated: Scalars['Boolean'];
 };
 
 export type PublicFeatureFlag = {
@@ -4645,7 +4694,7 @@ export type GetSystemHealthStatusQueryVariables = Exact<{ [key: string]: never; 
 
 export type GetSystemHealthStatusQuery = { __typename?: 'Query', getSystemHealthStatus: { __typename?: 'SystemHealth', services: Array<{ __typename?: 'SystemHealthService', id: HealthIndicatorId, label: string, status: AdminPanelHealthServiceStatus }> } };
 
-export type ApiKeyFragmentFragment = { __typename?: 'ApiKey', id: string, name: string, expiresAt: string, revokedAt?: string | null, role?: { __typename?: 'Role', id: string, label: string, icon?: string | null } | null };
+export type ApiKeyFragmentFragment = { __typename?: 'ApiKey', id: string, name: string, expiresAt: string, revokedAt?: string | null, role: { __typename?: 'Role', id: string, label: string, icon?: string | null } };
 
 export type WebhookFragmentFragment = { __typename?: 'Webhook', id: string, targetUrl: string, operations: Array<string>, description?: string | null, secret: string };
 
@@ -4662,7 +4711,7 @@ export type CreateApiKeyMutationVariables = Exact<{
 }>;
 
 
-export type CreateApiKeyMutation = { __typename?: 'Mutation', createApiKey: { __typename?: 'ApiKey', id: string, name: string, expiresAt: string, revokedAt?: string | null, role?: { __typename?: 'Role', id: string, label: string, icon?: string | null } | null } };
+export type CreateApiKeyMutation = { __typename?: 'Mutation', createApiKey: { __typename?: 'ApiKey', id: string, name: string, expiresAt: string, revokedAt?: string | null, role: { __typename?: 'Role', id: string, label: string, icon?: string | null } } };
 
 export type CreateWebhookMutationVariables = Exact<{
   input: CreateWebhookDto;
@@ -4690,7 +4739,7 @@ export type UpdateApiKeyMutationVariables = Exact<{
 }>;
 
 
-export type UpdateApiKeyMutation = { __typename?: 'Mutation', updateApiKey?: { __typename?: 'ApiKey', id: string, name: string, expiresAt: string, revokedAt?: string | null, role?: { __typename?: 'Role', id: string, label: string, icon?: string | null } | null } | null };
+export type UpdateApiKeyMutation = { __typename?: 'Mutation', updateApiKey?: { __typename?: 'ApiKey', id: string, name: string, expiresAt: string, revokedAt?: string | null, role: { __typename?: 'Role', id: string, label: string, icon?: string | null } } | null };
 
 export type UpdateWebhookMutationVariables = Exact<{
   input: UpdateWebhookDto;
@@ -4704,12 +4753,12 @@ export type GetApiKeyQueryVariables = Exact<{
 }>;
 
 
-export type GetApiKeyQuery = { __typename?: 'Query', apiKey?: { __typename?: 'ApiKey', createdAt: string, id: string, name: string, expiresAt: string, revokedAt?: string | null, role?: { __typename?: 'Role', id: string, label: string, icon?: string | null } | null } | null };
+export type GetApiKeyQuery = { __typename?: 'Query', apiKey?: { __typename?: 'ApiKey', createdAt: string, id: string, name: string, expiresAt: string, revokedAt?: string | null, role: { __typename?: 'Role', id: string, label: string, icon?: string | null } } | null };
 
 export type GetApiKeysQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetApiKeysQuery = { __typename?: 'Query', apiKeys: Array<{ __typename?: 'ApiKey', id: string, name: string, expiresAt: string, revokedAt?: string | null, role?: { __typename?: 'Role', id: string, label: string, icon?: string | null } | null }> };
+export type GetApiKeysQuery = { __typename?: 'Query', apiKeys: Array<{ __typename?: 'ApiKey', id: string, name: string, expiresAt: string, revokedAt?: string | null, role: { __typename?: 'Role', id: string, label: string, icon?: string | null } }> };
 
 export type GetWebhookQueryVariables = Exact<{
   input: GetWebhookDto;
@@ -5271,6 +5320,13 @@ export type DeleteWorkflowVersionStepMutationVariables = Exact<{
 
 export type DeleteWorkflowVersionStepMutation = { __typename?: 'Mutation', deleteWorkflowVersionStep: { __typename?: 'WorkflowVersionStepChanges', triggerNextStepIds?: Array<string> | null, stepsNextStepIds?: any | null, deletedStepIds?: Array<string> | null } };
 
+export type DuplicateWorkflowVersionStepMutationVariables = Exact<{
+  input: DuplicateWorkflowVersionStepInput;
+}>;
+
+
+export type DuplicateWorkflowVersionStepMutation = { __typename?: 'Mutation', duplicateWorkflowVersionStep: { __typename?: 'WorkflowVersionStepChanges', triggerNextStepIds?: Array<string> | null, stepsNextStepIds?: any | null, createdStep?: { __typename?: 'WorkflowAction', id: string, name: string, type: string, settings: any, valid: boolean, nextStepIds?: Array<string> | null, position?: { __typename?: 'WorkflowStepPosition', x: number, y: number } | null } | null } };
+
 export type RunWorkflowVersionMutationVariables = Exact<{
   input: RunWorkflowVersionInput;
 }>;
@@ -5367,7 +5423,7 @@ export type UploadWorkspaceLogoMutation = { __typename?: 'Mutation', uploadWorks
 export type CheckCustomDomainValidRecordsMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CheckCustomDomainValidRecordsMutation = { __typename?: 'Mutation', checkCustomDomainValidRecords?: { __typename?: 'CustomDomainValidRecords', id: string, customDomain: string, records: Array<{ __typename?: 'CustomDomainRecord', type: string, key: string, value: string, validationType: string, status: string }> } | null };
+export type CheckCustomDomainValidRecordsMutation = { __typename?: 'Mutation', checkCustomDomainValidRecords?: { __typename?: 'DomainValidRecords', id: string, domain: string, records: Array<{ __typename?: 'DomainRecord', type: string, key: string, value: string, validationType: string, status: string }> } | null };
 
 export type GetWorkspaceFromInviteHashQueryVariables = Exact<{
   inviteHash: Scalars['String'];
@@ -12045,6 +12101,52 @@ export function useDeleteWorkflowVersionStepMutation(baseOptions?: Apollo.Mutati
 export type DeleteWorkflowVersionStepMutationHookResult = ReturnType<typeof useDeleteWorkflowVersionStepMutation>;
 export type DeleteWorkflowVersionStepMutationResult = Apollo.MutationResult<DeleteWorkflowVersionStepMutation>;
 export type DeleteWorkflowVersionStepMutationOptions = Apollo.BaseMutationOptions<DeleteWorkflowVersionStepMutation, DeleteWorkflowVersionStepMutationVariables>;
+export const DuplicateWorkflowVersionStepDocument = gql`
+    mutation DuplicateWorkflowVersionStep($input: DuplicateWorkflowVersionStepInput!) {
+  duplicateWorkflowVersionStep(input: $input) {
+    triggerNextStepIds
+    stepsNextStepIds
+    createdStep {
+      id
+      name
+      type
+      settings
+      valid
+      nextStepIds
+      position {
+        x
+        y
+      }
+    }
+  }
+}
+    `;
+export type DuplicateWorkflowVersionStepMutationFn = Apollo.MutationFunction<DuplicateWorkflowVersionStepMutation, DuplicateWorkflowVersionStepMutationVariables>;
+
+/**
+ * __useDuplicateWorkflowVersionStepMutation__
+ *
+ * To run a mutation, you first call `useDuplicateWorkflowVersionStepMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDuplicateWorkflowVersionStepMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [duplicateWorkflowVersionStepMutation, { data, loading, error }] = useDuplicateWorkflowVersionStepMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDuplicateWorkflowVersionStepMutation(baseOptions?: Apollo.MutationHookOptions<DuplicateWorkflowVersionStepMutation, DuplicateWorkflowVersionStepMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DuplicateWorkflowVersionStepMutation, DuplicateWorkflowVersionStepMutationVariables>(DuplicateWorkflowVersionStepDocument, options);
+      }
+export type DuplicateWorkflowVersionStepMutationHookResult = ReturnType<typeof useDuplicateWorkflowVersionStepMutation>;
+export type DuplicateWorkflowVersionStepMutationResult = Apollo.MutationResult<DuplicateWorkflowVersionStepMutation>;
+export type DuplicateWorkflowVersionStepMutationOptions = Apollo.BaseMutationOptions<DuplicateWorkflowVersionStepMutation, DuplicateWorkflowVersionStepMutationVariables>;
 export const RunWorkflowVersionDocument = gql`
     mutation RunWorkflowVersion($input: RunWorkflowVersionInput!) {
   runWorkflowVersion(input: $input) {
@@ -12522,7 +12624,7 @@ export const CheckCustomDomainValidRecordsDocument = gql`
     mutation CheckCustomDomainValidRecords {
   checkCustomDomainValidRecords {
     id
-    customDomain
+    domain
     records {
       type
       key

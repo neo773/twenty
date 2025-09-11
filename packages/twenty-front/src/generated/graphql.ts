@@ -135,7 +135,7 @@ export type ApiKey = {
   id: Scalars['UUID'];
   name: Scalars['String'];
   revokedAt?: Maybe<Scalars['DateTime']>;
-  role?: Maybe<Role>;
+  role: Role;
   updatedAt: Scalars['DateTime'];
   workspace: Workspace;
   workspaceId: Scalars['UUID'];
@@ -169,6 +169,20 @@ export type AppTokenEdge = {
   cursor: Scalars['ConnectionCursor'];
   /** The node containing the AppToken */
   node: AppToken;
+};
+
+export type Application = {
+  __typename?: 'Application';
+  createdAt: Scalars['DateTime'];
+  description?: Maybe<Scalars['String']>;
+  id: Scalars['UUID'];
+  label: Scalars['String'];
+  sourcePath: Scalars['String'];
+  sourceType: Scalars['String'];
+  standardId?: Maybe<Scalars['UUID']>;
+  updatedAt: Scalars['DateTime'];
+  version?: Maybe<Scalars['String']>;
+  workspaceId: Scalars['UUID'];
 };
 
 export type ApprovedAccessDomain = {
@@ -818,22 +832,6 @@ export type CursorPaging = {
   last?: InputMaybe<Scalars['Int']>;
 };
 
-export type CustomDomainRecord = {
-  __typename?: 'CustomDomainRecord';
-  key: Scalars['String'];
-  status: Scalars['String'];
-  type: Scalars['String'];
-  validationType: Scalars['String'];
-  value: Scalars['String'];
-};
-
-export type CustomDomainValidRecords = {
-  __typename?: 'CustomDomainValidRecords';
-  customDomain: Scalars['String'];
-  id: Scalars['UUID'];
-  records: Array<CustomDomainRecord>;
-};
-
 /** Database Event Action */
 export enum DatabaseEventAction {
   CREATED = 'CREATED',
@@ -911,6 +909,27 @@ export enum DistantTableUpdate {
   TABLE_DELETED = 'TABLE_DELETED'
 }
 
+export type DomainRecord = {
+  __typename?: 'DomainRecord';
+  key: Scalars['String'];
+  status: Scalars['String'];
+  type: Scalars['String'];
+  validationType: Scalars['String'];
+  value: Scalars['String'];
+};
+
+export type DomainValidRecords = {
+  __typename?: 'DomainValidRecords';
+  domain: Scalars['String'];
+  id: Scalars['UUID'];
+  records: Array<DomainRecord>;
+};
+
+export type DuplicateWorkflowVersionStepInput = {
+  stepId: Scalars['String'];
+  workflowVersionId: Scalars['String'];
+};
+
 export type EditSsoInput = {
   id: Scalars['UUID'];
   status: SsoIdentityProviderStatus;
@@ -963,7 +982,6 @@ export type FeatureFlagDto = {
 export enum FeatureFlagKey {
   IS_AIRTABLE_INTEGRATION_ENABLED = 'IS_AIRTABLE_INTEGRATION_ENABLED',
   IS_AI_ENABLED = 'IS_AI_ENABLED',
-  IS_API_KEY_ROLES_ENABLED = 'IS_API_KEY_ROLES_ENABLED',
   IS_CORE_VIEW_ENABLED = 'IS_CORE_VIEW_ENABLED',
   IS_CORE_VIEW_SYNCING_ENABLED = 'IS_CORE_VIEW_SYNCING_ENABLED',
   IS_DATABASE_EVENT_TRIGGER_ENABLED = 'IS_DATABASE_EVENT_TRIGGER_ENABLED',
@@ -976,7 +994,6 @@ export enum FeatureFlagKey {
   IS_RELATION_CONNECT_ENABLED = 'IS_RELATION_CONNECT_ENABLED',
   IS_STRIPE_INTEGRATION_ENABLED = 'IS_STRIPE_INTEGRATION_ENABLED',
   IS_UNIQUE_INDEXES_ENABLED = 'IS_UNIQUE_INDEXES_ENABLED',
-  IS_WORKFLOW_BRANCH_ENABLED = 'IS_WORKFLOW_BRANCH_ENABLED',
   IS_WORKFLOW_ITERATOR_ENABLED = 'IS_WORKFLOW_ITERATOR_ENABLED',
   IS_WORKSPACE_MIGRATION_V2_ENABLED = 'IS_WORKSPACE_MIGRATION_V2_ENABLED'
 }
@@ -1350,7 +1367,7 @@ export type Mutation = {
   assignRoleToAgent: Scalars['Boolean'];
   assignRoleToApiKey: Scalars['Boolean'];
   authorizeApp: AuthorizeApp;
-  checkCustomDomainValidRecords?: Maybe<CustomDomainValidRecords>;
+  checkCustomDomainValidRecords?: Maybe<DomainValidRecords>;
   checkoutSession: BillingSessionOutput;
   computeStepOutputSchema: Scalars['JSON'];
   createAgentChatThread: AgentChatThread;
@@ -1377,6 +1394,7 @@ export type Mutation = {
   createPageLayout: PageLayout;
   createPageLayoutTab: PageLayoutTab;
   createPageLayoutWidget: PageLayoutWidget;
+  createPublicDomain: PublicDomain;
   createSAMLIdentityProvider: SetupSsoOutput;
   createWebhook: Webhook;
   createWorkflowVersionEdge: WorkflowVersionStepChanges;
@@ -1400,6 +1418,7 @@ export type Mutation = {
   deletePageLayout: PageLayout;
   deletePageLayoutTab: Scalars['Boolean'];
   deletePageLayoutWidget: PageLayoutWidget;
+  deletePublicDomain: Scalars['Boolean'];
   deleteSSOIdentityProvider: DeleteSsoOutput;
   deleteTwoFactorAuthenticationMethod: DeleteTwoFactorAuthenticationMethodOutput;
   deleteUser: User;
@@ -1417,6 +1436,7 @@ export type Mutation = {
   destroyPageLayoutTab: Scalars['Boolean'];
   destroyPageLayoutWidget: Scalars['Boolean'];
   disablePostgresProxy: PostgresCredentials;
+  duplicateWorkflowVersionStep: WorkflowVersionStepChanges;
   editSSOIdentityProvider: EditSsoOutput;
   emailPasswordResetLink: EmailPasswordResetLink;
   enablePostgresProxy: PostgresCredentials;
@@ -1455,6 +1475,7 @@ export type Mutation = {
   submitFormStep: Scalars['Boolean'];
   switchToEnterprisePlan: BillingUpdateOutput;
   switchToYearlyInterval: BillingUpdateOutput;
+  syncApplication: Application;
   trackAnalytics: Analytics;
   updateApiKey?: Maybe<ApiKey>;
   updateCoreView: CoreView;
@@ -1651,6 +1672,11 @@ export type MutationCreatePageLayoutWidgetArgs = {
 };
 
 
+export type MutationCreatePublicDomainArgs = {
+  domain: Scalars['String'];
+};
+
+
 export type MutationCreateSamlIdentityProviderArgs = {
   input: SetupSamlSsoInput;
 };
@@ -1761,6 +1787,11 @@ export type MutationDeletePageLayoutWidgetArgs = {
 };
 
 
+export type MutationDeletePublicDomainArgs = {
+  domain: Scalars['String'];
+};
+
+
 export type MutationDeleteSsoIdentityProviderArgs = {
   input: DeleteSsoInput;
 };
@@ -1833,6 +1864,11 @@ export type MutationDestroyPageLayoutTabArgs = {
 
 export type MutationDestroyPageLayoutWidgetArgs = {
   id: Scalars['String'];
+};
+
+
+export type MutationDuplicateWorkflowVersionStepArgs = {
+  input: DuplicateWorkflowVersionStepInput;
 };
 
 
@@ -2015,6 +2051,11 @@ export type MutationSignUpInWorkspaceArgs = {
 
 export type MutationSubmitFormStepArgs = {
   input: SubmitFormStepInput;
+};
+
+
+export type MutationSyncApplicationArgs = {
+  manifest: Scalars['JSON'];
 };
 
 
@@ -2473,6 +2514,14 @@ export type PostgresCredentials = {
   password: Scalars['String'];
   user: Scalars['String'];
   workspaceId: Scalars['UUID'];
+};
+
+export type PublicDomain = {
+  __typename?: 'PublicDomain';
+  createdAt: Scalars['DateTime'];
+  domain: Scalars['String'];
+  id: Scalars['UUID'];
+  isValidated: Scalars['Boolean'];
 };
 
 export type PublicFeatureFlag = {
