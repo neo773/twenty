@@ -82,7 +82,6 @@ export class WorkspaceEntityManager extends EntityManager {
     return this.connection.featureFlagMap;
   }
 
-
   override getRepository<Entity extends ObjectLiteral>(
     target: EntityTarget<Entity>,
     permissionOptions?: {

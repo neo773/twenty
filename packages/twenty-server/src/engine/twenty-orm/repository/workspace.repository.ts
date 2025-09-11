@@ -640,38 +640,6 @@ export class WorkspaceRepository<
     return results;
   }
 
-  /**
-   * Direct update for virtual fields without event emission.
-   */
-  async updateVirtualFields(
-    criteria:
-      | string
-      | string[]
-      | number
-      | number[]
-      | Date
-      | Date[]
-      | ObjectId
-      | ObjectId[]
-      | FindOptionsWhere<T>,
-    virtualFieldUpdates: QueryDeepPartialEntity<T>,
-  ): Promise<UpdateResult> {
-    const queryBuilder = this.createQueryBuilder()
-      .update()
-      .set(virtualFieldUpdates);
-
-    // Handle different criteria types properly
-    if (typeof criteria === 'string') {
-      queryBuilder.where('id = :id', { id: criteria });
-    } else if (Array.isArray(criteria)) {
-      queryBuilder.whereInIds(criteria);
-    } else {
-      queryBuilder.where(criteria as FindOptionsWhere<T>);
-    }
-
-    return queryBuilder.execute();
-  }
-
   override async upsert(
     entityOrEntities:
       | QueryDeepPartialEntityWithNestedRelationFields<T>

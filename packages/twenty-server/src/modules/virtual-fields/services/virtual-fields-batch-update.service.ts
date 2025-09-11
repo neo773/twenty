@@ -35,7 +35,7 @@ export class VirtualFieldsBatchUpdateService {
 
     for (const [entityId, updates] of updatesByEntity.entries()) {
       try {
-        await repository.updateVirtualFields(entityId, updates as Partial<T>);
+        await repository.update(entityId, updates as Partial<T>);
 
         this.logger.debug('Updated computed fields for entity', {
           entityId,

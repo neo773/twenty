@@ -221,8 +221,6 @@ export class WorkspaceCacheStorageService {
     );
   }
 
-
-
   async flushVersionedMetadata(
     workspaceId: string,
     metadataVersion?: number,
@@ -247,8 +245,6 @@ export class WorkspaceCacheStorageService {
       `${WorkspaceCacheKeys.ORMEntitySchemas}:${workspaceId}:${metadataVersionSuffix}`,
     );
   }
-
-
 
   async flush(workspaceId: string, metadataVersion?: number): Promise<void> {
     await this.flushVersionedMetadata(workspaceId, metadataVersion);
