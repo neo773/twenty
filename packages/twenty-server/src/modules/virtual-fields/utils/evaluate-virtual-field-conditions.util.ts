@@ -9,8 +9,6 @@ import {
   type FieldCondition,
   type LogicalCondition,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondition';
-import { isLogicalCondition } from 'src/modules/virtual-fields/utils/isLogicalCondition';
 import { getFieldMetadata, resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 type RecordData = Record<string, PrimitiveValue | PrimitiveValue[]>;
@@ -49,7 +47,7 @@ function evaluateCondition(
   objectMetadataMaps: ObjectMetadataMaps,
 ): boolean {
   try {
-    if (isFieldCondition(condition)) {
+    if ('field' in condition) {
       return evaluateFieldCondition(
         condition,
         recordData,
@@ -57,7 +55,7 @@ function evaluateCondition(
       );
     }
 
-    if (isLogicalCondition(condition)) {
+    if ('and' in condition || 'or' in condition || 'not' in condition) {
       return evaluateLogicalCondition(
         condition,
         recordData,

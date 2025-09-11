@@ -196,7 +196,7 @@ describe('metadata-resolver.util', () => {
     it('should get object metadata by name', () => {
       const result = getObjectMetadataByName('company', mockObjectMetadataMaps);
 
-      expect(result).toEqual(mockObjectMetadataMaps.byId['company-id']);
+      expect(result).toEqual(mockObjectMetadataMaps.byId[STANDARD_OBJECT_IDS.company]);
     });
 
     it('should return undefined for non-existent object name', () => {

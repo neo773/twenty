@@ -8,8 +8,6 @@ import {
   type Condition,
   type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondition';
-import { isLogicalCondition } from 'src/modules/virtual-fields/utils/isLogicalCondition';
 import { buildVirtualFieldKey } from 'src/modules/virtual-fields/utils/build-virtual-field-key.util';
 import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
 import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
@@ -202,7 +200,7 @@ export class VirtualFieldsDependencyMapService {
   ): string[] {
     const dependencies = new Set<string>();
 
-    if (isFieldCondition(condition)) {
+    if ('field' in condition) {
       const resolvedField = resolveField(
         condition.field,
         objectMetadataMaps,
@@ -211,7 +209,7 @@ export class VirtualFieldsDependencyMapService {
       if (resolvedField) {
         dependencies.add(resolvedField.objectName);
       }
-    } else if (isLogicalCondition(condition)) {
+    } else if ('and' in condition || 'or' in condition || 'not' in condition) {
       if (condition.and) {
         for (const subCondition of condition.and) {
           const subDependencies = this.extractDependenciesFromCondition(

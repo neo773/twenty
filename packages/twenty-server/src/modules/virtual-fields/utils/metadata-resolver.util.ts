@@ -1,5 +1,4 @@
 import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/object-metadata-maps';
-import { getFieldMetadataEntityFromCachedObjectMetadataMaps } from 'src/engine/metadata-modules/utils/get-field-metadata-entity-from-cached-object-metadata-maps.util';
 import { getObjectMetadataMapItemByNameSingular } from 'src/engine/metadata-modules/utils/get-object-metadata-map-item-by-name-singular.util';
 import { type AllStandardFieldIds } from 'src/modules/computed-fields/types/AllStandardFieldIds';
 import { type AllStandardObjectIds } from 'src/modules/computed-fields/types/AllStandardObjectIds';

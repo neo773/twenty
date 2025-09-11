@@ -11,9 +11,6 @@ import {
   type PathBasedField,
   type RankingClause,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { buildColumnReference } from 'src/modules/virtual-fields/utils/build-column-reference.util';
-import { buildTableAlias } from 'src/modules/virtual-fields/utils/build-table-alias.util';
-import { isFieldCondition } from 'src/modules/virtual-fields/utils/isFieldCondition';
 import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
 import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
@@ -64,7 +61,7 @@ export class VirtualFieldsPathEvaluatorService {
 
     for (let i = 0; i < resolvedPath.length - 1; i++) {
       const step = resolvedPath[i];
-      const nextAlias = buildTableAlias(step.objectName, i + 1);
+      const nextAlias = `${step.objectName}_${i + 1}`;
 
       queryBuilder.leftJoin(`${currentAlias}.${step.fieldName}`, nextAlias);
       currentAlias = nextAlias;
@@ -113,10 +110,7 @@ export class VirtualFieldsPathEvaluatorService {
     }
 
     const targetField = resolvedPath[resolvedPath.length - 1];
-    const targetColumnRef = buildColumnReference(
-      currentAlias,
-      targetField.fieldName,
-    );
+    const targetColumnRef = `${currentAlias}.${targetField.fieldName}`;
 
     if (pathField.where) {
       this.applyConditionToQuery(
@@ -188,7 +182,7 @@ export class VirtualFieldsPathEvaluatorService {
 
     for (let i = 0; i < resolvedPath.length - 1; i++) {
       const step = resolvedPath[i];
-      const nextAlias = buildTableAlias(step.objectName, i + 1);
+      const nextAlias = `${step.objectName}_${i + 1}`;
 
       queryBuilder.leftJoin(`${currentAlias}.${step.fieldName}`, nextAlias);
       currentAlias = nextAlias;
@@ -231,7 +225,7 @@ export class VirtualFieldsPathEvaluatorService {
   ): void {
     // Simplified: Only handle basic field conditions for now
     // Complex logical conditions (and/or/not) should be handled by Twenty's GraphqlQueryFilterFieldParser
-    if (isFieldCondition(condition)) {
+    if ('field' in condition) {
       const resolvedField = resolveField(
         condition.field,
         objectMetadataMaps,
@@ -254,7 +248,7 @@ export class VirtualFieldsPathEvaluatorService {
             const nextStep = resolvedPath[i + 1];
 
             if (nextStep && nextStep.objectName === resolvedField.objectName) {
-              tableAlias = buildTableAlias(step.objectName, i + 1);
+              tableAlias = `${step.objectName}_${i + 1}`;
               break;
             }
           }
