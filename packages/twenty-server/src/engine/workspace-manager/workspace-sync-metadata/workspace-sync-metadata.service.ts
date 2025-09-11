@@ -265,7 +265,7 @@ export class WorkspaceSyncMetadataService {
       );
     }
 
-    // Initialize virtual fields for predefined standard objects after metadata version is set
+    // Initialize virtual fields
     if (options.applyChanges) {
       this.logger.log('Initializing virtual fields for standard objects');
       const initVirtualFieldsStart = performance.now();
