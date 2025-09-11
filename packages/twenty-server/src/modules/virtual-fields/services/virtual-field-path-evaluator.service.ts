@@ -120,11 +120,16 @@ export class VirtualFieldPathEvaluator {
     queryBuilder: WorkspaceSelectQueryBuilder<ObjectLiteral>,
     resolvedPath: ResolvedPathStep[],
   ): string {
+    if (resolvedPath.length <= 1) {
+      return 'root';
+    }
+
     let currentAlias = 'root';
 
     for (let i = 0; i < resolvedPath.length - 1; i++) {
       const step = resolvedPath[i];
-      const nextAlias = this.createTableAlias(step.objectName, i + 1);
+      const nextStep = resolvedPath[i + 1];
+      const nextAlias = nextStep.objectName;
 
       queryBuilder.leftJoin(`${currentAlias}.${step.fieldName}`, nextAlias);
       currentAlias = nextAlias;
@@ -133,121 +138,32 @@ export class VirtualFieldPathEvaluator {
     return currentAlias;
   }
 
-  private createTableAlias(objectName: string, index: number): string {
-    return `${objectName}_${index}`;
-  }
-
-  private findCorrectAliasForCondition(
+  private getAliasForCondition(
     condition: Condition,
     resolvedPath: ResolvedPathStep[],
     objectMetadataMaps: ObjectMetadataMaps,
-  ): {
-    correctAlias: string;
-    objectMetadata: ObjectMetadataItemWithFieldMaps | null;
-  } {
+  ): string {
     if (!('field' in condition)) {
-      // For complex conditions (and/or/not), use the last path alias as fallback
-      const fallbackAlias =
-        resolvedPath.length > 1
-          ? this.createTableAlias(
-              resolvedPath[resolvedPath.length - 1].objectName,
-              resolvedPath.length - 1,
-            )
-          : 'root';
-
-      return {
-        correctAlias: fallbackAlias,
-        objectMetadata: this.getTargetObjectMetadata(
-          fallbackAlias,
-          objectMetadataMaps,
-        ),
-      };
+      return resolvedPath.length > 1
+        ? resolvedPath[resolvedPath.length - 1].objectName
+        : 'root';
     }
 
-    // Resolve the field to find which object it belongs to
     const resolvedField = resolveField(condition.field, objectMetadataMaps);
 
     if (!resolvedField) {
       this.logger.warn(`Cannot resolve condition field: ${condition.field}`);
-      const fallbackAlias =
-        resolvedPath.length > 1
-          ? this.createTableAlias(
-              resolvedPath[resolvedPath.length - 1].objectName,
-              resolvedPath.length - 1,
-            )
-          : 'root';
 
-      return {
-        correctAlias: fallbackAlias,
-        objectMetadata: this.getTargetObjectMetadata(
-          fallbackAlias,
-          objectMetadataMaps,
-        ),
-      };
+      return resolvedPath.length > 1
+        ? resolvedPath[resolvedPath.length - 1].objectName
+        : 'root';
     }
 
-    // Build alias mapping from resolved path to find the correct alias
-    const aliasMap = this.buildAliasMapFromPath(resolvedPath);
-    const correctAlias = aliasMap.get(resolvedField.objectName);
-
-    if (correctAlias) {
-      return {
-        correctAlias,
-        objectMetadata:
-          getObjectMetadataMapItemByNameSingular(
-            objectMetadataMaps,
-            resolvedField.objectName,
-          ) ?? null,
-      };
-    }
-
-    // Fallback if we can't find the object in the path
-    this.logger.warn(
-      `Could not find correct alias for condition field ${condition.field} (${resolvedField.objectName}), object not found in path`,
+    const pathStep = resolvedPath.find(
+      (step) => step.objectName === resolvedField.objectName,
     );
 
-    const fallbackAlias =
-      resolvedPath.length > 1
-        ? this.createTableAlias(
-            resolvedPath[resolvedPath.length - 1].objectName,
-            resolvedPath.length - 1,
-          )
-        : 'root';
-
-    return {
-      correctAlias: fallbackAlias,
-      objectMetadata: this.getTargetObjectMetadata(
-        fallbackAlias,
-        objectMetadataMaps,
-      ),
-    };
-  }
-
-  private buildAliasMapFromPath(
-    resolvedPath: ResolvedPathStep[],
-  ): Map<string, string> {
-    const aliasMap = new Map<string, string>();
-
-    // Add root alias for the first object in the path (the source object)
-    if (resolvedPath.length > 0) {
-      aliasMap.set(resolvedPath[0].objectName, 'root');
-    }
-
-    // Add aliases for joined tables - this must match buildPathJoins logic exactly
-    // buildPathJoins creates aliases based on the step's objectName and the loop index + 1
-    for (let i = 0; i < resolvedPath.length - 1; i++) {
-      const step = resolvedPath[i];
-      const nextAlias = this.createTableAlias(step.objectName, i + 1);
-
-      // The alias represents the target of the join, which is the NEXT step's object
-      if (i + 1 < resolvedPath.length) {
-        const targetStep = resolvedPath[i + 1];
-
-        aliasMap.set(targetStep.objectName, nextAlias);
-      }
-    }
-
-    return aliasMap;
+    return pathStep ? resolvedField.objectName : 'root';
   }
 
   private isEntityReturnType(resolvedPath: ResolvedPathStep[]): boolean {
@@ -370,12 +286,16 @@ export class VirtualFieldPathEvaluator {
     objectMetadataMaps: ObjectMetadataMaps,
   ): void {
     if (pathField.where) {
-      const { correctAlias, objectMetadata } =
-        this.findCorrectAliasForCondition(
-          pathField.where,
-          resolvedPath,
-          objectMetadataMaps,
-        );
+      const correctAlias = this.getAliasForCondition(
+        pathField.where,
+        resolvedPath,
+        objectMetadataMaps,
+      );
+
+      const objectMetadata = this.getTargetObjectMetadata(
+        correctAlias,
+        objectMetadataMaps,
+      );
 
       this.applyConditionFilter(
         queryBuilder,
@@ -409,10 +329,12 @@ export class VirtualFieldPathEvaluator {
     pathAlias: string,
     objectMetadataMaps: ObjectMetadataMaps,
   ): ObjectMetadataItemWithFieldMaps | null {
-    const objectName = pathAlias === 'root' ? 'root' : pathAlias.split('_')[0];
+    if (pathAlias === 'root') {
+      return null;
+    }
 
     return (
-      getObjectMetadataMapItemByNameSingular(objectMetadataMaps, objectName) ||
+      getObjectMetadataMapItemByNameSingular(objectMetadataMaps, pathAlias) ||
       null
     );
   }
