@@ -82,20 +82,6 @@ export class WorkspaceEntityManager extends EntityManager {
     return this.connection.featureFlagMap;
   }
 
-  withContext(
-    contextOverrides: Partial<WorkspaceInternalContext>,
-  ): WorkspaceEntityManager {
-    const newContext = {
-      ...this.internalContext,
-      ...contextOverrides,
-    };
-
-    return new WorkspaceEntityManager(
-      newContext,
-      this.connection,
-      this.queryRunner,
-    );
-  }
 
   override getRepository<Entity extends ObjectLiteral>(
     target: EntityTarget<Entity>,

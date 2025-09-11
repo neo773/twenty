@@ -37,7 +37,6 @@ export class WorkspaceEventEmitter {
     authContext,
     entities,
     beforeEntities,
-    isVirtualFieldUpdate,
   }: {
     action: DatabaseEventAction;
     objectMetadataItem: ObjectMetadataItemWithFieldMaps;
@@ -45,7 +44,6 @@ export class WorkspaceEventEmitter {
     authContext?: AuthContext;
     entities: T | T[];
     beforeEntities?: T | T[];
-    isVirtualFieldUpdate?: boolean;
   }) {
     if (
       objectMetadataItem.standardId === STANDARD_OBJECT_IDS.timelineActivity
@@ -156,7 +154,6 @@ export class WorkspaceEventEmitter {
       name: eventName,
       workspaceId,
       events,
-      isVirtualFieldUpdate,
     });
   }
 

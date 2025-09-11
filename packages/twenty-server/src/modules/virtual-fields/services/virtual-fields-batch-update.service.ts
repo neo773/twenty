@@ -33,13 +33,9 @@ export class VirtualFieldsBatchUpdateService {
         operation.value;
     }
 
-    const entityManager = repository.manager.withContext({
-      isVirtualFieldUpdate: true,
-    });
-
     for (const [entityId, updates] of updatesByEntity.entries()) {
       try {
-        await repository.update(entityId, updates as Partial<T>, entityManager);
+        await repository.updateVirtualFields(entityId, updates as Partial<T>);
 
         this.logger.debug('Updated computed fields for entity', {
           entityId,
@@ -47,7 +43,7 @@ export class VirtualFieldsBatchUpdateService {
           values: Object.values(updates),
         });
       } catch (error) {
-        this.logger.error('Error updating entity', {
+        this.logger.error('Error updating virtual fields for entity', {
           entityId,
           updates,
           error,

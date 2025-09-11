@@ -132,16 +132,14 @@ export class EntityEventsToDbListener {
           }),
         );
 
-        if (!batchEvent.isVirtualFieldUpdate) {
-          promises.push(
-            this.entityEventsToDbQueueService.add<
-              WorkspaceEventBatch<ObjectRecordNonDestructiveEvent>
-            >(ProcessVirtualFieldsJob.name, {
-              ...batchEvent,
-              events: batchEvent.events as ObjectRecordNonDestructiveEvent[],
-            }),
-          );
-        }
+        promises.push(
+          this.entityEventsToDbQueueService.add<
+            WorkspaceEventBatch<ObjectRecordNonDestructiveEvent>
+          >(ProcessVirtualFieldsJob.name, {
+            ...batchEvent,
+            events: batchEvent.events as ObjectRecordNonDestructiveEvent[],
+          }),
+        );
       }
     }
 
