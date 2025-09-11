@@ -5,7 +5,7 @@ import { type ObjectMetadataMaps } from 'src/engine/metadata-modules/types/objec
 import { type VirtualField } from 'src/modules/computed-fields/types/VirtualField';
 import { VirtualFieldsFieldDiscoveryService } from 'src/modules/virtual-fields/services/virtual-fields-field-discovery.service';
 import { getObjectMetadataByName } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
-import { parseVirtualFieldKey } from 'src/modules/virtual-fields/utils/parse-virtual-field-key.util';
+import { parseVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
 import { resolveObjectById } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 

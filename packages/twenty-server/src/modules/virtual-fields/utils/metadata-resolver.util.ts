@@ -37,12 +37,13 @@ export function resolveFieldByStandardId(
 }
 
 /**
- * Resolves field by field metadata ID using engine utilities
+ * Resolves field by field metadata ID using optimized engine lookups
  */
 export function resolveFieldById(
   fieldId: string,
   objectMetadataMaps: ObjectMetadataMaps,
 ): FieldResolution | null {
+  // More efficient: iterate over objects and check fieldsById directly
   for (const objectMetadata of Object.values(objectMetadataMaps.byId)) {
     if (!objectMetadata) continue;
 
@@ -119,35 +120,34 @@ export function resolveObjectById(
 }
 
 /**
- * Gets field metadata using engine utilities
- * Replaces getFieldMetadata.ts
+ * Gets field metadata using optimized lookups
+ * Reuses existing resolution functions to avoid code duplication
  */
 export function getFieldMetadata(
   fieldId: string | AllStandardFieldIds,
   objectMetadataMaps: ObjectMetadataMaps,
 ) {
-  // Try to find by standard ID first
-  for (const objectMetadata of Object.values(objectMetadataMaps.byId)) {
-    if (!objectMetadata) continue;
-
-    for (const fieldMetadata of Object.values(objectMetadata.fieldsById)) {
-      if (fieldMetadata.standardId === fieldId) {
-        return fieldMetadata;
-      }
-    }
+  // First try to resolve the field to get the object context
+  const fieldResolution = resolveField(fieldId, objectMetadataMaps);
+  
+  if (!fieldResolution) {
+    return null;
   }
 
-  // Try direct field ID lookup
-  for (const objectMetadata of Object.values(objectMetadataMaps.byId)) {
-    if (!objectMetadata) continue;
+  // Get the object metadata
+  const objectMetadata = getObjectMetadataMapItemByNameSingular(
+    objectMetadataMaps,
+    fieldResolution.objectName,
+  );
 
-    const fieldMetadata = objectMetadata.fieldsById[fieldId];
-    if (fieldMetadata) {
-      return fieldMetadata;
-    }
+  if (!objectMetadata) {
+    return null;
   }
 
-  return null;
+  // Look up by field name in the object's fieldIdByName map, then get metadata
+  const resolvedFieldId = objectMetadata.fieldIdByName[fieldResolution.fieldName];
+  
+  return resolvedFieldId ? objectMetadata.fieldsById[resolvedFieldId] : null;
 }
 
 /**

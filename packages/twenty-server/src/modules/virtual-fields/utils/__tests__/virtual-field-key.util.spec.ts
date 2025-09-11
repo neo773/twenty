@@ -1,4 +1,30 @@
-import { parseVirtualFieldKey } from 'src/modules/virtual-fields/utils/parse-virtual-field-key.util';
+import { buildVirtualFieldKey, parseVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
+
+describe('buildVirtualFieldKey', () => {
+  it('should build virtual field key with simple names', () => {
+    const result = buildVirtualFieldKey('company', 'customerTier');
+
+    expect(result).toBe('virtualField:company:customerTier');
+  });
+
+  it('should build virtual field key with underscores in object name', () => {
+    const result = buildVirtualFieldKey('custom_object', 'fieldName');
+
+    expect(result).toBe('virtualField:custom_object:fieldName');
+  });
+
+  it('should build virtual field key with underscores in field name', () => {
+    const result = buildVirtualFieldKey('company', 'customer_tier_level');
+
+    expect(result).toBe('virtualField:company:customer_tier_level');
+  });
+
+  it('should build virtual field key with both names having underscores', () => {
+    const result = buildVirtualFieldKey('custom_object_type', 'complex_field_name');
+
+    expect(result).toBe('virtualField:custom_object_type:complex_field_name');
+  });
+});
 
 describe('parseVirtualFieldKey', () => {
   it('should parse valid virtual field key', () => {
@@ -71,5 +97,25 @@ describe('parseVirtualFieldKey', () => {
     const result = parseVirtualFieldKey(fieldKey);
 
     expect(result).toBeNull();
+  });
+
+  describe('buildVirtualFieldKey + parseVirtualFieldKey roundtrip', () => {
+    it('should correctly roundtrip simple names', () => {
+      const objectName = 'company';
+      const fieldName = 'customerTier';
+      const key = buildVirtualFieldKey(objectName, fieldName);
+      const parsed = parseVirtualFieldKey(key);
+
+      expect(parsed).toEqual({ objectName, fieldName });
+    });
+
+    it('should correctly roundtrip complex names', () => {
+      const objectName = 'custom_object_type';
+      const fieldName = 'complex_field_name_here';
+      const key = buildVirtualFieldKey(objectName, fieldName);
+      const parsed = parseVirtualFieldKey(key);
+
+      expect(parsed).toEqual({ objectName, fieldName });
+    });
   });
 });

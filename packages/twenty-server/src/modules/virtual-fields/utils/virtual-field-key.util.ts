@@ -1,5 +1,9 @@
 const VIRTUAL_FIELD_KEY_PREFIX = 'virtualField:' as const;
 
+export function buildVirtualFieldKey(objectName: string, fieldName: string): string {
+  return `${VIRTUAL_FIELD_KEY_PREFIX}${objectName}:${fieldName}`;
+}
+
 export function parseVirtualFieldKey(
   fieldKey: string,
 ): { objectName: string; fieldName: string } | null {

@@ -11,7 +11,6 @@ import {
   type PathBasedField,
   type RankingClause,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
 import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 type ResolvedPathStep = {
@@ -49,9 +48,12 @@ export class VirtualFieldsPathEvaluatorService {
       );
 
     const queryBuilder = repository.createQueryBuilder('root');
-    const resolvedPath = resolveFieldPath(pathField.path, objectMetadataMaps);
+    // Replace resolveFieldPath with inline mapping
+    const resolvedPath = pathField.path
+      .map(fieldId => resolveField(fieldId, objectMetadataMaps))
+      .filter(Boolean) as ResolvedPathStep[];
 
-    if (!resolvedPath) {
+    if (resolvedPath.length !== pathField.path.length) {
       throw new Error(
         `Could not resolve field path: ${pathField.path.join(' -> ')}`,
       );

@@ -8,8 +8,7 @@ import {
   type Condition,
   type VirtualField,
 } from 'src/modules/computed-fields/types/VirtualField';
-import { buildVirtualFieldKey } from 'src/modules/virtual-fields/utils/build-virtual-field-key.util';
-import { resolveFieldPath } from 'src/modules/virtual-fields/utils/resolve-field-path.util';
+import { buildVirtualFieldKey } from 'src/modules/virtual-fields/utils/virtual-field-key.util';
 import { resolveField } from 'src/modules/virtual-fields/utils/metadata-resolver.util';
 
 export type VirtualFieldDependencyMap = Record<
@@ -185,13 +184,16 @@ export class VirtualFieldsDependencyMapService {
     path: AllStandardFieldIds[],
     objectMetadataMaps: ObjectMetadataMaps,
   ): string[] {
-    const resolvedPath = resolveFieldPath(path, objectMetadataMaps);
+    // Replace resolveFieldPath with inline mapping
+    const resolvedPath = path
+      .map(fieldId => resolveField(fieldId, objectMetadataMaps))
+      .filter(Boolean);
 
-    if (!resolvedPath) {
+    if (resolvedPath.length !== path.length) {
       return [];
     }
 
-    return resolvedPath.map((step) => step.objectName);
+    return resolvedPath.map((step) => step!.objectName);
   }
 
   private extractDependenciesFromCondition(
