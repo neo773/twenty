@@ -2,67 +2,52 @@ import {
   type InputSchema,
   type InputSchemaProperty,
 } from '@/workflow/types/InputSchema';
-import {
-  type ArrayTypeNode,
-  type ArrowFunction,
-  createSourceFile,
-  type FunctionDeclaration,
-  type FunctionLikeDeclaration,
-  type LiteralTypeNode,
-  type Node,
-  type PropertySignature,
-  ScriptTarget,
-  type StringLiteral,
-  SyntaxKind,
-  type TypeNode,
-  type UnionTypeNode,
-  type VariableStatement,
-} from 'typescript';
+import { type TSESTree } from '@typescript-eslint/types';
+import { parse } from '@typescript-eslint/typescript-estree';
 import { isDefined } from 'twenty-shared/utils';
 
-const getTypeString = (typeNode: TypeNode): InputSchemaProperty => {
-  switch (typeNode.kind) {
-    case SyntaxKind.NumberKeyword:
+const getTypeString = (typeNode?: TSESTree.TypeNode): InputSchemaProperty => {
+  if (!typeNode) return { type: 'unknown' };
+
+  switch (typeNode.type) {
+    case 'TSNumberKeyword':
       return { type: 'number' };
-    case SyntaxKind.StringKeyword:
+    case 'TSStringKeyword':
       return { type: 'string' };
-    case SyntaxKind.BooleanKeyword:
+    case 'TSBooleanKeyword':
       return { type: 'boolean' };
-    case SyntaxKind.ArrayType:
+    case 'TSArrayType':
       return {
         type: 'array',
-        items: getTypeString((typeNode as ArrayTypeNode).elementType),
+        items: getTypeString(typeNode.elementType),
       };
-    case SyntaxKind.ObjectKeyword:
+    case 'TSObjectKeyword':
       return { type: 'object' };
-    case SyntaxKind.TypeLiteral: {
+    case 'TSTypeLiteral': {
       const properties: InputSchemaProperty['properties'] = {};
-
-      (typeNode as any).members.forEach((member: PropertySignature) => {
-        if (isDefined(member.name) && isDefined(member.type)) {
-          const memberName = (member.name as any).text;
-
-          properties[memberName] = getTypeString(member.type);
+      typeNode.members.forEach((member) => {
+        if (
+          member.type === 'TSPropertySignature' &&
+          member.key.type === 'Identifier'
+        ) {
+          properties[member.key.name] = getTypeString(
+            member.typeAnnotation?.typeAnnotation,
+          );
         }
       });
-
       return { type: 'object', properties };
     }
-    case SyntaxKind.UnionType: {
-      const unionNode = typeNode as UnionTypeNode;
+    case 'TSUnionType': {
       const enumValues: string[] = [];
-
       let isEnum = true;
 
-      unionNode.types.forEach((subType) => {
-        if (subType.kind === SyntaxKind.LiteralType) {
-          const literal = (subType as LiteralTypeNode).literal;
-
-          if (literal.kind === SyntaxKind.StringLiteral) {
-            enumValues.push((literal as StringLiteral).text);
-          } else {
-            isEnum = false;
-          }
+      typeNode.types.forEach((subType) => {
+        if (
+          subType.type === 'TSLiteralType' &&
+          subType.literal.type === 'Literal' &&
+          typeof subType.literal.value === 'string'
+        ) {
+          enumValues.push(subType.literal.value);
         } else {
           isEnum = false;
         }
@@ -71,7 +56,6 @@ const getTypeString = (typeNode: TypeNode): InputSchemaProperty => {
       if (isEnum) {
         return { type: 'string', enum: enumValues };
       }
-
       return { type: 'unknown' };
     }
     default:
@@ -80,59 +64,63 @@ const getTypeString = (typeNode: TypeNode): InputSchemaProperty => {
 };
 
 const computeFunctionParameters = (
-  funcNode: FunctionDeclaration | FunctionLikeDeclaration | ArrowFunction,
+  funcNode: TSESTree.FunctionDeclaration | TSESTree.ArrowFunctionExpression,
   schema: InputSchema,
 ): InputSchema => {
-  const params = funcNode.parameters;
-
-  return params.reduce((updatedSchema, param) => {
-    const typeNode = param.type;
-
-    if (isDefined(typeNode)) {
-      return [...updatedSchema, getTypeString(typeNode)];
-    } else {
-      return [...updatedSchema, { type: 'unknown' }];
+  return funcNode.params.reduce((updatedSchema, param) => {
+    if (param.type === 'Identifier') {
+      return [
+        ...updatedSchema,
+        getTypeString(param.typeAnnotation?.typeAnnotation),
+      ];
+    } else if (param.type === 'ObjectPattern') {
+      // destructured params
+      const properties: InputSchemaProperty['properties'] = {};
+      param.properties.forEach((p) => {
+        if (
+          p.type === 'Property' &&
+          p.key.type === 'Identifier' &&
+          p.value.type === 'Identifier'
+        ) {
+          properties[p.key.name] = getTypeString(
+            p.value.typeAnnotation?.typeAnnotation,
+          );
+        }
+      });
+      return [...updatedSchema, { type: 'object', properties }];
     }
+    return [...updatedSchema, { type: 'unknown' }];
   }, schema);
 };
 
-const extractFunctions = (node: Node): FunctionLikeDeclaration[] => {
-  if (node.kind === SyntaxKind.FunctionDeclaration) {
-    return [node as FunctionDeclaration];
-  }
-
-  if (node.kind === SyntaxKind.VariableStatement) {
-    const varStatement = node as VariableStatement;
-    return varStatement.declarationList.declarations
-      .filter(
-        (declaration) =>
-          isDefined(declaration.initializer) &&
-          declaration.initializer.kind === SyntaxKind.ArrowFunction,
-      )
-      .map((declaration) => declaration.initializer as ArrowFunction);
-  }
-
-  return [];
-};
-
 export const getFunctionInputSchema = (fileContent: string): InputSchema => {
-  const sourceFile = createSourceFile(
-    'temp.ts',
-    fileContent,
-    ScriptTarget.ESNext,
-    true,
-  );
+  const ast = parse(fileContent, { loc: false, range: false });
   let schema: InputSchema = [];
 
-  sourceFile.forEachChild((node) => {
-    if (
-      node.kind === SyntaxKind.FunctionDeclaration ||
-      node.kind === SyntaxKind.VariableStatement
+  ast.body.forEach((node) => {
+    if (node.type === 'FunctionDeclaration') {
+      schema = computeFunctionParameters(node, schema);
+    } else if (
+      node.type === 'VariableDeclaration' &&
+      node.declarations[0]?.init?.type === 'ArrowFunctionExpression'
     ) {
-      const functions = extractFunctions(node);
-      functions.forEach((func) => {
-        schema = computeFunctionParameters(func, schema);
-      });
+      schema = computeFunctionParameters(node.declarations[0].init, schema);
+    } else if (
+      node.type === 'ExportNamedDeclaration' &&
+      isDefined(node.declaration)
+    ) {
+      if (node.declaration.type === 'FunctionDeclaration') {
+        schema = computeFunctionParameters(node.declaration, schema);
+      } else if (
+        node.declaration.type === 'VariableDeclaration' &&
+        node.declaration.declarations[0]?.init?.type ===
+          'ArrowFunctionExpression'
+      ) {
+        schema = computeFunctionParameters(
+          node.declaration.declarations[0].init,
+          schema,
+        );
+      }
     }
   });
 
