@@ -2,139 +2,176 @@ import {
   type InputSchema,
   type InputSchemaProperty,
 } from '@/workflow/types/InputSchema';
-import {
-  type ArrayTypeNode,
-  type ArrowFunction,
-  createSourceFile,
-  type FunctionDeclaration,
-  type FunctionLikeDeclaration,
-  type LiteralTypeNode,
-  type Node,
-  type PropertySignature,
-  ScriptTarget,
-  type StringLiteral,
-  SyntaxKind,
-  type TypeNode,
-  type UnionTypeNode,
-  type VariableStatement,
-} from 'typescript';
+import { tsPlugin } from '@sveltejs/acorn-typescript';
+import * as acorn from 'acorn';
 import { isDefined } from 'twenty-shared/utils';
 
-const getTypeString = (typeNode: TypeNode): InputSchemaProperty => {
-  switch (typeNode.kind) {
-    case SyntaxKind.NumberKeyword:
+type TSTypeNode = {
+  type: string;
+  elementType?: TSTypeNode;
+  members?: Array<{
+    type: string;
+    key?: { name: string };
+    typeAnnotation?: { typeAnnotation: TSTypeNode };
+  }>;
+  types?: TSTypeNode[];
+  literal?: { value: string | number | boolean };
+  typeName?: { name: string };
+};
+
+type ExtendedNode = {
+  type: string;
+  typeAnnotation?: {
+    type: 'TSTypeAnnotation';
+    typeAnnotation: TSTypeNode;
+  };
+  params?: ExtendedNode[];
+  declarations?: { init?: ExtendedNode }[];
+  declaration?: ExtendedNode;
+  body?: ExtendedNode[];
+};
+
+const getTypeString = (typeNode: TSTypeNode): InputSchemaProperty => {
+  switch (typeNode.type) {
+    case 'TSNumberKeyword':
       return { type: 'number' };
-    case SyntaxKind.StringKeyword:
+    case 'TSStringKeyword':
       return { type: 'string' };
-    case SyntaxKind.BooleanKeyword:
+    case 'TSBooleanKeyword':
       return { type: 'boolean' };
-    case SyntaxKind.ArrayType:
+    case 'TSArrayType':
       return {
         type: 'array',
-        items: getTypeString((typeNode as ArrayTypeNode).elementType),
+        items: typeNode.elementType
+          ? getTypeString(typeNode.elementType)
+          : { type: 'unknown' },
       };
-    case SyntaxKind.ObjectKeyword:
+    case 'TSObjectKeyword':
       return { type: 'object' };
-    case SyntaxKind.TypeLiteral: {
+    case 'TSTypeLiteral': {
       const properties: InputSchemaProperty['properties'] = {};
 
-      (typeNode as any).members.forEach((member: PropertySignature) => {
-        if (isDefined(member.name) && isDefined(member.type)) {
-          const memberName = (member.name as any).text;
-
-          properties[memberName] = getTypeString(member.type);
-        }
-      });
+      if (isDefined(typeNode.members)) {
+        typeNode.members.forEach((member) => {
+          if (
+            member.type === 'TSPropertySignature' &&
+            isDefined(member.key?.name) &&
+            isDefined(member.typeAnnotation?.typeAnnotation)
+          ) {
+            const memberName = member.key.name;
+            properties[memberName] = getTypeString(
+              member.typeAnnotation.typeAnnotation,
+            );
+          }
+        });
+      }
 
       return { type: 'object', properties };
     }
-    case SyntaxKind.UnionType: {
-      const unionNode = typeNode as UnionTypeNode;
+    case 'TSUnionType': {
       const enumValues: string[] = [];
-
       let isEnum = true;
 
-      unionNode.types.forEach((subType) => {
-        if (subType.kind === SyntaxKind.LiteralType) {
-          const literal = (subType as LiteralTypeNode).literal;
-
-          if (literal.kind === SyntaxKind.StringLiteral) {
-            enumValues.push((literal as StringLiteral).text);
+      if (isDefined(typeNode.types)) {
+        typeNode.types.forEach((subType) => {
+          if (subType.type === 'TSLiteralType' && isDefined(subType.literal)) {
+            if (typeof subType.literal.value === 'string') {
+              enumValues.push(subType.literal.value);
+            } else {
+              isEnum = false;
+            }
           } else {
             isEnum = false;
           }
-        } else {
-          isEnum = false;
-        }
-      });
+        });
+      }
 
-      if (isEnum) {
+      if (isEnum && enumValues.length > 0) {
         return { type: 'string', enum: enumValues };
       }
 
       return { type: 'unknown' };
     }
+    case 'TSTypeReference':
+      return typeNode.typeName?.name === 'object'
+        ? { type: 'object' }
+        : { type: 'unknown' };
     default:
       return { type: 'unknown' };
   }
 };
 
+const isFunction = (node: ExtendedNode): boolean => {
+  return (
+    node.type === 'FunctionDeclaration' ||
+    node.type === 'ArrowFunctionExpression' ||
+    node.type === 'FunctionExpression'
+  );
+};
+
 const computeFunctionParameters = (
-  funcNode: FunctionDeclaration | FunctionLikeDeclaration | ArrowFunction,
+  funcNode: ExtendedNode,
   schema: InputSchema,
 ): InputSchema => {
-  const params = funcNode.parameters;
+  if (!isDefined(funcNode.params)) {
+    return schema;
+  }
 
-  return params.reduce((updatedSchema, param) => {
-    const typeNode = param.type;
+  return funcNode.params.reduce((updatedSchema, param) => {
+    const typeAnnotation = param.typeAnnotation;
 
-    if (isDefined(typeNode)) {
-      return [...updatedSchema, getTypeString(typeNode)];
-    } else {
-      return [...updatedSchema, { type: 'unknown' }];
+    if (isDefined(typeAnnotation?.typeAnnotation)) {
+      return [...updatedSchema, getTypeString(typeAnnotation.typeAnnotation)];
     }
+
+    return [...updatedSchema, { type: 'unknown' }];
   }, schema);
 };
 
-const extractFunctions = (node: Node): FunctionLikeDeclaration[] => {
-  if (node.kind === SyntaxKind.FunctionDeclaration) {
-    return [node as FunctionDeclaration];
+const extractFunctions = (node: ExtendedNode): ExtendedNode[] => {
+  if (node.type === 'FunctionDeclaration' && isFunction(node)) {
+    return [node];
   }
 
-  if (node.kind === SyntaxKind.VariableStatement) {
-    const varStatement = node as VariableStatement;
-    return varStatement.declarationList.declarations
+  if (node.type === 'VariableDeclaration' && isDefined(node.declarations)) {
+    return node.declarations
       .filter(
         (declaration) =>
-          isDefined(declaration.initializer) &&
-          declaration.initializer.kind === SyntaxKind.ArrowFunction,
+          isDefined(declaration.init) && isFunction(declaration.init),
       )
-      .map((declaration) => declaration.initializer as ArrowFunction);
+      .map((declaration) => declaration.init!)
+      .filter(isDefined);
+  }
+
+  if (node.type === 'ExportNamedDeclaration' && isDefined(node.declaration)) {
+    return extractFunctions(node.declaration);
   }
 
   return [];
 };
 
 export const getFunctionInputSchema = (fileContent: string): InputSchema => {
-  const sourceFile = createSourceFile(
-    'temp.ts',
-    fileContent,
-    ScriptTarget.ESNext,
-    true,
-  );
+  const ast = acorn.Parser.extend(tsPlugin()).parse(fileContent, {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+  }) as ExtendedNode;
+
   let schema: InputSchema = [];
 
-  sourceFile.forEachChild((node) => {
-    if (
-      node.kind === SyntaxKind.FunctionDeclaration ||
-      node.kind === SyntaxKind.VariableStatement
-    ) {
-      const functions = extractFunctions(node);
-      functions.forEach((func) => {
-        schema = computeFunctionParameters(func, schema);
-      });
-    }
-  });
+  if (isDefined(ast.body)) {
+    ast.body.forEach((node) => {
+      if (
+        node.type === 'FunctionDeclaration' ||
+        node.type === 'VariableDeclaration' ||
+        node.type === 'ExportNamedDeclaration'
+      ) {
+        const functions = extractFunctions(node);
+        functions.forEach((func) => {
+          schema = computeFunctionParameters(func, schema);
+        });
+      }
+    });
+  }
 
   return schema;
 };
