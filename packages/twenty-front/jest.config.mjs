@@ -24,8 +24,8 @@ const jestConfig = {
   testEnvironment: 'jsdom',
 
   transformIgnorePatterns: [
-    '/node_modules/(?!(twenty-ui|@sveltejs/acorn-typescript|acorn)/.*)',
-    '../../node_modules/(?!(twenty-ui|@sveltejs/acorn-typescript|acorn)/.*)',
+    '/node_modules/(?!(twenty-ui)/.*)',
+    '../../node_modules/(?!(twenty-ui)/.*)',
     '../../twenty-ui/',
   ],
   transform: {

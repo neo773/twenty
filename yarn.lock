@@ -18475,15 +18475,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sveltejs/acorn-typescript@npm:^1.0.5":
-  version: 1.0.5
-  resolution: "@sveltejs/acorn-typescript@npm:1.0.5"
-  peerDependencies:
-    acorn: ^8.9.0
-  checksum: 10c0/5f5393ca3afc3d532baa3d418b51972ad26966ff352e13a46c6baa6d7099655acf2668be1d693e9daba2d3994a40b4c9a6b3157340e9cdfe2ffb52e4334630fd
-  languageName: node
-  linkType: hard
-
 "@svgr/babel-plugin-add-jsx-attribute@npm:8.0.0":
   version: 8.0.0
   resolution: "@svgr/babel-plugin-add-jsx-attribute@npm:8.0.0"
@@ -51584,7 +51575,6 @@ __metadata:
     "@nivo/radial-bar": "npm:^0.99.0"
     "@react-pdf/renderer": "npm:^4.1.6"
     "@scalar/api-reference-react": "npm:^0.4.36"
-    "@sveltejs/acorn-typescript": "npm:^1.0.5"
     "@tiptap/core": "npm:^2.10.4"
     "@tiptap/extension-document": "npm:^2.10.4"
     "@tiptap/extension-hard-break": "npm:^2.10.4"
@@ -51600,10 +51590,8 @@ __metadata:
     "@types/react-grid-layout": "npm:^1"
     "@typescript-eslint/eslint-plugin": "npm:^8.39.0"
     "@typescript-eslint/parser": "npm:^8.39.0"
-    "@typescript-eslint/types": "npm:^8.43.0"
     "@typescript-eslint/utils": "npm:^8.39.0"
     "@xyflow/react": "npm:^12.4.2"
-    acorn: "npm:^8.15.0"
     apollo-link-rest: "npm:^0.9.0"
     apollo-upload-client: "npm:^17.0.0"
     buffer: "npm:^6.0.3"
