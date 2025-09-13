@@ -2,15 +2,36 @@ import {
   type InputSchema,
   type InputSchemaProperty,
 } from '@/workflow/types/InputSchema';
-import { parse } from '@babel/parser';
+import { tsPlugin } from '@sveltejs/acorn-typescript';
+import * as acorn from 'acorn';
 import { isDefined } from 'twenty-shared/utils';
 
-interface BabelNode {
+type TSTypeNode = {
   type: string;
-  [key: string]: any;
-}
+  elementType?: TSTypeNode;
+  members?: Array<{
+    type: string;
+    key?: { name: string };
+    typeAnnotation?: { typeAnnotation: TSTypeNode };
+  }>;
+  types?: TSTypeNode[];
+  literal?: { value: string | number | boolean };
+  typeName?: { name: string };
+};
 
-const getTypeString = (typeNode: BabelNode): InputSchemaProperty => {
+type ExtendedNode = {
+  type: string;
+  typeAnnotation?: {
+    type: 'TSTypeAnnotation';
+    typeAnnotation: TSTypeNode;
+  };
+  params?: ExtendedNode[];
+  declarations?: { init?: ExtendedNode }[];
+  declaration?: ExtendedNode;
+  body?: ExtendedNode[];
+};
+
+const getTypeString = (typeNode: TSTypeNode): InputSchemaProperty => {
   switch (typeNode.type) {
     case 'TSNumberKeyword':
       return { type: 'number' };
@@ -31,7 +52,7 @@ const getTypeString = (typeNode: BabelNode): InputSchemaProperty => {
       const properties: InputSchemaProperty['properties'] = {};
 
       if (isDefined(typeNode.members)) {
-        typeNode.members.forEach((member: BabelNode) => {
+        typeNode.members.forEach((member) => {
           if (
             member.type === 'TSPropertySignature' &&
             isDefined(member.key?.name) &&
@@ -52,7 +73,7 @@ const getTypeString = (typeNode: BabelNode): InputSchemaProperty => {
       let isEnum = true;
 
       if (isDefined(typeNode.types)) {
-        typeNode.types.forEach((subType: BabelNode) => {
+        typeNode.types.forEach((subType) => {
           if (subType.type === 'TSLiteralType' && isDefined(subType.literal)) {
             if (typeof subType.literal.value === 'string') {
               enumValues.push(subType.literal.value);
@@ -80,7 +101,7 @@ const getTypeString = (typeNode: BabelNode): InputSchemaProperty => {
   }
 };
 
-const isFunction = (node: BabelNode): boolean => {
+const isFunction = (node: ExtendedNode): boolean => {
   return (
     node.type === 'FunctionDeclaration' ||
     node.type === 'ArrowFunctionExpression' ||
@@ -89,28 +110,25 @@ const isFunction = (node: BabelNode): boolean => {
 };
 
 const computeFunctionParameters = (
-  funcNode: BabelNode,
+  funcNode: ExtendedNode,
   schema: InputSchema,
 ): InputSchema => {
   if (!isDefined(funcNode.params)) {
     return schema;
   }
 
-  return funcNode.params.reduce(
-    (updatedSchema: InputSchema, param: BabelNode) => {
-      const typeAnnotation = param.typeAnnotation;
+  return funcNode.params.reduce((updatedSchema, param) => {
+    const typeAnnotation = param.typeAnnotation;
 
-      if (isDefined(typeAnnotation?.typeAnnotation)) {
-        return [...updatedSchema, getTypeString(typeAnnotation.typeAnnotation)];
-      }
+    if (isDefined(typeAnnotation?.typeAnnotation)) {
+      return [...updatedSchema, getTypeString(typeAnnotation.typeAnnotation)];
+    }
 
-      return [...updatedSchema, { type: 'unknown' }];
-    },
-    schema,
-  );
+    return [...updatedSchema, { type: 'unknown' }];
+  }, schema);
 };
 
-const extractFunctions = (node: BabelNode): BabelNode[] => {
+const extractFunctions = (node: ExtendedNode): ExtendedNode[] => {
   if (node.type === 'FunctionDeclaration' && isFunction(node)) {
     return [node];
   }
@@ -118,10 +136,10 @@ const extractFunctions = (node: BabelNode): BabelNode[] => {
   if (node.type === 'VariableDeclaration' && isDefined(node.declarations)) {
     return node.declarations
       .filter(
-        (declaration: BabelNode) =>
+        (declaration) =>
           isDefined(declaration.init) && isFunction(declaration.init),
       )
-      .map((declaration: BabelNode) => declaration.init)
+      .map((declaration) => declaration.init!)
       .filter(isDefined);
   }
 
@@ -133,25 +151,27 @@ const extractFunctions = (node: BabelNode): BabelNode[] => {
 };
 
 export const getFunctionInputSchema = (fileContent: string): InputSchema => {
-  const ast = parse(fileContent, {
+  const ast = acorn.Parser.extend(tsPlugin()).parse(fileContent, {
+    ecmaVersion: 'latest',
     sourceType: 'module',
-    plugins: ['typescript'],
-  });
+  }) as ExtendedNode;
 
   let schema: InputSchema = [];
 
-  ast.program.body.forEach((node: BabelNode) => {
-    if (
-      node.type === 'FunctionDeclaration' ||
-      node.type === 'VariableDeclaration' ||
-      node.type === 'ExportNamedDeclaration'
-    ) {
-      const functions = extractFunctions(node);
-      functions.forEach((func) => {
-        schema = computeFunctionParameters(func, schema);
-      });
-    }
-  });
+  if (isDefined(ast.body)) {
+    ast.body.forEach((node) => {
+      if (
+        node.type === 'FunctionDeclaration' ||
+        node.type === 'VariableDeclaration' ||
+        node.type === 'ExportNamedDeclaration'
+      ) {
+        const functions = extractFunctions(node);
+        functions.forEach((func) => {
+          schema = computeFunctionParameters(func, schema);
+        });
+      }
+    });
+  }
 
   return schema;
 };
