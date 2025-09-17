@@ -76,11 +76,7 @@ export class ImapMessageProcessorService {
         const messageData = messagesData.get(uid);
 
         if (messageData) {
-          const result = await this.processMessageData(
-            uid,
-            messageData,
-            startTime,
-          );
+          const result = await this.processMessageData(uid, messageData);
 
           results.push(result);
         } else {
@@ -105,8 +101,9 @@ export class ImapMessageProcessorService {
   private async processMessageData(
     uid: number,
     messageData: FetchMessageObject,
-    startTime: number,
   ): Promise<MessageFetchResult> {
+    const startTime = Date.now();
+
     try {
       const rawContent = messageData.source?.toString() || '';
 
@@ -116,7 +113,7 @@ export class ImapMessageProcessorService {
         return {
           uid,
           parsed: null,
-          processingTimeMs: Date.now() - startTime,
+          processingTimeMs: startTime - startTime,
         };
       }
 
@@ -140,7 +137,12 @@ export class ImapMessageProcessorService {
     uid: number,
   ): Promise<ParsedMail> {
     try {
-      return await simpleParser(rawContent);
+      return await simpleParser(rawContent, {
+        skipTextToHtml: true,
+        skipImageLinks: true,
+        skipTextLinks: true,
+        keepCidLinks: false,
+      });
     } catch (error) {
       this.logger.error(`Failed to parse message UID ${uid}: ${error.message}`);
       throw error;

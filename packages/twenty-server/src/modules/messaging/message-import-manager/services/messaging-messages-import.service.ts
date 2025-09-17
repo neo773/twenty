@@ -130,16 +130,18 @@ export class MessagingMessagesImportService {
         );
       }
 
-      if (
-        messageIdsToFetch.length < MESSAGING_GMAIL_USERS_MESSAGES_GET_BATCH_SIZE
-      ) {
-        await this.messageChannelSyncStatusService.markAsCompletedAndScheduleMessageListFetch(
-          [messageChannel.id],
-        );
-      } else {
+      const remainingMessages = await this.cacheStorage.getSetLength(
+        `messages-to-import:${workspaceId}:${messageChannel.id}`,
+      );
+
+      if (remainingMessages > 0) {
         await this.messageChannelSyncStatusService.scheduleMessagesImport([
           messageChannel.id,
         ]);
+      } else {
+        await this.messageChannelSyncStatusService.markAsCompletedAndScheduleMessageListFetch(
+          [messageChannel.id],
+        );
       }
 
       const messageChannelRepository =

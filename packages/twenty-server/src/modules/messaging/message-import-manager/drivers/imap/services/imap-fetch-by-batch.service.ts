@@ -31,19 +31,32 @@ export class ImapFetchByBatchService {
     connectedAccount: ConnectedAccount,
     folder: string,
   ): Promise<FetchAllResult> {
+    const operationStartTime = Date.now();
     const batchLimit = 20;
     const batchResults: MessageFetchResult[][] = [];
     const uidsByBatch: number[][] = [];
+    let totalProcessedMessages = 0;
+    let totalSuccessfulMessages = 0;
+    let totalFailedMessages = 0;
 
     this.logger.log(
       `Starting optimized batch fetch for ${uids.length} messages from folder ${folder}`,
     );
 
+    const clientStartTime = Date.now();
     const client = await this.imapClientProvider.getClient(connectedAccount);
+    const clientConnectionTime = Date.now() - clientStartTime;
+
+    this.logger.log(
+      `IMAP client connection established in ${clientConnectionTime}ms`,
+    );
 
     try {
       for (let i = 0; i < uids.length; i += batchLimit) {
+        const batchStartTime = Date.now();
         const batchUids = uids.slice(i, i + batchLimit);
+        const batchNumber = Math.floor(i / batchLimit) + 1;
+        const totalBatches = Math.ceil(uids.length / batchLimit);
 
         uidsByBatch.push(batchUids);
 
@@ -57,12 +70,32 @@ export class ImapFetchByBatchService {
 
           batchResults.push(batchResult);
 
+          const batchProcessingTime = Date.now() - batchStartTime;
+          const successfulInBatch = batchResult.filter(
+            (result) => result.parsed !== null,
+          ).length;
+          const failedInBatch = batchResult.length - successfulInBatch;
+
+          totalProcessedMessages += batchResult.length;
+          totalSuccessfulMessages += successfulInBatch;
+          totalFailedMessages += failedInBatch;
+
+          const avgProcessingTimePerMessage =
+            batchResult.length > 0
+              ? Math.round(batchProcessingTime / batchResult.length)
+              : 0;
+
           this.logger.log(
-            `Fetched batch ${Math.floor(i / batchLimit) + 1}/${Math.ceil(uids.length / batchLimit)} (${batchUids.length} messages)`,
+            `Batch ${batchNumber}/${totalBatches} completed in ${batchProcessingTime}ms - ` +
+              `Messages: ${batchUids.length}, Successful: ${successfulInBatch}, Failed: ${failedInBatch}, ` +
+              `Avg per message: ${avgProcessingTimePerMessage}ms`,
           );
         } catch (error) {
+          const batchProcessingTime = Date.now() - batchStartTime;
+
           this.logger.error(
-            `Batch fetch failed for batch starting at index ${i}: ${error.message}`,
+            `Batch ${batchNumber}/${totalBatches} failed after ${batchProcessingTime}ms - ` +
+              `Error: ${error.message}`,
           );
 
           const errorResults =
@@ -73,8 +106,26 @@ export class ImapFetchByBatchService {
             );
 
           batchResults.push(errorResults);
+          totalProcessedMessages += batchUids.length;
+          totalFailedMessages += batchUids.length;
         }
       }
+
+      const totalOperationTime = Date.now() - operationStartTime;
+      const avgTimePerMessage =
+        totalProcessedMessages > 0
+          ? Math.round(totalOperationTime / totalProcessedMessages)
+          : 0;
+      const successRate =
+        totalProcessedMessages > 0
+          ? Math.round((totalSuccessfulMessages / totalProcessedMessages) * 100)
+          : 0;
+
+      this.logger.log(
+        `Batch fetch operation completed in ${totalOperationTime}ms - ` +
+          `Total messages: ${totalProcessedMessages}, Success rate: ${successRate}%, ` +
+          `Avg per message: ${avgTimePerMessage}ms, Connection time: ${clientConnectionTime}ms`,
+      );
 
       return {
         uidsByBatch,
@@ -82,7 +133,12 @@ export class ImapFetchByBatchService {
       };
     } finally {
       if (client) {
+        const closeStartTime = Date.now();
+
         await this.imapClientProvider.closeClient(client);
+        const closeTime = Date.now() - closeStartTime;
+
+        this.logger.log(`IMAP client closed in ${closeTime}ms`);
       }
     }
   }
