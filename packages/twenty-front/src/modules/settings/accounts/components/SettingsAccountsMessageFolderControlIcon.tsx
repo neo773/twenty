@@ -44,15 +44,15 @@ const StyledBodyArea = styled.div<{ isVisible?: boolean }>`
   width: 14px;
 `;
 
-type SettingsAccountMessageFolderControlIconProps = {
+type SettingsAccountsMessageFolderControlIconProps = {
   className?: string;
   visibility: MessageFolderVisibility;
 };
 
-export const SettingsAccountMessageFolderControlIcon = ({
+export const SettingsAccountsMessageFolderControlIcon = ({
   className,
   visibility,
-}: SettingsAccountMessageFolderControlIconProps) => {
+}: SettingsAccountsMessageFolderControlIconProps) => {
   const isMetaVisible =
     visibility === 'meta' || visibility === 'subject' || visibility === 'full';
   const isSubjectVisible = visibility === 'subject' || visibility === 'full';
