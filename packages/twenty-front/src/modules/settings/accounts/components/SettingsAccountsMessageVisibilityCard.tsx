@@ -51,6 +51,7 @@ const inboxSettingsVisibilityOptions = [
     description: msg`Set email visibility sharing settings per folder`,
     value: MessageChannelVisibility.PER_FOLDER,
     cardMedia: <SettingsAccountsMessageFolderIcon />,
+    cardContentExpanded: <>Here is the expanded content</>,
   },
 ];
 
