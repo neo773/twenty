@@ -1,39 +1,26 @@
-import { type MessageChannel } from '@/accounts/types/MessageChannel';
 import { type MessageFolder } from '@/accounts/types/MessageFolder';
 import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilteredObjectMetadataItems';
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
-import { useFindOneRecord } from '@/object-record/hooks/useFindOneRecord';
 import { useUpdateOneRecord } from '@/object-record/hooks/useUpdateOneRecord';
-import { useParams } from 'react-router-dom';
+import { selectedMessageChannelState } from '@/settings/accounts/states/selectedMessageChannelState';
+import { useRecoilValue } from 'recoil';
 import { SettingsAccountsPerFolderSettings } from './SettingsAccountsPerFolderSettings';
 import { createContactCreationConfiguration } from './configurations/createContactCreationConfiguration';
 
 export const SettingsAccountsPerFolderContactCreationSettings = () => {
-  const { accountId } = useParams<{ accountId: string }>();
-  
   const { updateOneRecord } = useUpdateOneRecord<MessageFolder>({
     objectNameSingular: CoreObjectNameSingular.MessageFolder,
   });
 
-  const { record: messageChannel } = useFindOneRecord<MessageChannel>({
-    objectNameSingular: CoreObjectNameSingular.MessageChannel,
-    objectRecordId: accountId || '',
-    recordGqlFields: {
-      id: true,
-      messageFolders: {
-        id: true,
-        name: true,
-        syncCursor: true,
-        isSentFolder: true,
-        isSynced: true,
-        messageChannelId: true,
-      },
-    },
-  });
+  const selectedMessageChannel = useRecoilValue(selectedMessageChannelState);
 
-  const { activeNonSystemObjectMetadataItems } = useFilteredObjectMetadataItems();
+  const { activeNonSystemObjectMetadataItems } =
+    useFilteredObjectMetadataItems();
 
-  const handleFolderContactCreationUpdate = (folder: MessageFolder, policy: string) => {
+  const handleFolderContactCreationUpdate = (
+    folder: MessageFolder,
+    policy: string,
+  ) => {
     updateOneRecord({
       idToUpdate: folder.id,
       updateOneRecordInput: {
@@ -44,16 +31,16 @@ export const SettingsAccountsPerFolderContactCreationSettings = () => {
 
   const contactCreationConfiguration = createContactCreationConfiguration(
     activeNonSystemObjectMetadataItems,
-    handleFolderContactCreationUpdate
+    handleFolderContactCreationUpdate,
   );
 
-  if (!messageChannel?.messageFolders) {
+  if (!selectedMessageChannel?.messageFolders) {
     return null;
   }
 
   return (
     <SettingsAccountsPerFolderSettings
-      folders={messageChannel.messageFolders}
+      folders={selectedMessageChannel.messageFolders}
       configuration={contactCreationConfiguration}
       objectMetadataItems={activeNonSystemObjectMetadataItems}
     />

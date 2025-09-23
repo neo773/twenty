@@ -42,10 +42,7 @@ export const SettingsAccountsPerFolderVisibilitySettings = () => {
     isEmpty(selectedMessageChannel?.messageFolders)
   ) {
     return (
-      <div style={{ color: theme.font.color.light }}>
-        {JSON.stringify(selectedMessageChannel)}
-        {t`No folders found`}
-      </div>
+      <div style={{ color: theme.font.color.light }}>{t`No folders found`}</div>
     );
   }
 
