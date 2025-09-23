@@ -3,6 +3,7 @@ import { useFilteredObjectMetadataItems } from '@/object-metadata/hooks/useFilte
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
 import { useUpdateOneRecord } from '@/object-record/hooks/useUpdateOneRecord';
 import { selectedMessageChannelState } from '@/settings/accounts/states/selectedMessageChannelState';
+import { useCallback, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { SettingsAccountsPerFolderSettings } from './SettingsAccountsPerFolderSettings';
 import { createContactCreationConfiguration } from './configurations/createContactCreationConfiguration';
@@ -17,21 +18,25 @@ export const SettingsAccountsPerFolderContactCreationSettings = () => {
   const { activeNonSystemObjectMetadataItems } =
     useFilteredObjectMetadataItems();
 
-  const handleFolderContactCreationUpdate = (
-    folder: MessageFolder,
-    policy: string,
-  ) => {
-    updateOneRecord({
-      idToUpdate: folder.id,
-      updateOneRecordInput: {
-        contactAutoCreationPolicy: policy,
-      },
-    });
-  };
+  const handleFolderContactCreationUpdate = useCallback(
+    (folder: MessageFolder, policy: string) => {
+      updateOneRecord({
+        idToUpdate: folder.id,
+        updateOneRecordInput: {
+          contactAutoCreationPolicy: policy,
+        },
+      });
+    },
+    [updateOneRecord],
+  );
 
-  const contactCreationConfiguration = createContactCreationConfiguration(
-    activeNonSystemObjectMetadataItems,
-    handleFolderContactCreationUpdate,
+  const contactCreationConfiguration = useMemo(
+    () =>
+      createContactCreationConfiguration(
+        activeNonSystemObjectMetadataItems,
+        handleFolderContactCreationUpdate,
+      ),
+    [activeNonSystemObjectMetadataItems, handleFolderContactCreationUpdate],
   );
 
   if (!selectedMessageChannel?.messageFolders) {

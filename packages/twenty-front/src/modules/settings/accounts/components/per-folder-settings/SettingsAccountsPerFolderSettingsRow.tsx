@@ -4,6 +4,7 @@ import { TableCell } from '@/ui/layout/table/components/TableCell';
 import { TableRow } from '@/ui/layout/table/components/TableRow';
 import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
+import { useCallback, useMemo } from 'react';
 import { IconArrowsShuffle, IconFolder, IconSend } from 'twenty-ui/display';
 import {
   type FolderWithSetting,
@@ -53,18 +54,25 @@ export const SettingsAccountsPerFolderSettingsRow = <T extends string>({
 }: SettingsAccountsPerFolderSettingsRowProps<T>) => {
   const theme = useTheme();
 
-  const selectOptions = configuration.options.map((option) => ({
-    label: option.label,
-    value: option.value,
-    Icon: option.icon,
-    color: option.color,
-  }));
+  const selectOptions = useMemo(
+    () =>
+      configuration.options.map((option) => ({
+        label: option.label,
+        value: option.value,
+        Icon: option.icon,
+        color: option.color,
+      })),
+    [configuration.options],
+  );
 
-  const handleSelectChange = (value: T) => {
-    onSettingChange(folder.id, value);
-  };
+  const handleSelectChange = useCallback(
+    (value: T) => {
+      onSettingChange(folder.id, value);
+    },
+    [onSettingChange, folder.id],
+  );
 
-  const getFolderIcon = () => {
+  const FolderIcon = useMemo(() => {
     if (folder.name === 'All folders') {
       return IconArrowsShuffle;
     }
@@ -72,9 +80,7 @@ export const SettingsAccountsPerFolderSettingsRow = <T extends string>({
       return IconSend;
     }
     return IconFolder;
-  };
-
-  const FolderIcon = getFolderIcon();
+  }, [folder.name, folder.isSentFolder]);
 
   return (
     <StyledTableRow gridAutoColumns="1fr 200px">

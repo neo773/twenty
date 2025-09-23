@@ -5,7 +5,7 @@ import { DropdownMenuSearchInput } from '@/ui/layout/dropdown/components/Dropdow
 import { Table } from '@/ui/layout/table/components/Table';
 import styled from '@emotion/styled';
 import { Trans } from '@lingui/react/macro';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { normalizeSearchText } from '~/utils/normalizeSearchText';
 import { type FolderWithSetting, type PerFolderSettingsProps } from './types';
 
@@ -35,6 +35,13 @@ const StyledEmptyState = styled.div`
   justify-content: center;
 `;
 
+const BUILT_IN_FOLDERS: Partial<MessageFolder>[] = [
+  { id: 'all', name: 'All folders', isSentFolder: false },
+  { id: 'inbox', name: 'Inbox', isSentFolder: false },
+  { id: 'sent', name: 'Sent', isSentFolder: true },
+  { id: 'drafts', name: 'Drafts', isSentFolder: false },
+];
+
 export const SettingsAccountsPerFolderSettings = <T extends string>({
   folders,
   configuration,
@@ -42,20 +49,13 @@ export const SettingsAccountsPerFolderSettings = <T extends string>({
 }: PerFolderSettingsProps<T>) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const builtInFolders: Partial<MessageFolder>[] = [
-    { id: 'all', name: 'All folders', isSentFolder: false },
-    { id: 'inbox', name: 'Inbox', isSentFolder: false },
-    { id: 'sent', name: 'Sent', isSentFolder: true },
-    { id: 'drafts', name: 'Drafts', isSentFolder: false },
-  ];
-
   const allFoldersWithSettings = useMemo(() => {
     const dynamicFolders = folders.map((folder): FolderWithSetting<T> => ({
       ...folder,
       currentValue: configuration.getValue(folder),
     }));
 
-    const builtInFoldersWithSettings = builtInFolders.map((folder): FolderWithSetting<T> => ({
+    const builtInFoldersWithSettings = BUILT_IN_FOLDERS.map((folder): FolderWithSetting<T> => ({
       id: folder.id!,
       name: folder.name!,
       syncCursor: '',
@@ -67,7 +67,7 @@ export const SettingsAccountsPerFolderSettings = <T extends string>({
     }));
 
     return [...builtInFoldersWithSettings, ...dynamicFolders];
-  }, [folders, configuration, builtInFolders]);
+  }, [folders, configuration.getValue, configuration.defaultValue]);
 
   const filteredFolders = useMemo(() => {
     if (!searchTerm.trim()) {
@@ -80,19 +80,19 @@ export const SettingsAccountsPerFolderSettings = <T extends string>({
     );
   }, [allFoldersWithSettings, searchTerm]);
 
-  const formatName = (name: string) => {
+  const formatName = useCallback((name: string) => {
     return name
       .split(' ')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
-  };
+  }, []);
 
-  const handleFolderSettingChange = (folderId: string, value: T) => {
+  const handleFolderSettingChange = useCallback((folderId: string, value: T) => {
     const folder = folders.find(f => f.id === folderId);
     if (folder) {
       configuration.setValue(folder, value);
     }
-  };
+  }, [folders, configuration.setValue]);
 
   return (
     <StyledContainer>

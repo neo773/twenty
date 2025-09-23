@@ -1,14 +1,14 @@
 import { type MessageFolder } from '@/accounts/types/MessageFolder';
 import {
-    IconEye,
-    IconEyeOff,
-    IconEyeShare,
-    IconShield,
+  IconEye,
+  IconEyeOff,
+  IconEyeShare,
+  IconShield,
 } from 'twenty-ui/display';
 import { type MessageChannelVisibility } from '~/generated/graphql';
 import {
-    type PerFolderSettingConfiguration,
-    type VisibilityPerFolderSettingOption,
+  type PerFolderSettingConfiguration,
+  type VisibilityPerFolderSettingOption,
 } from '../types';
 
 const visibilityOptions: VisibilityPerFolderSettingOption[] = [

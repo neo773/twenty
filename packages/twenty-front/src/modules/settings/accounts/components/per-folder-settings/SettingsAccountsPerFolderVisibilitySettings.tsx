@@ -5,6 +5,7 @@ import { selectedMessageChannelState } from '@/settings/accounts/states/selected
 import { useTheme } from '@emotion/react';
 import { useLingui } from '@lingui/react/macro';
 import isEmpty from 'lodash.isempty';
+import { useCallback, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { type MessageChannelVisibility } from '~/generated/graphql';
@@ -21,20 +22,21 @@ export const SettingsAccountsPerFolderVisibilitySettings = () => {
 
   const selectedMessageChannel = useRecoilValue(selectedMessageChannelState);
 
-  const handleFolderVisibilityUpdate = (
-    folder: MessageFolder,
-    visibility: MessageChannelVisibility,
-  ) => {
-    updateOneRecord({
-      idToUpdate: folder.id,
-      updateOneRecordInput: {
-        visibility: visibility,
-      },
-    });
-  };
+  const handleFolderVisibilityUpdate = useCallback(
+    (folder: MessageFolder, visibility: MessageChannelVisibility) => {
+      updateOneRecord({
+        idToUpdate: folder.id,
+        updateOneRecordInput: {
+          visibility: visibility,
+        },
+      });
+    },
+    [updateOneRecord],
+  );
 
-  const visibilityConfiguration = createVisibilityConfiguration(
-    handleFolderVisibilityUpdate,
+  const visibilityConfiguration = useMemo(
+    () => createVisibilityConfiguration(handleFolderVisibilityUpdate),
+    [handleFolderVisibilityUpdate],
   );
 
   if (
