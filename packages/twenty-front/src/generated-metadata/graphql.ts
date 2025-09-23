@@ -1436,6 +1436,7 @@ export type LoginToken = {
 
 export enum MessageChannelVisibility {
   METADATA = 'METADATA',
+  PER_FOLDER = 'PER_FOLDER',
   SHARE_EVERYTHING = 'SHARE_EVERYTHING',
   SUBJECT = 'SUBJECT'
 }

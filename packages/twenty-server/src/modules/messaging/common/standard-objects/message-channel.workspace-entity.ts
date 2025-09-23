@@ -46,6 +46,7 @@ export enum MessageChannelVisibility {
   METADATA = 'METADATA',
   SUBJECT = 'SUBJECT',
   SHARE_EVERYTHING = 'SHARE_EVERYTHING',
+  PER_FOLDER = 'PER_FOLDER',
 }
 
 export enum MessageChannelType {
@@ -57,6 +58,7 @@ export enum MessageChannelContactAutoCreationPolicy {
   SENT_AND_RECEIVED = 'SENT_AND_RECEIVED',
   SENT = 'SENT',
   NONE = 'NONE',
+  PER_FOLDER = 'PER_FOLDER',
 }
 
 registerEnumType(MessageChannelVisibility, {

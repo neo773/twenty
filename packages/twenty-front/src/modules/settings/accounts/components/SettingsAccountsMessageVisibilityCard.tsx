@@ -1,3 +1,4 @@
+import { SettingsAccountsMessageFolderIcon } from '@/settings/accounts/components/SettingsAccountsMessageFolderIcon';
 import { SettingsAccountsRadioSettingsCard } from '@/settings/accounts/components/SettingsAccountsRadioSettingsCard';
 import { SettingsAccountsVisibilityIcon } from '@/settings/accounts/components/SettingsAccountsVisibilityIcon';
 import { msg } from '@lingui/core/macro';
@@ -44,6 +45,12 @@ const inboxSettingsVisibilityOptions = [
         body="inactive"
       />
     ),
+  },
+  {
+    title: msg`Per folder setting`,
+    description: msg`Set email visibility sharing settings per folder`,
+    value: MessageChannelVisibility.PER_FOLDER,
+    cardMedia: <SettingsAccountsMessageFolderIcon />,
   },
 ];
 
