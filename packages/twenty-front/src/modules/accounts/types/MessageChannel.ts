@@ -7,6 +7,7 @@ export enum MessageChannelContactAutoCreationPolicy {
   SENT_AND_RECEIVED = 'SENT_AND_RECEIVED',
   SENT = 'SENT',
   NONE = 'NONE',
+  PER_FOLDER = 'PER_FOLDER',
 }
 
 export enum MessageChannelSyncStatus {

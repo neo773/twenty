@@ -1,5 +1,6 @@
 import { MessageChannelContactAutoCreationPolicy } from '@/accounts/types/MessageChannel';
 import { SettingsAccountsMessageAutoCreationIcon } from '@/settings/accounts/components/SettingsAccountsMessageAutoCreationIcon';
+import { SettingsAccountsMessageFolderIcon } from '@/settings/accounts/components/SettingsAccountsMessageFolderIcon';
 import { SettingsAccountsRadioSettingsCard } from '@/settings/accounts/components/SettingsAccountsRadioSettingsCard';
 import { msg } from '@lingui/core/macro';
 
@@ -33,6 +34,12 @@ const autoCreationOptions = [
         isReceivedActive={false}
       />
     ),
+  },
+  {
+    title: msg`Per folder setting`,
+    description: msg`Set contact auto-creation policy per folder`,
+    value: MessageChannelContactAutoCreationPolicy.PER_FOLDER,
+    cardMedia: <SettingsAccountsMessageFolderIcon />,
   },
 ];
 
