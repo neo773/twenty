@@ -1,13 +1,11 @@
-import { type MessageChannel } from '@/accounts/types/MessageChannel';
 import { type MessageFolder } from '@/accounts/types/MessageFolder';
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
-import { useFindOneRecord } from '@/object-record/hooks/useFindOneRecord';
 import { useUpdateOneRecord } from '@/object-record/hooks/useUpdateOneRecord';
-
+import { selectedMessageChannelState } from '@/settings/accounts/states/selectedMessageChannelState';
 import { useTheme } from '@emotion/react';
 import { useLingui } from '@lingui/react/macro';
 import isEmpty from 'lodash.isempty';
-import { useParams } from 'react-router-dom';
+import { useRecoilValue } from 'recoil';
 import { isDefined } from 'twenty-shared/utils';
 import { type MessageChannelVisibility } from '~/generated/graphql';
 import { SettingsAccountsPerFolderSettings } from './SettingsAccountsPerFolderSettings';
@@ -15,28 +13,13 @@ import { createVisibilityConfiguration } from './configurations/createVisibility
 
 export const SettingsAccountsPerFolderVisibilitySettings = () => {
   const { t } = useLingui();
-  const { accountId } = useParams<{ accountId: string }>();
   const theme = useTheme();
 
   const { updateOneRecord } = useUpdateOneRecord<MessageFolder>({
     objectNameSingular: CoreObjectNameSingular.MessageFolder,
   });
 
-  const { record: messageChannel } = useFindOneRecord<MessageChannel>({
-    objectNameSingular: CoreObjectNameSingular.MessageChannel,
-    objectRecordId: accountId || '',
-    recordGqlFields: {
-      id: true,
-      messageFolders: {
-        id: true,
-        name: true,
-        syncCursor: true,
-        isSentFolder: true,
-        isSynced: true,
-        messageChannelId: true,
-      },
-    },
-  });
+  const selectedMessageChannel = useRecoilValue(selectedMessageChannelState);
 
   const handleFolderVisibilityUpdate = (
     folder: MessageFolder,
@@ -55,17 +38,20 @@ export const SettingsAccountsPerFolderVisibilitySettings = () => {
   );
 
   if (
-    !isDefined(messageChannel?.messageFolders) ||
-    isEmpty(messageChannel.messageFolders)
+    !isDefined(selectedMessageChannel?.messageFolders) ||
+    isEmpty(selectedMessageChannel?.messageFolders)
   ) {
     return (
-      <div style={{ color: theme.font.color.light }}>{t`No folders found`}</div>
+      <div style={{ color: theme.font.color.light }}>
+        {JSON.stringify(selectedMessageChannel)}
+        {t`No folders found`}
+      </div>
     );
   }
 
   return (
     <SettingsAccountsPerFolderSettings
-      folders={messageChannel.messageFolders}
+      folders={selectedMessageChannel?.messageFolders}
       configuration={visibilityConfiguration}
     />
   );
