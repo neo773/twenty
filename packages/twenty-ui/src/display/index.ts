@@ -79,6 +79,7 @@ export {
   IconArrowMerge,
   IconArrowRight,
   IconArrowsDiagonal,
+  IconArrowsShuffle,
   IconArrowsVertical,
   IconArrowUp,
   IconArrowUpRight,

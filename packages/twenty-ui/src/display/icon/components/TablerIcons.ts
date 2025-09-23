@@ -11,13 +11,11 @@ export {
   IconAppWindow,
   IconArchive,
   IconArchiveOff,
-  IconArrowBackUp,
-  IconArrowDown,
+  IconArrowBackUp, IconArrowDown,
   IconArrowLeft,
   IconArrowMerge,
   IconArrowRight,
-  IconArrowsDiagonal,
-  IconArrowsVertical,
+  IconArrowsDiagonal, IconArrowsShuffle, IconArrowsVertical,
   IconArrowUp,
   IconArrowUpRight,
   IconAt,
@@ -349,7 +347,7 @@ export {
   IconWand,
   IconWebhook,
   IconWorld,
-  IconX,
+  IconX
 } from '@tabler/icons-react';
 
 export type { IconProps as TablerIconsProps } from '@tabler/icons-react';

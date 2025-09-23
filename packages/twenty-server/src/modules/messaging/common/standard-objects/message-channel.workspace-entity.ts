@@ -118,6 +118,12 @@ export class MessageChannelWorkspaceEntity extends BaseWorkspaceEntity {
         position: 2,
         color: 'orange',
       },
+      {
+        value: MessageChannelVisibility.PER_FOLDER,
+        label: 'Per Folder',
+        position: 3,
+        color: 'red',
+      },
     ],
     defaultValue: `'${MessageChannelVisibility.SHARE_EVERYTHING}'`,
   })
@@ -190,6 +196,12 @@ export class MessageChannelWorkspaceEntity extends BaseWorkspaceEntity {
         value: MessageChannelContactAutoCreationPolicy.NONE,
         label: 'None',
         position: 2,
+        color: 'red',
+      },
+      {
+        value: MessageChannelContactAutoCreationPolicy.PER_FOLDER,
+        label: 'Per Folder',
+        position: 3,
         color: 'red',
       },
     ],
