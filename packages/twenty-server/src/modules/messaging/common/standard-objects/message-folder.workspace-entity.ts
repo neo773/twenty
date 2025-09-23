@@ -1,3 +1,5 @@
+import { registerEnumType } from '@nestjs/graphql';
+
 import { msg } from '@lingui/core/macro';
 import { FieldMetadataType } from 'twenty-shared/types';
 import { Relation } from 'typeorm';
@@ -17,6 +19,27 @@ import { MESSAGE_FOLDER_STANDARD_FIELD_IDS } from 'src/engine/workspace-manager/
 import { STANDARD_OBJECT_ICONS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-icons';
 import { STANDARD_OBJECT_IDS } from 'src/engine/workspace-manager/workspace-sync-metadata/constants/standard-object-ids';
 import { MessageChannelWorkspaceEntity } from 'src/modules/messaging/common/standard-objects/message-channel.workspace-entity';
+
+export enum MessageFolderVisibility {
+  NONE = 'NONE',
+  METADATA = 'METADATA',
+  SUBJECT = 'SUBJECT',
+  EVERYTHING = 'EVERYTHING',
+}
+
+export enum MessageChannelFolderContactAutoCreationPolicy {
+  NONE = 'NONE',
+  PEOPLE_AND_COMPANIES = 'PEOPLE_AND_COMPANIES',
+  COMPANIES = 'COMPANIES',
+}
+
+registerEnumType(MessageFolderVisibility, {
+  name: 'MessageFolderVisibility',
+});
+
+registerEnumType(MessageChannelFolderContactAutoCreationPolicy, {
+  name: 'MessageChannelFolderContactAutoCreationPolicy',
+});
 
 @WorkspaceEntity({
   standardId: STANDARD_OBJECT_IDS.messageFolder,
@@ -78,6 +101,66 @@ export class MessageFolderWorkspaceEntity extends BaseWorkspaceEntity {
     defaultValue: false,
   })
   isSynced: boolean;
+
+  @WorkspaceField({
+    standardId: MESSAGE_FOLDER_STANDARD_FIELD_IDS.visibility,
+    type: FieldMetadataType.SELECT,
+    label: msg`Visibility`,
+    description: msg`Visibility`,
+    icon: 'IconEyeglass',
+    options: [
+      {
+        value: MessageFolderVisibility.METADATA,
+        label: 'Metadata',
+        position: 0,
+        color: 'green',
+      },
+      {
+        value: MessageFolderVisibility.SUBJECT,
+        label: 'Subject',
+        position: 1,
+        color: 'blue',
+      },
+      {
+        value: MessageFolderVisibility.EVERYTHING,
+        label: 'Share Everything',
+        position: 2,
+        color: 'orange',
+      },
+    ],
+    defaultValue: `'${MessageFolderVisibility.EVERYTHING}'`,
+  })
+  visibility: MessageFolderVisibility;
+
+  @WorkspaceField({
+    standardId: MESSAGE_FOLDER_STANDARD_FIELD_IDS.contactCreationPolicy,
+    type: FieldMetadataType.SELECT,
+    label: msg`Contact Creation Policy`,
+    description: msg`Contact Creation Policy`,
+    icon: 'IconUserPlus',
+    options: [
+      {
+        value: MessageChannelFolderContactAutoCreationPolicy.NONE,
+        label: 'None',
+        position: 0,
+        color: 'red',
+      },
+      {
+        value: MessageChannelFolderContactAutoCreationPolicy.PEOPLE_AND_COMPANIES,
+        label: 'People and Companies',
+        position: 1,
+        color: 'green',
+      },
+      {
+        value: MessageChannelFolderContactAutoCreationPolicy.COMPANIES,
+        label: 'Companies',
+        position: 2,
+        color: 'blue',
+      },
+    ],
+    defaultValue: `'${MessageChannelFolderContactAutoCreationPolicy.PEOPLE_AND_COMPANIES}'`,
+  })
+  contactAutoCreationPolicy: MessageChannelFolderContactAutoCreationPolicy;
 
   @WorkspaceField({
     standardId: MESSAGE_FOLDER_STANDARD_FIELD_IDS.externalId,

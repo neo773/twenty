@@ -1,42 +1,33 @@
 import { type MessageFolder } from '@/accounts/types/MessageFolder';
-import { type ObjectMetadataItem } from '@/object-metadata/types/ObjectMetadataItem';
 import { type IconComponent } from 'twenty-ui/display';
-import { type ThemeColor } from 'twenty-ui/theme';
-import {
-  type MessageChannelContactAutoCreationPolicy,
-  type MessageChannelVisibility,
-} from '~/generated/graphql';
+import { type MessageChannelVisibility } from '~/generated/graphql';
 
-export type PerFolderSettingType = 'visibility' | 'contactCreation';
+export type FolderVisibilityValue = MessageChannelVisibility | 'NOTHING';
 
-export type PerFolderSettingOption<T = string> = {
-  value: T;
+export type FolderContactCreationValue =
+  | 'PEOPLE_AND_COMPANIES'
+  | 'COMPANIES'
+  | 'PEOPLE'
+  | 'NONE';
+
+export type PerFolderSettingsOption<TValue> = {
+  value: TValue;
   label: string;
-  icon: IconComponent;
-  color?: ThemeColor;
+  icon?: IconComponent;
 };
 
-export type VisibilityPerFolderSettingOption =
-  PerFolderSettingOption<MessageChannelVisibility>;
-export type ContactCreationPerFolderSettingOption = PerFolderSettingOption<
-  MessageChannelContactAutoCreationPolicy | string
->;
-
-export type PerFolderSettingConfiguration<T = string> = {
-  type: PerFolderSettingType;
+export type PerFolderSettingsConfig<TValue> = {
+  title: string;
+  subtitle: string;
   columnHeader: string;
-  options: PerFolderSettingOption<T>[];
-  defaultValue?: T;
-  getValue: (folder: MessageFolder) => T | undefined;
-  setValue: (folder: MessageFolder, value: T) => void;
+  options: PerFolderSettingsOption<TValue>[];
+  allFoldersValue: TValue;
+  mixedValue: 'Mixed';
+  getFolderValue: (folder: MessageFolder, settings?: any) => TValue;
+  onFolderValueChange: (folderId: string, value: TValue) => void;
 };
 
-export type PerFolderSettingsProps<T = string> = {
+export type PerFolderSettingsProps<TValue> = {
   folders: MessageFolder[];
-  configuration: PerFolderSettingConfiguration<T>;
-  objectMetadataItems?: ObjectMetadataItem[];
-};
-
-export type FolderWithSetting<T = string> = MessageFolder & {
-  currentValue?: T;
+  config: PerFolderSettingsConfig<TValue>;
 };

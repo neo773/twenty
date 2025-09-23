@@ -84,6 +84,7 @@ export {
   IconArrowUp,
   IconArrowUpRight,
   IconAt,
+  IconBan,
   IconBaselineDensitySmall,
   IconBell,
   IconBlockquote,
