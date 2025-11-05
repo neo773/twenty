@@ -24,14 +24,18 @@ export class MessagingMessageParticipantService {
         'messageParticipant',
       );
 
+    // Query existing participants within transaction to prevent race conditions
     const existingParticipantsBasedOnMessageIds =
-      await messageParticipantRepository.find({
-        where: {
-          messageId: In(
-            participants.map((participant) => participant.messageId),
-          ),
+      await messageParticipantRepository.find(
+        {
+          where: {
+            messageId: In(
+              participants.map((participant) => participant.messageId),
+            ),
+          },
         },
-      });
+        transactionManager,
+      );
 
     const participantsToCreate: Pick<
       MessageParticipantWorkspaceEntity,

@@ -10,6 +10,7 @@ import {
   type ReplicationMode,
   type SelectQueryBuilder,
 } from 'typeorm';
+import { type IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
 import { EntityManagerFactory } from 'typeorm/entity-manager/EntityManagerFactory';
 
 import { type FeatureFlagMap } from 'src/engine/core-modules/feature-flag/interfaces/feature-flag-map.interface';
@@ -249,5 +250,45 @@ export class WorkspaceDataSource extends DataSource {
 
       return super.destroy();
     }
+  }
+
+  // Override transaction to use REPEATABLE READ by default and support
+  // deferred constraints for bulk operations
+  override async transaction<T>(
+    isolationOrRunInTransaction:
+      | IsolationLevel
+      | ((entityManager: WorkspaceEntityManager) => Promise<T>),
+    runInTransaction?: (entityManager: WorkspaceEntityManager) => Promise<T>,
+  ): Promise<T> {
+    const isolation =
+      typeof isolationOrRunInTransaction === 'string'
+        ? isolationOrRunInTransaction
+        : 'REPEATABLE READ';
+    const callback =
+      typeof isolationOrRunInTransaction === 'function'
+        ? isolationOrRunInTransaction
+        : runInTransaction;
+
+    if (!callback) {
+      throw new Error('Transaction callback is required');
+    }
+
+    return super.transaction(
+      isolation,
+      async (entityManager: WorkspaceEntityManager) => {
+        // Set constraints deferred for bulk operations to prevent premature
+        // foreign key violations during complex insert sequences
+        await entityManager.query(
+          'SET CONSTRAINTS ALL DEFERRED',
+          [],
+          undefined,
+          {
+            shouldBypassPermissionChecks: true,
+          },
+        );
+
+        return callback(entityManager);
+      },
+    );
   }
 }

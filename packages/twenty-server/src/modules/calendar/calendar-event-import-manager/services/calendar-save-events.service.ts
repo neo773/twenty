@@ -40,31 +40,37 @@ export class CalendarSaveEventsService {
         'calendarChannelEventAssociation',
       );
 
-    const existingCalendarEvents = await calendarEventRepository.find({
-      where: {
-        iCalUID: Any(
-          fetchedCalendarEvents.map((event) => event.iCalUID as string),
-        ),
-      },
-    });
-
-    const fetchedCalendarEventsWithDBEvents: FetchedCalendarEventWithDBEvent[] =
-      fetchedCalendarEvents.map((event): FetchedCalendarEventWithDBEvent => {
-        const existingEventWithSameiCalUID = existingCalendarEvents.find(
-          (existingEvent) => existingEvent.iCalUID === event.iCalUID,
-        );
-
-        return {
-          fetchedCalendarEvent: event,
-          existingCalendarEvent: existingEventWithSameiCalUID ?? null,
-          newlyCreatedCalendarEvent: null,
-        };
-      });
-
     const workspaceDataSource = await this.twentyORMManager.getDatasource();
 
+    // Move existence check inside transaction to prevent race conditions
     await workspaceDataSource.transaction(
       async (transactionManager: WorkspaceEntityManager) => {
+        const existingCalendarEvents = await calendarEventRepository.find(
+          {
+            where: {
+              iCalUID: Any(
+                fetchedCalendarEvents.map((event) => event.iCalUID as string),
+              ),
+            },
+          },
+          transactionManager,
+        );
+
+        const fetchedCalendarEventsWithDBEvents: FetchedCalendarEventWithDBEvent[] =
+          fetchedCalendarEvents.map(
+            (event): FetchedCalendarEventWithDBEvent => {
+              const existingEventWithSameiCalUID = existingCalendarEvents.find(
+                (existingEvent) => existingEvent.iCalUID === event.iCalUID,
+              );
+
+              return {
+                fetchedCalendarEvent: event,
+                existingCalendarEvent: existingEventWithSameiCalUID ?? null,
+                newlyCreatedCalendarEvent: null,
+              };
+            },
+          );
+
         const savedCalendarEvents = await calendarEventRepository.save(
           fetchedCalendarEventsWithDBEvents
             .filter(

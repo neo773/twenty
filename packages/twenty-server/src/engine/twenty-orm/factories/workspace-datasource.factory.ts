@@ -192,13 +192,13 @@ export class WorkspaceDatasourceFactory {
                   }
                 : undefined,
               extra: {
-                query_timeout: 10000,
+                query_timeout: 20000,
                 // https://node-postgres.com/apis/pool
                 // TypeORM doesn't allow sharing connection pools between data sources
                 // So we keep a small pool open for longer if connection pooling patch isn't enabled
                 // TODO: Probably not needed anymore when connection pooling patch is enabled
                 idleTimeoutMillis: TWENTY_MINUTES_IN_MS,
-                max: 4,
+                max: process.env.NODE_ENV === 'production' ? 20 : 4,
                 allowExitOnIdle: true,
               },
             },
