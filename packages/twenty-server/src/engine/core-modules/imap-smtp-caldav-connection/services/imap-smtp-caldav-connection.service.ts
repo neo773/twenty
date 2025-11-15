@@ -51,12 +51,17 @@ export class ImapSmtpCaldavService {
 
       return true;
     } catch (error) {
+      const imapError = error as Error & {
+        authenticationFailed?: boolean;
+        code?: string;
+      };
+
       this.logger.error(
-        `IMAP connection failed: ${error.message}`,
-        error.stack,
+        `IMAP connection failed: ${imapError.message}`,
+        imapError.stack,
       );
 
-      if (error.authenticationFailed) {
+      if (imapError.authenticationFailed) {
         throw new UserInputError(
           'IMAP authentication failed. Please check your credentials.',
           {
@@ -65,7 +70,28 @@ export class ImapSmtpCaldavService {
         );
       }
 
-      if (error.code === 'ECONNREFUSED') {
+      // Check for SSL/TLS certificate errors
+      const sslErrorCodes = [
+        'DEPTH_ZERO_SELF_SIGNED_CERT',
+        'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+        'CERT_HAS_EXPIRED',
+        'SELF_SIGNED_CERT_IN_CHAIN',
+        'UNABLE_TO_GET_ISSUER_CERT',
+        'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+        'ERR_TLS_CERT_ALTNAME_INVALID',
+        'CERT_NOT_YET_VALID',
+      ];
+
+      if (imapError.code && sslErrorCodes.includes(imapError.code)) {
+        throw new UserInputError(
+          `IMAP SSL/TLS certificate error: ${imapError.code}`,
+          {
+            userFriendlyMessage: msg`We couldn't verify your email server's security certificate. This might be due to an expired, self-signed, or untrusted certificate. Please contact your email provider or IT administrator.`,
+          },
+        );
+      }
+
+      if (imapError.code === 'ECONNREFUSED') {
         throw new UserInputError(
           `IMAP connection refused. Please verify server and port.`,
           {
@@ -74,7 +100,7 @@ export class ImapSmtpCaldavService {
         );
       }
 
-      throw new UserInputError(`IMAP connection failed: ${error.message}`, {
+      throw new UserInputError(`IMAP connection failed: ${imapError.message}`, {
         userFriendlyMessage: msg`We encountered an issue connecting to your email account. Please check your settings and try again.`,
       });
     } finally {
