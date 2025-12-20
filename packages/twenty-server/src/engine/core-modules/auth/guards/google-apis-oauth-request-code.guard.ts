@@ -54,6 +54,7 @@ export class GoogleAPIsOauthRequestCodeGuard extends AuthGuard('google-apis') {
         loginHint: request.query.loginHint,
         userId: userId,
         workspaceId: workspaceId,
+        skipConfigurationStep: request.query.skipConfigurationStep === 'true',
       });
 
       if (

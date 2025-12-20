@@ -65,6 +65,7 @@ export class MicrosoftAPIsOauthRequestCodeGuard extends AuthGuard(
         calendarVisibility: request.query.calendarVisibility,
         messageVisibility: request.query.messageVisibility,
         loginHint: request.query.loginHint,
+        skipConfigurationStep: request.query.skipConfigurationStep === 'true',
       });
 
       return (await super.canActivate(context)) as boolean;

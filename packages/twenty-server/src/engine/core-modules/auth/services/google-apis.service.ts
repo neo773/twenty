@@ -29,6 +29,7 @@ import {
   type CalendarChannelVisibility,
   type CalendarChannelWorkspaceEntity,
 } from 'src/modules/calendar/common/standard-objects/calendar-channel.workspace-entity';
+import { ChannelSyncService } from 'src/modules/connected-account/channel-sync/services/channel-sync.service';
 import { AccountsToReconnectService } from 'src/modules/connected-account/services/accounts-to-reconnect.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 import { MessageChannelSyncStatusService } from 'src/modules/messaging/common/services/message-channel-sync-status.service';
@@ -60,6 +61,7 @@ export class GoogleAPIsService {
     private readonly createConnectedAccountService: CreateConnectedAccountService,
     private readonly updateConnectedAccountOnReconnectService: UpdateConnectedAccountOnReconnectService,
     private readonly googleAPIScopesService: GoogleAPIScopesService,
+    private readonly channelSyncService: ChannelSyncService,
   ) {}
 
   async refreshGoogleRefreshToken(input: {
@@ -70,6 +72,7 @@ export class GoogleAPIsService {
     refreshToken: string;
     calendarVisibility: CalendarChannelVisibility | undefined;
     messageVisibility: MessageChannelVisibility | undefined;
+    skipConfigurationStep?: boolean;
   }): Promise<string> {
     const {
       handle,
@@ -77,6 +80,7 @@ export class GoogleAPIsService {
       workspaceMemberId,
       calendarVisibility,
       messageVisibility,
+      skipConfigurationStep,
     } = input;
 
     const isCalendarEnabled = this.twentyConfigService.get(
@@ -205,6 +209,15 @@ export class GoogleAPIsService {
             }
           },
         );
+
+        // When skipConfigurationStep is true (during onboarding), start syncing immediately
+        // instead of leaving channels in PENDING_CONFIGURATION state
+        if (!existingAccountId && skipConfigurationStep) {
+          await this.channelSyncService.startChannelSync({
+            connectedAccountId: newOrExistingConnectedAccountId,
+            workspaceId,
+          });
+        }
 
         if (this.twentyConfigService.get('MESSAGING_PROVIDER_GMAIL_ENABLED')) {
           const messageChannels = await messageChannelRepository.find({

@@ -36,11 +36,13 @@ export const useTriggerApisOAuth = () => {
         messageVisibility,
         calendarVisibility,
         loginHint,
+        skipConfigurationStep,
       }: {
         redirectLocation?: AppPath | string;
         messageVisibility?: MessageChannelVisibility;
         calendarVisibility?: CalendarChannelVisibility;
         loginHint?: string;
+        skipConfigurationStep?: boolean;
       } = {},
     ) => {
       const authServerUrl = REACT_APP_SERVER_BASE_URL;
@@ -65,6 +67,8 @@ export const useTriggerApisOAuth = () => {
         : '';
 
       params += loginHint ? `&loginHint=${loginHint}` : '';
+
+      params += skipConfigurationStep ? `&skipConfigurationStep=true` : '';
 
       redirect(`${authServerUrl}/auth/${getProviderUrl(provider)}?${params}`);
     },

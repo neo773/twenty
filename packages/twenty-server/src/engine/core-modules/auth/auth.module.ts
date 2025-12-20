@@ -60,6 +60,7 @@ import { WorkspaceCacheModule } from 'src/engine/workspace-cache/workspace-cache
 import { WorkspaceDataSourceModule } from 'src/engine/workspace-datasource/workspace-datasource.module';
 import { WorkspaceManagerModule } from 'src/engine/workspace-manager/workspace-manager.module';
 import { CalendarChannelSyncStatusService } from 'src/modules/calendar/common/services/calendar-channel-sync-status.service';
+import { ChannelSyncModule } from 'src/modules/connected-account/channel-sync/channel-sync.module';
 import { ConnectedAccountModule } from 'src/modules/connected-account/connected-account.module';
 import { MessageChannelSyncStatusService } from 'src/modules/messaging/common/services/message-channel-sync-status.service';
 import { MessagingFolderSyncManagerModule } from 'src/modules/messaging/message-folder-manager/messaging-folder-sync-manager.module';
@@ -102,6 +103,7 @@ import { JwtAuthStrategy } from './strategies/jwt.auth.strategy';
     OnboardingModule,
     WorkspaceDataSourceModule,
     ConnectedAccountModule,
+    ChannelSyncModule,
     MessagingFolderSyncManagerModule,
     WorkspaceSSOModule,
     FeatureFlagModule,

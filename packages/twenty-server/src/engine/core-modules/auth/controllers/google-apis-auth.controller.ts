@@ -79,6 +79,7 @@ export class GoogleAPIsAuthController {
         redirectLocation,
         calendarVisibility,
         messageVisibility,
+        skipConfigurationStep,
       } = user;
 
       const { workspaceMemberId, userId, workspaceId } =
@@ -106,6 +107,7 @@ export class GoogleAPIsAuthController {
           refreshToken,
           calendarVisibility,
           messageVisibility,
+          skipConfigurationStep,
         });
 
       if (userId) {

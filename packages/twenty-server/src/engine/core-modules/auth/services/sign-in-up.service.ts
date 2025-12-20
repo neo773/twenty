@@ -272,6 +272,7 @@ export class SignInUpService {
       await this.activateOnboardingForUser({
         user,
         workspace: params.workspace,
+        options: { skipConnectAccountStep: true },
       });
 
       await this.userWorkspaceService.addUserToWorkspaceIfUserNotInWorkspace(
@@ -301,20 +302,27 @@ export class SignInUpService {
     {
       user,
       workspace,
+      options,
     }: {
       user: UserEntity;
       workspace: WorkspaceEntity;
+      options?: {
+        skipConnectAccountStep?: boolean;
+      };
     },
     queryRunner?: QueryRunner,
   ) {
-    await this.onboardingService.setOnboardingConnectAccountPending(
-      {
-        userId: user.id,
-        workspaceId: workspace.id,
-        value: true,
-      },
-      queryRunner,
-    );
+    // Only show connect account step for workspace creators, not for subsequent users
+    if (!options?.skipConnectAccountStep) {
+      await this.onboardingService.setOnboardingConnectAccountPending(
+        {
+          userId: user.id,
+          workspaceId: workspace.id,
+          value: true,
+        },
+        queryRunner,
+      );
+    }
 
     if (user.firstName === '' && user.lastName === '') {
       await this.onboardingService.setOnboardingCreateProfilePending(

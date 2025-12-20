@@ -25,6 +25,7 @@ import {
   type CalendarChannelVisibility,
   type CalendarChannelWorkspaceEntity,
 } from 'src/modules/calendar/common/standard-objects/calendar-channel.workspace-entity';
+import { ChannelSyncService } from 'src/modules/connected-account/channel-sync/services/channel-sync.service';
 import { AccountsToReconnectService } from 'src/modules/connected-account/services/accounts-to-reconnect.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
 import { MessageChannelSyncStatusService } from 'src/modules/messaging/common/services/message-channel-sync-status.service';
@@ -55,6 +56,7 @@ export class MicrosoftAPIsService {
     private readonly createConnectedAccountService: CreateConnectedAccountService,
     private readonly updateConnectedAccountOnReconnectService: UpdateConnectedAccountOnReconnectService,
     private readonly twentyConfigService: TwentyConfigService,
+    private readonly channelSyncService: ChannelSyncService,
   ) {}
 
   async refreshMicrosoftRefreshToken(input: {
@@ -65,6 +67,7 @@ export class MicrosoftAPIsService {
     refreshToken: string;
     calendarVisibility: CalendarChannelVisibility | undefined;
     messageVisibility: MessageChannelVisibility | undefined;
+    skipConfigurationStep?: boolean;
   }): Promise<string> {
     const {
       handle,
@@ -72,6 +75,7 @@ export class MicrosoftAPIsService {
       workspaceMemberId,
       calendarVisibility,
       messageVisibility,
+      skipConfigurationStep,
     } = input;
 
     const scopes = getMicrosoftApisOauthScopes();
@@ -190,6 +194,15 @@ export class MicrosoftAPIsService {
             }
           },
         );
+
+        // When skipConfigurationStep is true (during onboarding), start syncing immediately
+        // instead of leaving channels in PENDING_CONFIGURATION state
+        if (!existingAccountId && skipConfigurationStep) {
+          await this.channelSyncService.startChannelSync({
+            connectedAccountId: newOrExistingConnectedAccountId,
+            workspaceId,
+          });
+        }
 
         if (
           this.twentyConfigService.get('MESSAGING_PROVIDER_MICROSOFT_ENABLED')
