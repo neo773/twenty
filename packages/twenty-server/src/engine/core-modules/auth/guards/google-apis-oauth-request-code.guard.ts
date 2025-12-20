@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
+import { isDefined } from 'twenty-shared/utils';
 
 import {
   AuthException,
@@ -54,7 +55,7 @@ export class GoogleAPIsOauthRequestCodeGuard extends AuthGuard('google-apis') {
         loginHint: request.query.loginHint,
         userId: userId,
         workspaceId: workspaceId,
-        skipConfigurationStep: request.query.skipConfigurationStep === 'true',
+        skipConfigurationStep: isDefined(request.query.skipConfigurationStep),
       });
 
       if (

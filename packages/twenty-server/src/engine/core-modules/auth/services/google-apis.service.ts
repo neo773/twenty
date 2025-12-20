@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { ConnectedAccountProvider } from 'twenty-shared/types';
+import { isDefined } from 'twenty-shared/utils';
 import { v4 } from 'uuid';
 
 import {
@@ -210,9 +211,7 @@ export class GoogleAPIsService {
           },
         );
 
-        // When skipConfigurationStep is true (during onboarding), start syncing immediately
-        // instead of leaving channels in PENDING_CONFIGURATION state
-        if (!existingAccountId && skipConfigurationStep) {
+        if (!isDefined(existingAccountId) && skipConfigurationStep) {
           await this.channelSyncService.startChannelSync({
             connectedAccountId: newOrExistingConnectedAccountId,
             workspaceId,

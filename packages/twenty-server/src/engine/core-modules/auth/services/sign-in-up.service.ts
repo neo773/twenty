@@ -312,7 +312,6 @@ export class SignInUpService {
     },
     queryRunner?: QueryRunner,
   ) {
-    // Only show connect account step for workspace creators, not for subsequent users
     if (!options?.skipConnectAccountStep) {
       await this.onboardingService.setOnboardingConnectAccountPending(
         {

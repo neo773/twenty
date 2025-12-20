@@ -68,7 +68,7 @@ export const useTriggerApisOAuth = () => {
 
       params += loginHint ? `&loginHint=${loginHint}` : '';
 
-      params += skipConfigurationStep ? `&skipConfigurationStep=true` : '';
+      params += skipConfigurationStep ? `&skipConfigurationStep` : '';
 
       redirect(`${authServerUrl}/auth/${getProviderUrl(provider)}?${params}`);
     },
