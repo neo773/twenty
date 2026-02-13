@@ -14,7 +14,12 @@ export class GmailGetHistoryService {
   public async getHistory(
     gmailClient: gmail_v1.Gmail,
     lastSyncHistoryId: string,
-    historyTypes?: ('messageAdded' | 'messageDeleted')[],
+    historyTypes?: (
+      | 'messageAdded'
+      | 'messageDeleted'
+      | 'labelAdded'
+      | 'labelRemoved'
+    )[],
     labelId?: string,
   ): Promise<{
     history: gmail_v1.Schema$History[];
@@ -32,7 +37,12 @@ export class GmailGetHistoryService {
           maxResults: MESSAGING_GMAIL_USERS_HISTORY_MAX_RESULT,
           pageToken,
           startHistoryId: lastSyncHistoryId,
-          historyTypes: historyTypes || ['messageAdded', 'messageDeleted'],
+          historyTypes: historyTypes || [
+            'messageAdded',
+            'messageDeleted',
+            'labelAdded',
+            'labelRemoved',
+          ],
           labelId,
         })
         .catch((error) => {
@@ -78,12 +88,22 @@ export class GmailGetHistoryService {
           (messageAdded) => messageAdded.message?.id || '',
         );
 
+        const labelsAdded = history.labelsAdded?.map(
+          (labelAdded) => labelAdded.message?.id || '',
+        );
+
         const messagesDeleted = history.messagesDeleted?.map(
           (messageDeleted) => messageDeleted.message?.id || '',
         );
 
+        const labelsRemoved = history.labelsRemoved?.map(
+          (labelRemoved) => labelRemoved.message?.id || '',
+        );
+
         if (messagesAdded) acc.messagesAdded.push(...messagesAdded);
+        if (labelsAdded) acc.messagesAdded.push(...labelsAdded);
         if (messagesDeleted) acc.messagesDeleted.push(...messagesDeleted);
+        if (labelsRemoved) acc.messagesDeleted.push(...labelsRemoved);
 
         return acc;
       },

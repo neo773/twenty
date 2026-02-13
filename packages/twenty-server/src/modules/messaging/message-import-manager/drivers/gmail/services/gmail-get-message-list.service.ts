@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { isNonEmptyString } from '@sniptt/guards';
-import { google } from 'googleapis';
+import { batchFetchImplementation } from '@jrmdayn/googleapis-batcher';
+import { google, type gmail_v1 } from 'googleapis';
 
 import { OAuth2ClientManagerService } from 'src/modules/connected-account/oauth2-client-manager/services/oauth2-client-manager.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
@@ -20,6 +21,9 @@ import { GmailMessageListFetchErrorHandler } from 'src/modules/messaging/message
 import { computeGmailExcludeSearchFilter } from 'src/modules/messaging/message-import-manager/drivers/gmail/utils/compute-gmail-exclude-search-filter.util';
 import { type GetMessageListsArgs } from 'src/modules/messaging/message-import-manager/types/get-message-lists-args.type';
 import { type GetMessageListsResponse } from 'src/modules/messaging/message-import-manager/types/get-message-lists-response.type';
+
+
+const GMAIL_BATCH_REQUEST_MAX_SIZE = 50;
 
 @Injectable()
 export class GmailGetMessageListService {
@@ -145,6 +149,99 @@ export class GmailGetMessageListService {
     ];
   }
 
+  private async getMessageExternalIdsForSelectedFoldersByThread(
+    gmailClient: gmail_v1.Gmail,
+    oAuth2Client: unknown,
+    messageExternalIds: string[],
+    messageFolders: Pick<
+      MessageFolderWorkspaceEntity,
+      'name' | 'externalId' | 'isSynced' | 'parentFolderId'
+    >[],
+  ): Promise<string[]> {
+    const syncedFolderExternalIds = messageFolders
+      .filter((folder) => folder.isSynced)
+      .map((folder) => folder.externalId)
+      .filter(isNonEmptyString);
+
+    if (
+      syncedFolderExternalIds.length === 0 ||
+      messageExternalIds.length === 0
+    ) {
+      return [];
+    }
+
+    const batchedFetchImplementation = batchFetchImplementation({
+      maxBatchSize: GMAIL_BATCH_REQUEST_MAX_SIZE,
+    });
+
+    const batchedGmailClient = google.gmail({
+      version: 'v1',
+      auth: oAuth2Client,
+      fetchImplementation: batchedFetchImplementation,
+    });
+
+    const messagesMetadata = await Promise.all(
+      messageExternalIds.map((messageExternalId) =>
+        batchedGmailClient.users.messages
+          .get({
+            userId: 'me',
+            id: messageExternalId,
+            format: 'metadata',
+            metadataHeaders: [],
+          })
+          .then((response) => response.data)
+          .catch((error) => {
+            this.gmailMessageListFetchErrorHandler.handleError(error);
+
+            return null;
+          }),
+      ),
+    );
+
+    const selectedMessageExternalIds = new Set<string>();
+
+    for (const messageMetadata of messagesMetadata) {
+      const messageThreadId = messageMetadata?.threadId;
+
+      if (!isNonEmptyString(messageThreadId)) {
+        continue;
+      }
+
+      const thread = await gmailClient.users.threads
+        .get({
+          userId: 'me',
+          id: messageThreadId,
+          format: 'metadata',
+          metadataHeaders: [],
+        })
+        .catch((error) => {
+          this.gmailMessageListFetchErrorHandler.handleError(error);
+
+          return null;
+        });
+
+      const threadMessages = thread?.data?.messages ?? [];
+      const threadShouldBeImported = threadMessages.some((threadMessage) =>
+        (threadMessage.labelIds ?? []).some((labelId) =>
+          syncedFolderExternalIds.includes(labelId),
+        ),
+      );
+
+      if (!threadShouldBeImported) {
+        continue;
+      }
+
+      for (const threadMessage of threadMessages) {
+        if (isNonEmptyString(threadMessage.id)) {
+          selectedMessageExternalIds.add(threadMessage.id);
+        }
+      }
+    }
+
+    return Array.from(selectedMessageExternalIds);
+  }
+
+
   public async getMessageLists({
     messageChannel,
     connectedAccount,
@@ -191,6 +288,17 @@ export class GmailGetMessageListService {
     const { messagesAdded, messagesDeleted } =
       await this.gmailGetHistoryService.getMessageIdsFromHistory(history);
 
+    const messageExternalIds =
+      messageChannel.messageFolderImportPolicy ===
+      MessageFolderImportPolicy.SELECTED_FOLDERS
+        ? await this.getMessageExternalIdsForSelectedFoldersByThread(
+            gmailClient,
+            oAuth2Client,
+            messagesAdded,
+            messageFolders,
+          )
+        : messagesAdded;
+
     if (!nextSyncCursor) {
       throw new MessageImportDriverException(
         `No nextSyncCursor found for connected account ${connectedAccount.id}`,
@@ -200,7 +308,7 @@ export class GmailGetMessageListService {
 
     return [
       {
-        messageExternalIds: messagesAdded,
+        messageExternalIds,
         messageExternalIdsToDelete: messagesDeleted,
         previousSyncCursor: messageChannel.syncCursor,
         nextSyncCursor,

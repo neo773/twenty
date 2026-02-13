@@ -29,6 +29,7 @@ const createMockFolder = (
 describe('GmailGetMessageListService', () => {
   let service: GmailGetMessageListService;
   let oAuth2ClientManagerService: OAuth2ClientManagerService;
+  let gmailGetHistoryService: GmailGetHistoryService;
 
   const mockConnectedAccount: Pick<
     ConnectedAccountWorkspaceEntity,
@@ -78,6 +79,9 @@ describe('GmailGetMessageListService', () => {
     );
     oAuth2ClientManagerService = module.get<OAuth2ClientManagerService>(
       OAuth2ClientManagerService,
+    );
+    gmailGetHistoryService = module.get<GmailGetHistoryService>(
+      GmailGetHistoryService,
     );
   });
 
@@ -294,6 +298,87 @@ describe('GmailGetMessageListService', () => {
 
       expect(result[0].messageExternalIds).toHaveLength(0);
       expect(mockGmailClient.users.messages.list).toHaveBeenCalledTimes(1);
+    });
+
+
+
+    it('should import full thread for selected folders when history only contains unlabeled reply', async () => {
+      const mockGmailClient = {
+        users: {
+          messages: {
+            get: jest
+              .fn()
+              .mockResolvedValueOnce({
+                data: {
+                  id: 'reply-message',
+                  threadId: 'thread-1',
+                  labelIds: ['INBOX'],
+                },
+              })
+              .mockResolvedValueOnce({
+                data: {
+                  id: 'reply-message-2',
+                  threadId: 'thread-1',
+                  labelIds: ['INBOX'],
+                },
+              }),
+          },
+          threads: {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                messages: [
+                  {
+                    id: 'initial-message',
+                    labelIds: ['Label_custom'],
+                  },
+                  {
+                    id: 'reply-message',
+                    labelIds: ['INBOX'],
+                  },
+                ],
+              },
+            }),
+          },
+        },
+      };
+
+      jest.spyOn(google, 'gmail').mockReturnValue(mockGmailClient as never);
+
+      (
+        oAuth2ClientManagerService.getGoogleOAuth2Client as jest.Mock
+      ).mockResolvedValue({});
+
+      (gmailGetHistoryService.getHistory as jest.Mock).mockResolvedValue({
+        history: [{ labelsAdded: [{ message: { id: 'reply-message' } }] }],
+        historyId: 'next-history-id',
+      });
+      (gmailGetHistoryService.getMessageIdsFromHistory as jest.Mock).mockResolvedValue({
+        messagesAdded: ['reply-message'],
+        messagesDeleted: [],
+      });
+
+      const result = await service.getMessageLists({
+        messageChannel: {
+          syncCursor: 'history-123',
+          id: 'channel-1',
+          messageFolderImportPolicy: MessageFolderImportPolicy.SELECTED_FOLDERS,
+        },
+        connectedAccount: mockConnectedAccount,
+        messageFolders: [
+          createMockFolder({
+            name: 'Custom',
+            externalId: 'Label_custom',
+            isSynced: true,
+          }),
+        ],
+      });
+
+      expect(result[0].messageExternalIds).toEqual(
+        expect.arrayContaining(['initial-message', 'reply-message']),
+      );
+      expect(mockGmailClient.users.threads.get).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'thread-1' }),
+      );
     });
 
     it('should return empty array when no folders have isSynced=true with SELECTED_FOLDERS policy', async () => {
