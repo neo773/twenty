@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { batchFetchImplementation } from '@jrmdayn/googleapis-batcher';
 import { isNonEmptyString } from '@sniptt/guards';
-import { google } from 'googleapis';
+import { type gmail_v1, google } from 'googleapis';
 
 import { OAuth2ClientManagerService } from 'src/modules/connected-account/oauth2-client-manager/services/oauth2-client-manager.service';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
@@ -24,11 +25,166 @@ import { type GetMessageListsResponse } from 'src/modules/messaging/message-impo
 @Injectable()
 export class GmailGetMessageListService {
   private readonly logger = new Logger(GmailGetMessageListService.name);
+  private readonly gmailBatchRequestMaxSize = 50;
   constructor(
     private readonly gmailGetHistoryService: GmailGetHistoryService,
     private readonly oAuth2ClientManagerService: OAuth2ClientManagerService,
     private readonly gmailMessageListFetchErrorHandler: GmailMessageListFetchErrorHandler,
   ) {}
+
+  private getSyncedFolderExternalIds(
+    messageFolders: Pick<
+      MessageFolderWorkspaceEntity,
+      'name' | 'externalId' | 'isSynced' | 'parentFolderId'
+    >[],
+  ): string[] {
+    return messageFolders
+      .filter(
+        (folder) => folder.isSynced && isNonEmptyString(folder.externalId),
+      )
+      .map((folder) => folder.externalId);
+  }
+
+  private async getMessagesWithMetadata(
+    gmailClient: gmail_v1.Gmail,
+    messageIds: string[],
+  ): Promise<gmail_v1.Schema$Message[]> {
+    const metadataPromises = messageIds.map((messageId) =>
+      gmailClient.users.messages
+        .get({
+          userId: 'me',
+          id: messageId,
+          format: 'metadata',
+          metadataHeaders: [],
+        })
+        .then((response) => response.data)
+        .catch((error) => {
+          this.gmailMessageListFetchErrorHandler.handleError(error);
+
+          return null;
+        }),
+    );
+
+    const metadata = await Promise.all(metadataPromises);
+
+    return metadata.filter(
+      (message): message is gmail_v1.Schema$Message => !!message,
+    );
+  }
+
+  private getLabelChangedMessageIds(
+    history: gmail_v1.Schema$History[],
+    syncedFolderExternalIds: string[],
+  ): { messageIdsAddedByLabel: string[]; messageIdsRemovedByLabel: string[] } {
+    const messageIdsAddedByLabel = new Set<string>();
+    const messageIdsRemovedByLabel = new Set<string>();
+
+    for (const historyItem of history) {
+      const labelsAdded = historyItem.labelsAdded ?? [];
+      const labelsRemoved = historyItem.labelsRemoved ?? [];
+
+      for (const labelAdded of labelsAdded) {
+        const labelIds = labelAdded.labelIds ?? [];
+        const messageId = labelAdded.message?.id;
+
+        if (
+          messageId &&
+          labelIds.some((labelId) => syncedFolderExternalIds.includes(labelId))
+        ) {
+          messageIdsAddedByLabel.add(messageId);
+        }
+      }
+
+      for (const labelRemoved of labelsRemoved) {
+        const labelIds = labelRemoved.labelIds ?? [];
+        const messageId = labelRemoved.message?.id;
+
+        if (
+          messageId &&
+          labelIds.some((labelId) => syncedFolderExternalIds.includes(labelId))
+        ) {
+          messageIdsRemovedByLabel.add(messageId);
+        }
+      }
+    }
+
+    return {
+      messageIdsAddedByLabel: Array.from(messageIdsAddedByLabel),
+      messageIdsRemovedByLabel: Array.from(messageIdsRemovedByLabel),
+    };
+  }
+
+  private async getReplyMessageIdsFromSyncedThreads(
+    gmailClient: gmail_v1.Gmail,
+    messagesAddedByHistory: string[],
+    syncedFolderExternalIds: string[],
+  ): Promise<string[]> {
+    if (
+      messagesAddedByHistory.length === 0 ||
+      syncedFolderExternalIds.length === 0
+    ) {
+      return [];
+    }
+
+    const messagesMetadata = await this.getMessagesWithMetadata(
+      gmailClient,
+      messagesAddedByHistory,
+    );
+
+    const threadIds = Array.from(
+      new Set(
+        messagesMetadata
+          .map((message) => message.threadId)
+          .filter(isNonEmptyString),
+      ),
+    );
+
+    const threadPromises = threadIds.map((threadId) =>
+      gmailClient.users.threads
+        .get({
+          userId: 'me',
+          id: threadId,
+          format: 'metadata',
+          metadataHeaders: [],
+        })
+        .then((response) => response.data)
+        .catch((error) => {
+          this.gmailMessageListFetchErrorHandler.handleError(error);
+
+          return null;
+        }),
+    );
+
+    const threads = (await Promise.all(threadPromises)).filter(
+      (thread): thread is gmail_v1.Schema$Thread => !!thread,
+    );
+
+    const syncedThreadIds = new Set(
+      threads
+        .filter((thread) =>
+          (thread.messages ?? []).some((threadMessage) =>
+            (threadMessage.labelIds ?? []).some((labelId) =>
+              syncedFolderExternalIds.includes(labelId),
+            ),
+          ),
+        )
+        .map((thread) => thread.id)
+        .filter(isNonEmptyString),
+    );
+
+    return messagesMetadata
+      .filter((message) => {
+        const messageLabelIds = message.labelIds ?? [];
+
+        const isInSyncedFolder = messageLabelIds.some((labelId) =>
+          syncedFolderExternalIds.includes(labelId),
+        );
+
+        return isInSyncedFolder || syncedThreadIds.has(message.threadId ?? '');
+      })
+      .map((message) => message.id)
+      .filter(isNonEmptyString);
+  }
 
   private async getMessageListWithoutCursor(
     connectedAccount: Pick<
@@ -48,9 +204,14 @@ export class GmailGetMessageListService {
       await this.oAuth2ClientManagerService.getGoogleOAuth2Client(
         connectedAccount,
       );
+    const batchedFetchImplementation = batchFetchImplementation({
+      maxBatchSize: this.gmailBatchRequestMaxSize,
+    });
+
     const gmailClient = google.gmail({
       version: 'v1',
       auth: oAuth2Client,
+      fetchImplementation: batchedFetchImplementation,
     });
 
     let pageToken: string | undefined;
@@ -169,9 +330,14 @@ export class GmailGetMessageListService {
       await this.oAuth2ClientManagerService.getGoogleOAuth2Client(
         connectedAccount,
       );
+    const batchedFetchImplementation = batchFetchImplementation({
+      maxBatchSize: this.gmailBatchRequestMaxSize,
+    });
+
     const gmailClient = google.gmail({
       version: 'v1',
       auth: oAuth2Client,
+      fetchImplementation: batchedFetchImplementation,
     });
 
     if (!isNonEmptyString(messageChannel.syncCursor)) {
@@ -186,10 +352,41 @@ export class GmailGetMessageListService {
       await this.gmailGetHistoryService.getHistory(
         gmailClient,
         messageChannel.syncCursor,
+        ['messageAdded', 'messageDeleted', 'labelAdded', 'labelRemoved'],
       );
 
-    const { messagesAdded, messagesDeleted } =
-      await this.gmailGetHistoryService.getMessageIdsFromHistory(history);
+    const {
+      messagesAdded: historyMessagesAdded,
+      messagesDeleted: historyMessagesDeleted,
+    } = await this.gmailGetHistoryService.getMessageIdsFromHistory(history);
+
+    const syncedFolderExternalIds =
+      this.getSyncedFolderExternalIds(messageFolders);
+
+    const { messageIdsAddedByLabel, messageIdsRemovedByLabel } =
+      this.getLabelChangedMessageIds(history, syncedFolderExternalIds);
+
+    const replyMessageIds =
+      messageChannel.messageFolderImportPolicy ===
+      MessageFolderImportPolicy.SELECTED_FOLDERS
+        ? await this.getReplyMessageIdsFromSyncedThreads(
+            gmailClient,
+            historyMessagesAdded,
+            syncedFolderExternalIds,
+          )
+        : [];
+
+    const messagesAdded = Array.from(
+      new Set([
+        ...historyMessagesAdded,
+        ...messageIdsAddedByLabel,
+        ...replyMessageIds,
+      ]),
+    );
+
+    const messagesDeleted = Array.from(
+      new Set([...historyMessagesDeleted, ...messageIdsRemovedByLabel]),
+    ).filter((messageId) => !messagesAdded.includes(messageId));
 
     if (!nextSyncCursor) {
       throw new MessageImportDriverException(

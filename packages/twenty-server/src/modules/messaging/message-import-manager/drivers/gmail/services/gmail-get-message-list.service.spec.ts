@@ -29,6 +29,7 @@ const createMockFolder = (
 describe('GmailGetMessageListService', () => {
   let service: GmailGetMessageListService;
   let oAuth2ClientManagerService: OAuth2ClientManagerService;
+  let gmailGetHistoryService: GmailGetHistoryService;
 
   const mockConnectedAccount: Pick<
     ConnectedAccountWorkspaceEntity,
@@ -78,6 +79,9 @@ describe('GmailGetMessageListService', () => {
     );
     oAuth2ClientManagerService = module.get<OAuth2ClientManagerService>(
       OAuth2ClientManagerService,
+    );
+    gmailGetHistoryService = module.get<GmailGetHistoryService>(
+      GmailGetHistoryService,
     );
   });
 
@@ -447,6 +451,128 @@ describe('GmailGetMessageListService', () => {
       expect(callArgs.q).toContain('-label:spam');
       expect(callArgs.q).toContain('-category:promotions');
       expect(callArgs.q).not.toContain('label:inbox');
+    });
+  });
+
+  describe('incremental sync with selected folders', () => {
+    it('should include messages added to synced folders by label changes', async () => {
+      const mockGmailClient = {
+        users: {
+          messages: {
+            get: jest.fn(),
+          },
+          threads: {
+            get: jest.fn(),
+          },
+        },
+      };
+
+      jest.spyOn(google, 'gmail').mockReturnValue(mockGmailClient as never);
+      (
+        oAuth2ClientManagerService.getGoogleOAuth2Client as jest.Mock
+      ).mockResolvedValue({});
+      (gmailGetHistoryService.getHistory as jest.Mock).mockResolvedValue({
+        history: [
+          {
+            labelsAdded: [
+              {
+                labelIds: ['Label_custom'],
+                message: { id: 'message-added-by-label' },
+              },
+            ],
+          },
+        ],
+        historyId: 'next-history-id',
+      });
+      (
+        gmailGetHistoryService.getMessageIdsFromHistory as jest.Mock
+      ).mockResolvedValue({
+        messagesAdded: [],
+        messagesDeleted: [],
+      });
+
+      const result = await service.getMessageLists({
+        messageChannel: {
+          syncCursor: 'history-100',
+          id: 'my-id',
+          messageFolderImportPolicy: MessageFolderImportPolicy.SELECTED_FOLDERS,
+        },
+        connectedAccount: mockConnectedAccount,
+        messageFolders: [
+          createMockFolder({
+            name: 'Custom',
+            externalId: 'Label_custom',
+            isSynced: true,
+          }),
+        ],
+      });
+
+      expect(result[0].messageExternalIds).toEqual(['message-added-by-label']);
+    });
+
+    it('should include reply messages when a synced label exists on another message in thread', async () => {
+      const mockGmailClient = {
+        users: {
+          messages: {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                id: 'reply-message-id',
+                threadId: 'thread-1',
+                labelIds: ['INBOX'],
+              },
+            }),
+          },
+          threads: {
+            get: jest.fn().mockResolvedValue({
+              data: {
+                id: 'thread-1',
+                messages: [
+                  { id: 'original-message', labelIds: ['Label_custom'] },
+                  { id: 'reply-message-id', labelIds: ['INBOX'] },
+                ],
+              },
+            }),
+          },
+        },
+      };
+
+      jest.spyOn(google, 'gmail').mockReturnValue(mockGmailClient as never);
+      (
+        oAuth2ClientManagerService.getGoogleOAuth2Client as jest.Mock
+      ).mockResolvedValue({});
+      (gmailGetHistoryService.getHistory as jest.Mock).mockResolvedValue({
+        history: [],
+        historyId: 'next-history-id',
+      });
+      (
+        gmailGetHistoryService.getMessageIdsFromHistory as jest.Mock
+      ).mockResolvedValue({
+        messagesAdded: ['reply-message-id'],
+        messagesDeleted: [],
+      });
+
+      const result = await service.getMessageLists({
+        messageChannel: {
+          syncCursor: 'history-100',
+          id: 'my-id',
+          messageFolderImportPolicy: MessageFolderImportPolicy.SELECTED_FOLDERS,
+        },
+        connectedAccount: mockConnectedAccount,
+        messageFolders: [
+          createMockFolder({
+            name: 'Custom',
+            externalId: 'Label_custom',
+            isSynced: true,
+          }),
+        ],
+      });
+
+      expect(result[0].messageExternalIds).toEqual(['reply-message-id']);
+      expect(mockGmailClient.users.threads.get).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'thread-1',
+        }),
+      );
     });
   });
 });
