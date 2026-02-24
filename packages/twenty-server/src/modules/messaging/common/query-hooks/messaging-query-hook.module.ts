@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { ApplyMessagesVisibilityRestrictionsService } from 'src/modules/messaging/common/query-hooks/message/apply-messages-visibility-restrictions.service';
 import { MessageChannelUpdateOnePreQueryHook } from 'src/modules/messaging/common/query-hooks/message/message-channel-update-one.pre-query.hook';
+import { MessageFolderUpdateOnePreQueryHook } from 'src/modules/messaging/common/query-hooks/message/message-folder-update-one.pre-query.hook';
 import { MessageFindManyPostQueryHook } from 'src/modules/messaging/common/query-hooks/message/message-find-many.post-query.hook';
 import { MessageFindOnePostQueryHook } from 'src/modules/messaging/common/query-hooks/message/message-find-one.post-query.hook';
 import { MessagingImportManagerModule } from 'src/modules/messaging/message-import-manager/messaging-import-manager.module';
@@ -13,6 +14,7 @@ import { MessagingImportManagerModule } from 'src/modules/messaging/message-impo
     MessageFindOnePostQueryHook,
     MessageFindManyPostQueryHook,
     MessageChannelUpdateOnePreQueryHook,
+    MessageFolderUpdateOnePreQueryHook,
   ],
 })
 export class MessagingQueryHookModule {}

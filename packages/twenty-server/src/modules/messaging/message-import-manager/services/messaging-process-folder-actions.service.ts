@@ -6,7 +6,7 @@ import { In } from 'typeorm';
 import { type WorkspaceEntityManager } from 'src/engine/twenty-orm/entity-manager/workspace-entity-manager';
 import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
 import { buildSystemAuthContext } from 'src/engine/twenty-orm/utils/build-system-auth-context.util';
-import { type MessageChannelWorkspaceEntity } from 'src/modules/messaging/common/standard-objects/message-channel.workspace-entity';
+import { MessageChannelWorkspaceEntity } from 'src/modules/messaging/common/standard-objects/message-channel.workspace-entity';
 import {
   MessageFolderPendingSyncAction,
   MessageFolderWorkspaceEntity,
@@ -44,6 +44,7 @@ export class MessagingProcessFolderActionsService {
     );
 
     const folderIdsToDelete: string[] = [];
+    const folderIdsToResetCursor: string[] = [];
     const processedFolderIds: string[] = [];
     const failedFolderIds: Array<{ folderId: string; error: Error }> = [];
 
@@ -68,6 +69,15 @@ export class MessagingProcessFolderActionsService {
           this.logger.debug(
             `WorkspaceId: ${workspaceId}, MessageChannelId: ${messageChannel.id}, FolderId: ${folder.id} - Completed FOLDER_DELETION action`,
           );
+        } else if (
+          folder.pendingSyncAction ===
+          MessageFolderPendingSyncAction.FOLDER_IMPORT
+        ) {
+          folderIdsToResetCursor.push(folder.id);
+
+          this.logger.debug(
+            `WorkspaceId: ${workspaceId}, MessageChannelId: ${messageChannel.id}, FolderId: ${folder.id} - Completed FOLDER_IMPORT action`,
+          );
         }
 
         processedFolderIds.push(folder.id);
@@ -86,7 +96,11 @@ export class MessagingProcessFolderActionsService {
       );
     }
 
-    if (processedFolderIds.length > 0 || folderIdsToDelete.length > 0) {
+    if (
+      processedFolderIds.length > 0 ||
+      folderIdsToDelete.length > 0 ||
+      folderIdsToResetCursor.length > 0
+    ) {
       const authContext = buildSystemAuthContext(workspaceId);
 
       await this.globalWorkspaceOrmManager.executeInWorkspaceContext(
@@ -111,6 +125,30 @@ export class MessagingProcessFolderActionsService {
 
                 this.logger.debug(
                   `WorkspaceId: ${workspaceId}, MessageChannelId: ${messageChannel.id} - Reset pendingSyncAction to NONE for ${processedFolderIds.length} folders`,
+                );
+              }
+
+              if (folderIdsToResetCursor.length > 0) {
+                await messageFolderRepository.update(
+                  { id: In(folderIdsToResetCursor) },
+                  { syncCursor: '' },
+                  transactionManager,
+                );
+
+                const messageChannelRepository =
+                  await this.globalWorkspaceOrmManager.getRepository<MessageChannelWorkspaceEntity>(
+                    workspaceId,
+                    'messageChannel',
+                  );
+
+                await messageChannelRepository.update(
+                  { id: messageChannel.id },
+                  { syncCursor: '' },
+                  transactionManager,
+                );
+
+                this.logger.log(
+                  `WorkspaceId: ${workspaceId}, MessageChannelId: ${messageChannel.id} - Reset syncCursor for ${folderIdsToResetCursor.length} folders and message channel`,
                 );
               }
 
