@@ -22,6 +22,21 @@ export class MessagingGetMessageListService {
     private readonly imapGetMessageListService: ImapGetMessageListService,
   ) {}
 
+  public async getMessageListsForFolderImport(
+    messageChannel: MessageChannelWorkspaceEntity,
+    messageFolders: MessageFolder[],
+  ): Promise<GetMessageListsResponse> {
+    switch (messageChannel.connectedAccount.provider) {
+      case ConnectedAccountProvider.GOOGLE:
+        return this.gmailGetMessageListService.getMessageListsForFolderImport({
+          connectedAccount: messageChannel.connectedAccount,
+          messageFolders,
+        });
+      default:
+        return [];
+    }
+  }
+
   public async getMessageLists(
     messageChannel: MessageChannelWorkspaceEntity,
     messageFolders: MessageFolder[],

@@ -145,6 +145,18 @@ export class GmailGetMessageListService {
     ];
   }
 
+  public async getMessageListsForFolderImport({
+    connectedAccount,
+    messageFolders,
+  }: Pick<
+    GetMessageListsArgs,
+    'connectedAccount' | 'messageFolders'
+  >): Promise<GetMessageListsResponse> {
+    return this.getMessageListWithoutCursor(connectedAccount, messageFolders, {
+      messageFolderImportPolicy: MessageFolderImportPolicy.SELECTED_FOLDERS,
+    });
+  }
+
   public async getMessageLists({
     messageChannel,
     connectedAccount,

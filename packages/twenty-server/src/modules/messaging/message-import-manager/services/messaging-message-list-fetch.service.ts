@@ -17,7 +17,10 @@ import {
   MessageChannelSyncStage,
   MessageChannelWorkspaceEntity,
 } from 'src/modules/messaging/common/standard-objects/message-channel.workspace-entity';
-import { MessageFolderPendingSyncAction } from 'src/modules/messaging/common/standard-objects/message-folder.workspace-entity';
+import {
+  MessageFolderPendingSyncAction,
+  type MessageFolderWorkspaceEntity,
+} from 'src/modules/messaging/common/standard-objects/message-folder.workspace-entity';
 import { MessagingMessageCleanerService } from 'src/modules/messaging/message-cleaner/services/messaging-message-cleaner.service';
 import { SyncMessageFoldersService } from 'src/modules/messaging/message-folder-manager/services/sync-message-folders.service';
 import { MessagingAccountAuthenticationService } from 'src/modules/messaging/message-import-manager/services/messaging-account-authentication.service';
@@ -131,19 +134,44 @@ export class MessagingMessageListFetchService {
             folder.pendingSyncAction === MessageFolderPendingSyncAction.NONE,
         );
 
+        const messageFoldersToImport = messageFolders.filter(
+          (folder) =>
+            folder.pendingSyncAction ===
+            MessageFolderPendingSyncAction.FOLDER_IMPORT,
+        );
+
         const messageLists =
           await this.messagingGetMessageListService.getMessageLists(
             messageChannelWithFreshTokens,
             messageFoldersToSync,
           );
 
+        const folderImportMessageLists =
+          messageFoldersToImport.length > 0
+            ? await this.messagingGetMessageListService.getMessageListsForFolderImport(
+                messageChannelWithFreshTokens,
+                messageFoldersToImport,
+              )
+            : [];
+
+        if (messageFoldersToImport.length > 0) {
+          this.logger.log(
+            `WorkspaceId: ${workspaceId}, MessageChannelId: ${freshMessageChannel.id} - Processing folder import for ${messageFoldersToImport.length} folders`,
+          );
+        }
+
         await this.cacheStorage.del(
           `messages-to-import:${workspaceId}:${freshMessageChannel.id}`,
         );
 
-        const messageExternalIds = messageLists.flatMap(
-          (messageList) => messageList.messageExternalIds,
-        );
+        const messageExternalIds = [
+          ...messageLists.flatMap(
+            (messageList) => messageList.messageExternalIds,
+          ),
+          ...folderImportMessageLists.flatMap(
+            (messageList) => messageList.messageExternalIds,
+          ),
+        ];
 
         const messageExternalIdsToDelete = messageLists.flatMap(
           (messageList) => messageList.messageExternalIdsToDelete,
@@ -216,6 +244,21 @@ export class MessagingMessageListFetchService {
             nextSyncCursor,
             workspaceId,
             folderId,
+          );
+        }
+
+        if (messageFoldersToImport.length > 0) {
+          const messageFolderRepository =
+            await this.globalWorkspaceOrmManager.getRepository<MessageFolderWorkspaceEntity>(
+              workspaceId,
+              'messageFolder',
+            );
+
+          await messageFolderRepository.update(
+            {
+              id: In(messageFoldersToImport.map((folder) => folder.id)),
+            },
+            { pendingSyncAction: MessageFolderPendingSyncAction.NONE },
           );
         }
 

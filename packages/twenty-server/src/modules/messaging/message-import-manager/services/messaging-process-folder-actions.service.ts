@@ -68,6 +68,11 @@ export class MessagingProcessFolderActionsService {
           this.logger.debug(
             `WorkspaceId: ${workspaceId}, MessageChannelId: ${messageChannel.id}, FolderId: ${folder.id} - Completed FOLDER_DELETION action`,
           );
+        } else if (
+          folder.pendingSyncAction ===
+          MessageFolderPendingSyncAction.FOLDER_IMPORT
+        ) {
+          continue;
         }
 
         processedFolderIds.push(folder.id);
