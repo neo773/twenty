@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { isDefined } from 'twenty-shared/utils';
 import { In } from 'typeorm';
 
 import { type WorkspaceEntityManager } from 'src/engine/twenty-orm/entity-manager/workspace-entity-manager';
@@ -31,8 +30,8 @@ export class MessagingProcessFolderActionsService {
   ): Promise<void> {
     const foldersWithPendingActions = messageFolders.filter(
       (folder) =>
-        isDefined(folder.pendingSyncAction) &&
-        folder.pendingSyncAction !== MessageFolderPendingSyncAction.NONE,
+        folder.pendingSyncAction ===
+        MessageFolderPendingSyncAction.FOLDER_DELETION,
     );
 
     if (foldersWithPendingActions.length === 0) {

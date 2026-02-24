@@ -17,7 +17,10 @@ import {
   MessageChannelSyncStage,
   MessageChannelWorkspaceEntity,
 } from 'src/modules/messaging/common/standard-objects/message-channel.workspace-entity';
-import { MessageFolderPendingSyncAction } from 'src/modules/messaging/common/standard-objects/message-folder.workspace-entity';
+import {
+  MessageFolderPendingSyncAction,
+  type MessageFolderWorkspaceEntity,
+} from 'src/modules/messaging/common/standard-objects/message-folder.workspace-entity';
 import { MessagingMessageCleanerService } from 'src/modules/messaging/message-cleaner/services/messaging-message-cleaner.service';
 import { SyncMessageFoldersService } from 'src/modules/messaging/message-folder-manager/services/sync-message-folders.service';
 import { MessagingAccountAuthenticationService } from 'src/modules/messaging/message-import-manager/services/messaging-account-authentication.service';
@@ -30,6 +33,7 @@ import {
 import { MessagingMessagesImportService } from 'src/modules/messaging/message-import-manager/services/messaging-messages-import.service';
 import { MessagingProcessFolderActionsService } from 'src/modules/messaging/message-import-manager/services/messaging-process-folder-actions.service';
 import { MessagingProcessGroupEmailActionsService } from 'src/modules/messaging/message-import-manager/services/messaging-process-group-email-actions.service';
+import { type GetMessageListsResponse } from 'src/modules/messaging/message-import-manager/types/get-message-lists-response.type';
 
 const ONE_WEEK_IN_MILLISECONDS = 7 * 24 * 60 * 60 * 1000;
 
@@ -126,10 +130,45 @@ export class MessagingMessageListFetchService {
             workspaceId,
           });
 
+        const foldersToBackfill = messageFolders.filter(
+          (folder) =>
+            folder.pendingSyncAction ===
+            MessageFolderPendingSyncAction.FOLDER_IMPORT,
+        );
+
         const messageFoldersToSync = messageFolders.filter(
           (folder) =>
             folder.pendingSyncAction === MessageFolderPendingSyncAction.NONE,
         );
+
+        let backfillMessageLists: GetMessageListsResponse = [];
+
+        if (foldersToBackfill.length > 0) {
+          this.logger.log(
+            `WorkspaceId: ${workspaceId}, MessageChannelId: ${freshMessageChannel.id} - Backfilling ${foldersToBackfill.length} newly enabled folders`,
+          );
+
+          backfillMessageLists =
+            await this.messagingGetMessageListService.getMessageLists(
+              { ...messageChannelWithFreshTokens, syncCursor: '' },
+              foldersToBackfill,
+            );
+
+          const messageFolderRepository =
+            await this.globalWorkspaceOrmManager.getRepository<MessageFolderWorkspaceEntity>(
+              workspaceId,
+              'messageFolder',
+            );
+
+          await messageFolderRepository.update(
+            {
+              id: In(foldersToBackfill.map((folder) => folder.id)),
+            },
+            {
+              pendingSyncAction: MessageFolderPendingSyncAction.NONE,
+            },
+          );
+        }
 
         const messageLists =
           await this.messagingGetMessageListService.getMessageLists(
@@ -137,20 +176,22 @@ export class MessagingMessageListFetchService {
             messageFoldersToSync,
           );
 
+        const allMessageLists = [...backfillMessageLists, ...messageLists];
+
         await this.cacheStorage.del(
           `messages-to-import:${workspaceId}:${freshMessageChannel.id}`,
         );
 
-        const messageExternalIds = messageLists.flatMap(
+        const messageExternalIds = allMessageLists.flatMap(
           (messageList) => messageList.messageExternalIds,
         );
 
-        const messageExternalIdsToDelete = messageLists.flatMap(
+        const messageExternalIdsToDelete = allMessageLists.flatMap(
           (messageList) => messageList.messageExternalIdsToDelete,
         );
 
         const isFullSync =
-          messageLists.every(
+          allMessageLists.every(
             (messageList) => !isNonEmptyString(messageList.previousSyncCursor),
           ) && !isNonEmptyString(freshMessageChannel.syncCursor);
 
@@ -332,8 +373,8 @@ export class MessagingMessageListFetchService {
   ): Promise<boolean> {
     const foldersWithPendingActions = messageChannel.messageFolders.filter(
       (folder) =>
-        isDefined(folder.pendingSyncAction) &&
-        folder.pendingSyncAction !== MessageFolderPendingSyncAction.NONE,
+        folder.pendingSyncAction ===
+        MessageFolderPendingSyncAction.FOLDER_DELETION,
     );
 
     if (foldersWithPendingActions.length === 0) {
