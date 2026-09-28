@@ -15,7 +15,7 @@ describe('updateOne', () => {
     let listingObjectId = '';
     let testFieldId = '';
 
-    beforeEach(async () => {
+    beforeAll(async () => {
       const { data } = await createOneObjectMetadata({
         expectToFail: false,
         input: {
@@ -43,7 +43,7 @@ describe('updateOne', () => {
 
       testFieldId = createdFieldMetadata.createOneField.id;
     });
-    afterEach(async () => {
+    afterAll(async () => {
       await updateOneObjectMetadata({
         expectToFail: false,
         input: {

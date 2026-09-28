@@ -26,7 +26,7 @@ const findObjectWithIndex = async ({
 describe('Index metadata creation through object metadata creation v2', () => {
   let createdObjectId: string;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const {
       labelPlural,
       description,
@@ -54,7 +54,7 @@ describe('Index metadata creation through object metadata creation v2', () => {
     createdObjectId = data.createOneObject.id;
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await updateOneObjectMetadata({
       input: {
         idToUpdate: createdObjectId,

@@ -110,7 +110,7 @@ describe('updateOne FieldMetadataService morph relation fields v2 - Add one targ
     }
   });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const {
       data: { createOneField: rawCreateOneField },
     } = await createOneFieldMetadata({
@@ -141,7 +141,7 @@ describe('updateOne FieldMetadataService morph relation fields v2 - Add one targ
     createdFieldMetadataId = rawCreateOneField.id;
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     if (!isDefined(createdFieldMetadataId)) {
       return;
     }

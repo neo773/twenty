@@ -41,7 +41,7 @@ describe('updateOne FILES field metadata - successful', () => {
     });
   });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const { data } = await createOneFieldMetadata({
       expectToFail: false,
       input: {
@@ -64,7 +64,7 @@ describe('updateOne FILES field metadata - successful', () => {
     createdFieldMetadataId = data.createOneField.id;
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await updateOneFieldMetadata({
       expectToFail: false,
       input: {

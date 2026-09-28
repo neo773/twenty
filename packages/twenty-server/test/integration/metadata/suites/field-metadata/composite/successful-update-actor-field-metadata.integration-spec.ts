@@ -93,7 +93,7 @@ describe('Actor field metadata update tests suite', () => {
     });
   });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const {
       data: { createOneField },
     } = await createOneFieldMetadata({
@@ -115,7 +115,7 @@ describe('Actor field metadata update tests suite', () => {
     createdFieldMetadataId = createOneField.id;
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await updateOneFieldMetadata({
       expectToFail: false,
       input: {
