@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        task: [build, typecheck, lint]
+        task: [build, 'typecheck,lint']
     steps:
       - name: Fetch custom Github Actions and base branch history
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/yarn-install
       - name: Run ${{ matrix.task }}
-        run: npx nx ${{ matrix.task }} twenty-front-component-renderer
+        run: npx nx run-many -t ${{ matrix.task }} -p twenty-front-component-renderer
   renderer-sb-build:
     needs: changed-files-check
     if: needs.changed-files-check.outputs.any_changed == 'true'
