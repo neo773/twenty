@@ -333,6 +333,14 @@ jobs:
         env:
           NODE_OPTIONS: "--max-old-space-size=12288 --import tsx/esm"
         run: npx nx database:reset twenty-server
+      - name: Server / Check seed left no queued jobs
+        run: |
+          docker run --rm --network host redis sh -c 'for key in $(redis-cli --scan --pattern "bull:*"); do case "$key" in *:wait|*:active|*:paused) count=$(redis-cli llen "$key");; *:delayed|*:prioritized|*:waiting-children) count=$(redis-cli zcard "$key");; *) continue;; esac; if [ "$count" -gt 0 ]; then echo "$key $count"; fi; done' > pending-seed-jobs.txt
+          if [ -s pending-seed-jobs.txt ]; then
+            echo "::error::Seeding left queued jobs that a Postgres dump cannot carry to the shards:"
+            cat pending-seed-jobs.txt
+            exit 1
+          fi
       - name: Server / Dump Test DB
         run: docker run --rm --network host -e PGPASSWORD=postgres -v "$PWD":/dump postgres:18 pg_dump -h localhost -U postgres -Fc -f /dump/integration-test-db.dump test
       - name: Upload Test DB dump
@@ -341,6 +349,7 @@ jobs:
           name: integration-test-db
           path: integration-test-db.dump
           retention-days: 1
+          overwrite: true
 
   server-integration-test:
     timeout-minutes: 30
