@@ -13,6 +13,7 @@ concurrency:
 
 env:
   SERVER_BUILD_CACHE_KEY: server-build
+  NODE_COMPILE_CACHE: ${{ github.workspace }}/.cache/node-compile
 
 jobs:
   changed-files-check:
