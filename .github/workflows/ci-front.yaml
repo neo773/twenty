@@ -87,15 +87,12 @@ jobs:
           - { storybook_scope: pages, shard: 6 }
           - { storybook_scope: pages, shard: 7 }
           - { storybook_scope: pages, shard: 8 }
-          - { storybook_scope: performance, shard: 2 }
-          - { storybook_scope: performance, shard: 3 }
-          - { storybook_scope: performance, shard: 4 }
           - { storybook_scope: performance, shard: 5 }
           - { storybook_scope: performance, shard: 6 }
           - { storybook_scope: performance, shard: 7 }
           - { storybook_scope: performance, shard: 8 }
     env:
-      SHARD_COUNTER: ${{ matrix.storybook_scope == 'modules' && 8 || matrix.storybook_scope == 'pages' && 4 || 1 }}
+      SHARD_COUNTER: ${{ matrix.storybook_scope == 'modules' && 8 || 4 }}
       REACT_APP_SERVER_BASE_URL: http://localhost:3000
       STORYBOOK_URL: http://localhost:6006
     steps:
@@ -214,7 +211,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: checks, tasks: 'lint,typecheck,lingui:extract' }
+          - { name: lint, tasks: lint }
+          - { name: typecheck, tasks: typecheck }
+          - { name: lingui-extract, tasks: 'lingui:extract' }
+          - { name: lingui-compile, tasks: 'lingui:compile' }
           - { name: test, tasks: test, shard: 1 }
           - { name: test, tasks: test, shard: 2 }
           - { name: test, tasks: test, shard: 3 }
@@ -242,12 +242,6 @@ jobs:
           tag: scope:frontend
           tasks: ${{ matrix.tasks }}
           args: ${{ matrix.shard && format('--shard={0}/3 --coverageThreshold={{}}', matrix.shard) || '' }}
-      - name: Run lingui:compile task
-        if: matrix.name == 'checks'
-        uses: ./.github/actions/nx-affected
-        with:
-          tag: scope:frontend
-          tasks: lingui:compile
       - name: Upload unit test coverage
         if: matrix.name == 'test'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
