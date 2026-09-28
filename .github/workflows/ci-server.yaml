@@ -321,6 +321,7 @@ jobs:
       CLICKHOUSE_URL: "http://default:clickhousePassword@localhost:8123/twenty"
       CLICKHOUSE_PASSWORD: clickhousePassword
       SHARD_COUNTER: 32
+      INTEGRATION_TEST_DB_RESET_STATUS_FILE: ${{ github.workspace }}/.cache/integration-db-reset-status
     steps:
       - name: Fetch custom Github Actions and base branch history
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -340,8 +341,6 @@ jobs:
         uses: ./.github/actions/restore-cache
         with:
           key: ${{ env.SERVER_BUILD_CACHE_KEY }}
-      - name: Server / Build
-        run: npx nx build twenty-server
       - name: Build dependencies
         run: |
           npx nx build twenty-shared
@@ -352,6 +351,19 @@ jobs:
           PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d postgres -c 'CREATE DATABASE "test";'
       - name: Run ClickHouse migrations
         run: npx nx clickhouse:migrate twenty-server
+      - name: Server / Build and reset Test DB in background
+        env:
+          RESET_LOG_FILE: ${{ github.workspace }}/.cache/integration-db-reset.log
+        run: |
+          mkdir -p "$(dirname "$INTEGRATION_TEST_DB_RESET_STATUS_FILE")"
+          {
+            if npx nx build twenty-server > "$RESET_LOG_FILE" 2>&1 && NODE_OPTIONS="--max-old-space-size=12288 --import tsx/esm" npx nx database:reset twenty-server >> "$RESET_LOG_FILE" 2>&1; then
+              echo ready > "$INTEGRATION_TEST_DB_RESET_STATUS_FILE.tmp"
+            else
+              echo failed > "$INTEGRATION_TEST_DB_RESET_STATUS_FILE.tmp"
+            fi
+            mv "$INTEGRATION_TEST_DB_RESET_STATUS_FILE.tmp" "$INTEGRATION_TEST_DB_RESET_STATUS_FILE"
+          } &
       - name: Restore jest transform cache
         id: restore-jest-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0 (restore)
@@ -364,7 +376,6 @@ jobs:
         with:
           tag: scope:backend
           tasks: 'test:integration'
-          configuration: 'with-db-reset'
           args: ${{ format('--shard={0}/{1}', matrix.shard, env.SHARD_COUNTER) }}
       # The secure-deployment suite boots the app as a production https
       # deployment (SERVER_URL is env-only, forced by its jest config), so it
@@ -376,6 +387,9 @@ jobs:
         with:
           tag: scope:backend
           tasks: 'test:integration:secure'
+      - name: Print Test DB reset log
+        if: failure()
+        run: cat "${{ github.workspace }}/.cache/integration-db-reset.log" || true
       - name: Save jest transform cache
         if: always() && matrix.shard == 1 && steps.restore-jest-cache.outputs.cache-hit != 'true' && format('{0}', github.event.pull_request.head.repo.fork) != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0 (save)
