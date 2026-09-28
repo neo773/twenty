@@ -80,17 +80,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
         storybook_scope: ${{ github.event_name == 'push' && fromJSON('["modules", "pages"]') || fromJSON('["modules", "pages", "performance"]') }}
         exclude:
-          - storybook_scope: performance
-            shard: 2
-          - storybook_scope: performance
-            shard: 3
-          - storybook_scope: performance
-            shard: 4
+          - { storybook_scope: pages, shard: 5 }
+          - { storybook_scope: pages, shard: 6 }
+          - { storybook_scope: pages, shard: 7 }
+          - { storybook_scope: pages, shard: 8 }
+          - { storybook_scope: performance, shard: 2 }
+          - { storybook_scope: performance, shard: 3 }
+          - { storybook_scope: performance, shard: 4 }
+          - { storybook_scope: performance, shard: 5 }
+          - { storybook_scope: performance, shard: 6 }
+          - { storybook_scope: performance, shard: 7 }
+          - { storybook_scope: performance, shard: 8 }
     env:
-      SHARD_COUNTER: ${{ matrix.storybook_scope == 'performance' && 1 || 4 }}
+      SHARD_COUNTER: ${{ matrix.storybook_scope == 'modules' && 8 || matrix.storybook_scope == 'pages' && 4 || 1 }}
       REACT_APP_SERVER_BASE_URL: http://localhost:3000
       STORYBOOK_URL: http://localhost:6006
     steps:
