@@ -1,5 +1,6 @@
 {
   "private": true,
+  "//ci-fork-run": "baseline",
   "devDependencies": {
     "@nx/jest": "22.7.8",
     "@nx/js": "22.7.8",
