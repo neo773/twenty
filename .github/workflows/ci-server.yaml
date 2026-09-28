@@ -341,23 +341,28 @@ jobs:
         uses: ./.github/actions/restore-cache
         with:
           key: ${{ env.SERVER_BUILD_CACHE_KEY }}
-      - name: Build dependencies
-        run: |
-          npx nx build twenty-shared
-          npx nx build twenty-emails
+      - name: Server / Build
+        run: npx nx build twenty-server
       - name: Server / Create Test DB
         run: |
           PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d postgres -c 'ALTER SYSTEM SET fsync = off' -c 'ALTER SYSTEM SET synchronous_commit = off' -c 'ALTER SYSTEM SET full_page_writes = off' -c 'SELECT pg_reload_conf()'
           PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d postgres -c 'CREATE DATABASE "test";'
       - name: Run ClickHouse migrations
         run: npx nx clickhouse:migrate twenty-server
-      - name: Server / Build and reset Test DB in background
+      - name: Server / Reset Test DB in background
+        working-directory: packages/twenty-server
         env:
           RESET_LOG_FILE: ${{ github.workspace }}/.cache/integration-db-reset.log
+          NODE_OPTIONS: --max-old-space-size=12288
         run: |
           mkdir -p "$(dirname "$INTEGRATION_TEST_DB_RESET_STATUS_FILE")"
           {
-            if npx nx build twenty-server > "$RESET_LOG_FILE" 2>&1 && NODE_OPTIONS="--max-old-space-size=12288 --import tsx/esm" npx nx database:reset twenty-server >> "$RESET_LOG_FILE" 2>&1; then
+            if node dist/database/scripts/truncate-clickhouse.js > "$RESET_LOG_FILE" 2>&1 \
+              && node dist/database/scripts/truncate-db.js >> "$RESET_LOG_FILE" 2>&1 \
+              && node dist/database/scripts/setup-db.js >> "$RESET_LOG_FILE" 2>&1 \
+              && node dist/command/command.js run-instance-commands --force --include-slow >> "$RESET_LOG_FILE" 2>&1 \
+              && node dist/command/command.js cache:flush >> "$RESET_LOG_FILE" 2>&1 \
+              && node dist/command/command.js workspace:seed:dev >> "$RESET_LOG_FILE" 2>&1; then
               echo ready > "$INTEGRATION_TEST_DB_RESET_STATUS_FILE.tmp"
             else
               echo failed > "$INTEGRATION_TEST_DB_RESET_STATUS_FILE.tmp"
