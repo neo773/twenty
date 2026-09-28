@@ -262,10 +262,90 @@ jobs:
       - name: Server / Run Tests (shard ${{ matrix.shard }}/4)
         run: npx nx run twenty-server:test:ci --shard=${{ matrix.shard }}/4
 
+  server-integration-seed:
+    needs: changed-files-check
+    if: needs.changed-files-check.outputs.any_changed == 'true'
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+      clickhouse:
+        image: clickhouse/clickhouse-server:25.8.8
+        env:
+          CLICKHOUSE_PASSWORD: clickhousePassword
+          CLICKHOUSE_URL: "http://default:clickhousePassword@localhost:8123/twenty"
+        ports:
+          - 8123:8123
+          - 9000:9000
+        options: >-
+          --health-cmd "clickhouse-client --host=localhost --port=9000 --user=default --password=clickhousePassword --query='SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      ANALYTICS_ENABLED: true
+      CLICKHOUSE_URL: "http://default:clickhousePassword@localhost:8123/twenty"
+      CLICKHOUSE_PASSWORD: clickhousePassword
+    steps:
+      - name: Fetch custom Github Actions and base branch history
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 10
+      - name: Install dependencies
+        uses: ./.github/actions/yarn-install
+      - name: Update .env.test for integrations tests
+        run: |
+          echo "" >> .env.test
+          echo "IS_BILLING_ENABLED=true" >> .env.test
+          echo "BILLING_STRIPE_API_KEY=test-api-key" >> .env.test
+          echo "BILLING_STRIPE_BASE_PLAN_PRODUCT_ID=test-base-plan-product-id" >> .env.test
+          echo "BILLING_STRIPE_WEBHOOK_SECRET=test-webhook-secret" >> .env.test
+          echo "BILLING_PLAN_REQUIRED_LINK=http://localhost:3001/stripe-redirection" >> .env.test
+      - name: Restore server build cache
+        uses: ./.github/actions/restore-cache
+        with:
+          key: ${{ env.SERVER_BUILD_CACHE_KEY }}
+      - name: Server / Build
+        run: npx nx build twenty-server
+      - name: Server / Create Test DB
+        run: |
+          PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d postgres -c 'ALTER SYSTEM SET fsync = off' -c 'ALTER SYSTEM SET synchronous_commit = off' -c 'ALTER SYSTEM SET full_page_writes = off' -c 'SELECT pg_reload_conf()'
+          PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d postgres -c 'CREATE DATABASE "test";'
+      - name: Run ClickHouse migrations
+        run: npx nx clickhouse:migrate twenty-server
+      - name: Server / Reset and seed Test DB
+        env:
+          NODE_OPTIONS: "--max-old-space-size=12288 --import tsx/esm"
+        run: npx nx database:reset twenty-server
+      - name: Server / Dump Test DB
+        run: docker run --rm --network host -e PGPASSWORD=postgres -v "$PWD":/dump postgres:18 pg_dump -h localhost -U postgres -Fc -f /dump/integration-test-db.dump test
+      - name: Upload Test DB dump
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: integration-test-db
+          path: integration-test-db.dump
+          retention-days: 1
+
   server-integration-test:
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    needs: server-build
+    needs: [server-build, server-integration-seed]
     strategy:
       fail-fast: false
       matrix:
@@ -331,20 +411,22 @@ jobs:
         run: |
           npx nx build twenty-shared
           npx nx build twenty-emails
-      - name: Server / Create Test DB
+      - name: Server / Tune Test DB
         run: |
           PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d postgres -c 'ALTER SYSTEM SET fsync = off' -c 'ALTER SYSTEM SET synchronous_commit = off' -c 'ALTER SYSTEM SET full_page_writes = off' -c 'SELECT pg_reload_conf()'
-          PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d postgres -c 'CREATE DATABASE "test";'
+      - name: Download Test DB dump
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: integration-test-db
+      - name: Server / Restore Test DB
+        run: docker run --rm --network host -e PGPASSWORD=postgres -v "$PWD":/dump postgres:18 pg_restore -h localhost -U postgres -d postgres --create --exit-on-error -j 4 /dump/integration-test-db.dump
       - name: Run ClickHouse migrations
         run: npx nx clickhouse:migrate twenty-server
-      - name: Run ClickHouse seeds
-        run: npx nx clickhouse:seed twenty-server
       - name: Server / Run Integration Tests
         uses: ./.github/actions/nx-affected
         with:
           tag: scope:backend
           tasks: 'test:integration'
-          configuration: 'with-db-reset'
           args: ${{ format('--shard={0}/{1}', matrix.shard, env.SHARD_COUNTER) }}
       # The secure-deployment suite boots the app as a production https
       # deployment (SERVER_URL is env-only, forced by its jest config), so it
@@ -410,6 +492,7 @@ jobs:
         server-previous-version-upgrade-mutation-guard,
         server-validation,
         server-test,
+        server-integration-seed,
         server-integration-test,
         cross-version-upgrade,
         discover-public-apps,
