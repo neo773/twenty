@@ -102,7 +102,7 @@ describe('Rich text v2 field metadata update tests suite', () => {
     });
   });
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const {
       data: { createOneField },
     } = await createOneFieldMetadata({
@@ -124,7 +124,7 @@ describe('Rich text v2 field metadata update tests suite', () => {
     createdFieldMetadataId = createOneField.id;
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await updateOneFieldMetadata({
       expectToFail: false,
       input: {

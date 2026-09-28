@@ -112,7 +112,7 @@ describe('Emails field metadata update tests suite', () => {
     });
   });
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const {
       data: { createOneField },
     } = await createOneFieldMetadata({
@@ -134,7 +134,7 @@ describe('Emails field metadata update tests suite', () => {
     createdFieldMetadataId = createOneField.id;
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await updateOneFieldMetadata({
       expectToFail: false,
       input: {

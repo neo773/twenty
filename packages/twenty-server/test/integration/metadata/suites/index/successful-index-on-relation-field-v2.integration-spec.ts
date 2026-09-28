@@ -15,7 +15,7 @@ describe('Index metadata creation on relation field creation v2', () => {
   let createdObjectId: string;
   let secondCreatedObjectId: string;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const {
       labelPlural,
       description,
@@ -70,7 +70,7 @@ describe('Index metadata creation on relation field creation v2', () => {
     }
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     for (const objectMetadataId of [createdObjectId, secondCreatedObjectId]) {
       await updateOneObjectMetadata({
         input: {
