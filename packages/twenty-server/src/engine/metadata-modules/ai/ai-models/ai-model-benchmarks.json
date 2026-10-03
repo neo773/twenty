@@ -1,6 +1,6 @@
 {
   "source": "artificialanalysis.ai",
-  "measuredAt": "2026-09-28",
+  "measuredAt": "2026-10-03",
   "models": {
     "gpt-5.4": {
       "intelligenceIndex": 39,
@@ -1459,15 +1459,6 @@
         "devstral-small-2505",
         "cc1fa238-1a76-486d-a997-22309275eadd",
         "Devstral Small (May '25)"
-      ]
-    },
-    "magistral-small": {
-      "intelligenceIndex": 8.2,
-      "measuredAt": "2026-09-28",
-      "aliases": [
-        "magistral-small",
-        "0fec07d5-a9b2-407a-b5f8-5bf10bd86b59",
-        "Magistral Small 1"
       ]
     },
     "pixtral-large-latest": {
