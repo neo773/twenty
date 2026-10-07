@@ -276,8 +276,36 @@ jobs:
           key: ${{ steps.restore-jest-cache.outputs.cache-primary-key }}
           path: .cache/jest/packages/twenty-server
 
+  integration-test-durations:
+    if: github.event_name != 'merge_group'
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Fetch integration test durations from the latest successful run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p integration-test-durations
+          for run_id in $(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci-server.yaml --status success --limit 10 --json databaseId --jq '.[].databaseId'); do
+            rm -rf integration-test-durations/*
+            if gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --pattern 'integration-test-durations-shard-*' --dir integration-test-durations; then
+              echo "Using integration test durations from run $run_id"
+              break
+            fi
+          done
+          echo '{}' > integration-test-durations/empty.json
+      - name: Upload integration test durations
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: integration-test-durations
+          path: integration-test-durations
+          retention-days: 1
+          overwrite: true
+
   server-integration-test:
-    needs: changed-files-check
+    needs: [changed-files-check, integration-test-durations]
     if: needs.changed-files-check.outputs.any_changed == 'true'
     timeout-minutes: 30
     runs-on: ubuntu-latest
@@ -322,6 +350,8 @@ jobs:
       CLICKHOUSE_PASSWORD: clickhousePassword
       SHARD_COUNTER: 16
       INTEGRATION_TEST_DB_RESET_STATUS_FILE: ${{ github.workspace }}/.cache/integration-db-reset-status
+      INTEGRATION_TEST_DURATIONS_DIR: ${{ github.workspace }}/.integration-test-durations
+      INTEGRATION_TEST_DURATIONS_OUTPUT_FILE: ${{ github.workspace }}/.integration-test-durations-output/shard-${{ matrix.shard }}.json
     steps:
       - name: Fetch custom Github Actions and base branch history
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -369,12 +399,26 @@ jobs:
           key: v4-jest-server-integration-${{ github.ref_name }}-${{ github.sha }}
           restore-keys: v4-jest-server-integration-${{ github.ref_name }}-
           path: .cache/jest/packages/twenty-server-integration
+      - name: Download integration test durations
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: integration-test-durations
+          path: ${{ env.INTEGRATION_TEST_DURATIONS_DIR }}
       - name: Server / Run Integration Tests
         uses: ./.github/actions/nx-affected
         with:
           tag: scope:backend
           tasks: 'test:integration'
           args: ${{ format('--shard={0}/{1}', matrix.shard, env.SHARD_COUNTER) }}
+      - name: Upload integration test durations
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: integration-test-durations-shard-${{ matrix.shard }}
+          path: ${{ env.INTEGRATION_TEST_DURATIONS_OUTPUT_FILE }}
+          retention-days: 7
+          if-no-files-found: ignore
+          overwrite: true
       # The secure-deployment suite boots the app as a production https
       # deployment (SERVER_URL is env-only, forced by its jest config), so it
       # cannot ride the main run. One shard is enough. Gated like the main run
@@ -448,6 +492,7 @@ jobs:
         server-upgrade-mutation-guard,
         server-validation,
         server-test,
+        integration-test-durations,
         server-integration-test,
         cross-version-upgrade,
         discover-public-apps,
