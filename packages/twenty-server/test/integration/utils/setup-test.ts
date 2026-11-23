@@ -65,15 +65,15 @@ export default async (_: unknown, projectConfig: JestConfigWithTsJest) => {
 
   await app.listen(projectConfig.globals.APP_PORT as number);
 
+  global.app = app;
+  global.workflowTestServices = createWorkflowTestServices(app);
+  global.testDataSource = rawDataSource;
+  global.jobDrainState = { lastStalledFingerprint: null };
+
   if (process.env.INTEGRATION_TEST_RESTORE_DATABASE_BETWEEN_FILES === 'true') {
     await app.get(JwtKeyManagerService).getCurrentSigningKey();
     await waitForAllJobsToFinish();
     await closeQueueConnections();
     await snapshotTestDatabase();
   }
-
-  global.app = app;
-  global.workflowTestServices = createWorkflowTestServices(app);
-  global.testDataSource = rawDataSource;
-  global.jobDrainState = { lastStalledFingerprint: null };
 };
