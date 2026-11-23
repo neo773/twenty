@@ -2,6 +2,8 @@
 
 import { Injectable } from '@nestjs/common';
 
+import { isDefined } from 'twenty-shared/utils';
+
 import { ENTITLEMENT_KEYS_GRANTED_WITHOUT_BILLING } from 'src/engine/core-modules/billing/constants/entitlement-keys-granted-without-billing.constant';
 import { type BillingEntitlements } from 'src/engine/core-modules/billing/types/billing-entitlements.type';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
@@ -17,10 +19,14 @@ const BILLING_ENTITLEMENTS_ROWS_REQUIREMENT = {
 @Injectable()
 @WorkspaceCache('billingEntitlements', { packingPonderation: 1 })
 export class WorkspaceBillingEntitlementsCacheService extends WorkspaceCacheProvider<BillingEntitlements> {
-  override readonly rowsRequirement = BILLING_ENTITLEMENTS_ROWS_REQUIREMENT;
+  override readonly rowsRequirement: WorkspaceCacheRowsRequirement;
 
   constructor(private readonly twentyConfigService: TwentyConfigService) {
     super();
+
+    this.rowsRequirement = this.twentyConfigService.get('IS_BILLING_ENABLED')
+      ? BILLING_ENTITLEMENTS_ROWS_REQUIREMENT
+      : {};
   }
 
   computeForCache({
@@ -28,7 +34,7 @@ export class WorkspaceBillingEntitlementsCacheService extends WorkspaceCacheProv
   }: WorkspaceCacheProviderContext<
     typeof BILLING_ENTITLEMENTS_ROWS_REQUIREMENT
   >): BillingEntitlements {
-    if (!this.twentyConfigService.get('IS_BILLING_ENABLED')) {
+    if (!isDefined(rows.billingEntitlement)) {
       return Object.fromEntries(
         ENTITLEMENT_KEYS_GRANTED_WITHOUT_BILLING.map((key) => [key, true]),
       );
