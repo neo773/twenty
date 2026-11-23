@@ -809,7 +809,7 @@ export class WorkspaceCacheService implements OnModuleInit, OnModuleDestroy {
     if (computeFailures.length > 0) {
       computeFailures.forEach(({ keyName, reason }) =>
         this.logger.error(
-          `Failed to compute cache key '${keyName}': ${reason}`,
+          `Failed to compute cache key '${keyName}': ${reason instanceof Error ? reason.stack : reason}`,
         ),
       );
       throw computeFailures[0].reason;
