@@ -15,6 +15,10 @@ import { createApp } from './create-app';
 import { createWorkflowTestServices } from './create-workflow-test-services';
 import { debugTraceUnhandledPgClientErrors } from './debug-trace-unhandled-pg-client-errors.util';
 import { snapshotTestDatabase } from './snapshot-test-database.util';
+import {
+  closeQueueConnections,
+  waitForAllJobsToFinish,
+} from './wait-for-all-jobs-to-finish.util';
 import { waitForTestDatabaseReset } from './wait-for-test-database-reset.util';
 
 const deactivateSeededCreateCompanyWorkflowVersion = async () => {
@@ -63,6 +67,8 @@ export default async (_: unknown, projectConfig: JestConfigWithTsJest) => {
 
   if (process.env.INTEGRATION_TEST_RESTORE_DATABASE_BETWEEN_FILES === 'true') {
     await app.get(JwtKeyManagerService).getCurrentSigningKey();
+    await waitForAllJobsToFinish();
+    await closeQueueConnections();
     await snapshotTestDatabase();
   }
 
