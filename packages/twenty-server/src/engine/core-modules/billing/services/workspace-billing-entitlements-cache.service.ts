@@ -17,14 +17,10 @@ const BILLING_ENTITLEMENTS_ROWS_REQUIREMENT = {
 @Injectable()
 @WorkspaceCache('billingEntitlements', { packingPonderation: 1 })
 export class WorkspaceBillingEntitlementsCacheService extends WorkspaceCacheProvider<BillingEntitlements> {
-  override readonly rowsRequirement: WorkspaceCacheRowsRequirement;
+  override readonly rowsRequirement = BILLING_ENTITLEMENTS_ROWS_REQUIREMENT;
 
   constructor(private readonly twentyConfigService: TwentyConfigService) {
     super();
-
-    this.rowsRequirement = this.twentyConfigService.get('IS_BILLING_ENABLED')
-      ? BILLING_ENTITLEMENTS_ROWS_REQUIREMENT
-      : {};
   }
 
   computeForCache({

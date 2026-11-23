@@ -1,6 +1,8 @@
 import IORedis from 'ioredis';
-
+import { getAppProviderByClassName } from 'test/integration/utils/get-app-provider-by-class-name.util';
 import { withTestDatabaseAdminClient } from 'test/integration/utils/with-test-database-admin-client.util';
+
+import { type JwtKeyManagerService } from 'src/engine/core-modules/jwt/services/jwt-key-manager.service';
 
 const REDIS_SCAN_PAGE_SIZE = 1000;
 
@@ -50,7 +52,16 @@ const deleteRedisKeysOutsideQueues = async (): Promise<void> => {
   }
 };
 
+const expireLocallyCachedSigningKey = (): void => {
+  Reflect.set(
+    getAppProviderByClassName<JwtKeyManagerService>('JwtKeyManagerService'),
+    'currentSigningKeyCachedAt',
+    0,
+  );
+};
+
 export const restoreTestDatabase = async (): Promise<void> => {
   await restorePostgresFromSeed();
   await deleteRedisKeysOutsideQueues();
+  expireLocallyCachedSigningKey();
 };
