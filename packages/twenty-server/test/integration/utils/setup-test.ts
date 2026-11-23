@@ -12,6 +12,7 @@ import { getWorkflowPrefillIds } from 'src/engine/workspace-manager/standard-obj
 
 import { createApp } from './create-app';
 import { createWorkflowTestServices } from './create-workflow-test-services';
+import { debugTraceUnhandledPgClientErrors } from './debug-trace-unhandled-pg-client-errors.util';
 import { snapshotTestDatabase } from './snapshot-test-database.util';
 import { waitForTestDatabaseReset } from './wait-for-test-database-reset.util';
 
@@ -37,6 +38,8 @@ export default async (_: unknown, projectConfig: JestConfigWithTsJest) => {
   // escapes interception.
   // @ts-expect-error node-fetch's types differ from the lib.dom fetch it replaces at runtime
   globalThis.fetch = nodeFetch;
+
+  debugTraceUnhandledPgClientErrors();
 
   await waitForTestDatabaseReset();
   await rawDataSource.initialize();
