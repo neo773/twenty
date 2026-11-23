@@ -14,6 +14,15 @@ export const snapshotTestDatabase = async (): Promise<void> =>
       );
 
       try {
+        const openConnections = await adminClient.query(
+          `SELECT pid, state, application_name, backend_start, state_change, left(query, 300) AS last_query FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()`,
+          [testDatabaseName],
+        );
+
+        process.stdout.write(
+          `[snapshot-debug] open connections on ${testDatabaseName}:\n${JSON.stringify(openConnections.rows, null, 2)}\n`,
+        );
+
         await adminClient.query(
           'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()',
           [testDatabaseName],
