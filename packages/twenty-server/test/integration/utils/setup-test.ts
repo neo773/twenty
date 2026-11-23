@@ -6,6 +6,7 @@ import { type JestConfigWithTsJest } from 'ts-jest';
 import 'tsconfig-paths/register';
 
 import { rawDataSource } from 'src/database/typeorm/raw/raw.datasource';
+import { JwtKeyManagerService } from 'src/engine/core-modules/jwt/services/jwt-key-manager.service';
 import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
 import { SEED_APPLE_WORKSPACE_ID } from 'src/engine/workspace-manager/dev-seeder/core/constants/seeder-workspaces.constant';
 import { getWorkflowPrefillIds } from 'src/engine/workspace-manager/standard-objects-prefill-data/utils/prefill-workflows.util';
@@ -61,6 +62,7 @@ export default async (_: unknown, projectConfig: JestConfigWithTsJest) => {
   await app.listen(projectConfig.globals.APP_PORT as number);
 
   if (process.env.INTEGRATION_TEST_RESTORE_DATABASE_BETWEEN_FILES === 'true') {
+    await app.get(JwtKeyManagerService).getCurrentSigningKey();
     await snapshotTestDatabase();
   }
 
