@@ -100,6 +100,7 @@ jobs:
       CLICKHOUSE_PASSWORD: clickhousePassword
       SHARD_COUNTER: 24
       INTEGRATION_TEST_DB_RESET_STATUS_FILE: ${{ github.workspace }}/.cache/integration-db-reset-status
+      INTEGRATION_TEST_RESTORE_DATABASE_BETWEEN_FILES: true
       SSO_TEST_OIDC_ISSUER: ${{ vars.OKTA_SSO_TEST_ISSUER }}
       SSO_TEST_OIDC_CLIENT_ID: ${{ vars.OKTA_SSO_TEST_CLIENT_ID }}
       SSO_TEST_USERNAME: ${{ vars.OKTA_SSO_TEST_USERNAME }}

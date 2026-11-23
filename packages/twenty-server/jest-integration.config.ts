@@ -14,6 +14,8 @@ if (process.env.NODE_ENV === 'test') {
 
 const isBillingEnabled = process.env.IS_BILLING_ENABLED === 'true';
 const isClickhouseEnabled = process.env.CLICKHOUSE_URL !== undefined;
+const isTestDatabaseRestoredBetweenFiles =
+  process.env.INTEGRATION_TEST_RESTORE_DATABASE_BETWEEN_FILES === 'true';
 // Always in CI so a missing secret fails loudly, except fork PRs which get no secrets
 const isSsoSuiteEnabled =
   (process.env.CI === 'true' && process.env.IS_FORK_PULL_REQUEST !== 'true') ||
@@ -46,6 +48,11 @@ const jestConfig: JestConfigWithTsJest = {
   globalTeardown: '<rootDir>/test/integration/utils/teardown-test.ts',
   setupFilesAfterEnv: [
     '<rootDir>/test/integration/utils/setup-wait-for-all-jobs-between-tests.ts',
+    ...(isTestDatabaseRestoredBetweenFiles
+      ? [
+          '<rootDir>/test/integration/utils/setup-restore-test-database-between-files.ts',
+        ]
+      : []),
   ],
   testTimeout: 90000,
   maxWorkers: 1,

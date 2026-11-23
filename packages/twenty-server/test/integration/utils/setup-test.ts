@@ -12,6 +12,7 @@ import { getWorkflowPrefillIds } from 'src/engine/workspace-manager/standard-obj
 
 import { createApp } from './create-app';
 import { createWorkflowTestServices } from './create-workflow-test-services';
+import { snapshotTestDatabase } from './snapshot-test-database.util';
 import { waitForTestDatabaseReset } from './wait-for-test-database-reset.util';
 
 const deactivateSeededCreateCompanyWorkflowVersion = async () => {
@@ -55,6 +56,10 @@ export default async (_: unknown, projectConfig: JestConfigWithTsJest) => {
     ]);
 
   await app.listen(projectConfig.globals.APP_PORT as number);
+
+  if (process.env.INTEGRATION_TEST_RESTORE_DATABASE_BETWEEN_FILES === 'true') {
+    await snapshotTestDatabase();
+  }
 
   global.app = app;
   global.workflowTestServices = createWorkflowTestServices(app);
